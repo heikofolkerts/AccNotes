@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notiz hinzufügen</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .context-info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        .context-info h3 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        .section {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 14px;
+        }
+        .section p {
+            margin: 3px 0;
+            font-size: 12px;
+        }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .button-container {
+            margin-top: 20px;
+            text-align: right;
+        }
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Notiz hinzufügen</h1>
+
+        <div class="context-info">
+            <h3>Kontext-Informationen</h3>
+            <div id="context-details">
+                <div class="section">
+                    <h4>Seiten-Informationen</h4>
+                    <p><strong>URL:</strong> <span id="page-url">-</span></p>
+                    <p><strong>Seitentitel:</strong> <span id="page-title">-</span></p>
+                    <p><strong>Ausgewählter Text:</strong> <span id="selected-text">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Element-Informationen</h4>
+                    <p><strong>Element-Typ:</strong> <span id="element-type">-</span></p>
+                    <p><strong>Tag:</strong> <span id="tag-name">-</span></p>
+                    <p><strong>Text/Inhalt:</strong> <span id="element-text">-</span></p>
+                    <p><strong>ID:</strong> <span id="element-id">-</span></p>
+                    <p><strong>Klassen:</strong> <span id="element-class">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Barrierefreiheit (ARIA)</h4>
+                    <p><strong>Zugänglicher Name:</strong> <span id="accessible-name">-</span></p>
+                    <p><strong>Zugängliche Beschreibung:</strong> <span id="accessible-description">-</span></p>
+                    <p><strong>ARIA-Label:</strong> <span id="aria-label">-</span></p>
+                    <p><strong>ARIA-Role:</strong> <span id="aria-role">-</span></p>
+                    <p><strong>ARIA-Hidden:</strong> <span id="aria-hidden">-</span></p>
+                    <p><strong>ARIA-Expanded:</strong> <span id="aria-expanded">-</span></p>
+                    <p><strong>ARIA-Pressed:</strong> <span id="aria-pressed">-</span></p>
+                    <p><strong>ARIA-Checked:</strong> <span id="aria-checked">-</span></p>
+                    <p><strong>ARIA-Disabled:</strong> <span id="aria-disabled">-</span></p>
+                    <p><strong>ARIA-Required:</strong> <span id="aria-required">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Interaktion & Fokus</h4>
+                    <p><strong>Ist interaktiv:</strong> <span id="is-interactive">-</span></p>
+                    <p><strong>Ist fokussierbar:</strong> <span id="is-focusable">-</span></p>
+                    <p><strong>Tab-Index:</strong> <span id="tab-index">-</span></p>
+                    <p><strong>Deaktiviert:</strong> <span id="disabled">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Link-Informationen</h4>
+                    <p><strong>Link-URL:</strong> <span id="link-url">-</span></p>
+                    <p><strong>Link-Ziel:</strong> <span id="link-target">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Formular-Informationen</h4>
+                    <p><strong>Name:</strong> <span id="form-name">-</span></p>
+                    <p><strong>Type:</strong> <span id="form-type">-</span></p>
+                    <p><strong>Wert:</strong> <span id="form-value">-</span></p>
+                    <p><strong>Placeholder:</strong> <span id="placeholder">-</span></p>
+                    <p><strong>Erforderlich:</strong> <span id="required">-</span></p>
+                </div>
+
+                <div class="section">
+                    <h4>Technische Details</h4>
+                    <p><strong>CSS-Selector:</strong> <span id="css-selector">-</span></p>
+                    <p><strong>XPath:</strong> <span id="xpath">-</span></p>
+                </div>
+            </div>
+        </div>
+
+        <textarea id="note-content" placeholder="Hier können Sie Ihre Notiz eingeben..."></textarea>
+
+        <div class="button-container">
+            <button id="save-button">Notiz speichern</button>
+        </div>
+    </div>
+
+    <script src="note.js"></script>
+</body>
+</html>

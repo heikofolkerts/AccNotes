@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Notiz hinzufügen",
+  "version": "1.0",
+  "description": "Fügt einen Kontextmenü-Eintrag hinzu.",
+  "permissions": ["contextMenus", "tabs", "activeTab"],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "web_accessible_resources": ["note.html", "note.js", "notes-overview.html", "notes-overview.js"],
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"]
+  }]
+}
