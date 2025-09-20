@@ -3,156 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Notiz hinzufügen</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 20px auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-bottom: 20px;
-        }
-        .context-info {
-            background-color: #e8f4f8;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            border-left: 4px solid #2196F3;
-        }
-        .context-info h3 {
-            margin-top: 0;
-            color: #1976D2;
-        }
-        .section {
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .section:last-child {
-            border-bottom: none;
-        }
-        .section h4 {
-            margin: 0 0 8px 0;
-            color: #333;
-            font-size: 14px;
-        }
-        .section p {
-            margin: 3px 0;
-            font-size: 12px;
-        }
-        textarea {
-            width: 100%;
-            min-height: 300px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-size: 14px;
-            font-family: inherit;
-            resize: vertical;
-        }
-        .button-container {
-            margin-top: 20px;
-            text-align: right;
-        }
-        button {
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #1976D2;
-        }
-    </style>
+    <meta name="description" content="AccNotes - Barrierefreiheits-Notiz erstellen">
+    <title>Notiz hinzufügen - AccNotes</title>
+    <link rel="stylesheet" href="styles/modern-theme.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Notiz hinzufügen</h1>
+    <!-- Skip link for screen reader users -->
+    <a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
 
-        <div class="context-info">
-            <h3>Kontext-Informationen</h3>
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" aria-label="Zwischen hellem und dunklem Design wechseln" title="Design wechseln" id="theme-toggle">
+        <span aria-hidden="true">🌓</span>
+    </button>
+
+    <main id="main-content" class="container container--narrow">
+        <header>
+            <h1>📝 Neue Barrierefreiheits-Notiz</h1>
+        </header>
+
+        <!-- Context Information Panel -->
+        <section class="info-panel" aria-labelledby="context-title">
+            <h2 id="context-title" class="info-panel__title">🔍 Kontext-Informationen</h2>
             <div id="context-details">
-                <div class="section">
-                    <h4>Seiten-Informationen</h4>
-                    <p><strong>URL:</strong> <span id="page-url">-</span></p>
-                    <p><strong>Seitentitel:</strong> <span id="page-title">-</span></p>
-                    <p><strong>Ausgewählter Text:</strong> <span id="selected-text">-</span></p>
-                </div>
 
-                <div class="section">
-                    <h4>Element-Informationen</h4>
-                    <p><strong>Element-Typ:</strong> <span id="element-type">-</span></p>
-                    <p><strong>Tag:</strong> <span id="tag-name">-</span></p>
-                    <p><strong>Text/Inhalt:</strong> <span id="element-text">-</span></p>
-                    <p><strong>ID:</strong> <span id="element-id">-</span></p>
-                    <p><strong>Klassen:</strong> <span id="element-class">-</span></p>
-                </div>
+                <!-- Page Information -->
+                <details class="section" open>
+                    <summary class="section__title">
+                        <span aria-hidden="true">🌐</span> Seiten-Informationen
+                    </summary>
+                    <dl>
+                        <dt>URL:</dt>
+                        <dd id="page-url" class="font-mono">-</dd>
+                        <dt>Seitentitel:</dt>
+                        <dd id="page-title">-</dd>
+                        <dt>Ausgewählter Text:</dt>
+                        <dd id="selected-text">-</dd>
+                    </dl>
+                </details>
 
-                <div class="section">
-                    <h4>Barrierefreiheit (ARIA)</h4>
-                    <p><strong>Zugänglicher Name:</strong> <span id="accessible-name">-</span></p>
-                    <p><strong>Zugängliche Beschreibung:</strong> <span id="accessible-description">-</span></p>
-                    <p><strong>ARIA-Label:</strong> <span id="aria-label">-</span></p>
-                    <p><strong>ARIA-Role:</strong> <span id="aria-role">-</span></p>
-                    <p><strong>ARIA-Hidden:</strong> <span id="aria-hidden">-</span></p>
-                    <p><strong>ARIA-Expanded:</strong> <span id="aria-expanded">-</span></p>
-                    <p><strong>ARIA-Pressed:</strong> <span id="aria-pressed">-</span></p>
-                    <p><strong>ARIA-Checked:</strong> <span id="aria-checked">-</span></p>
-                    <p><strong>ARIA-Disabled:</strong> <span id="aria-disabled">-</span></p>
-                    <p><strong>ARIA-Required:</strong> <span id="aria-required">-</span></p>
-                </div>
+                <!-- Element Information -->
+                <details class="section" open>
+                    <summary class="section__title">
+                        <span aria-hidden="true">🎯</span> Element-Informationen
+                    </summary>
+                    <dl>
+                        <dt>Element-Typ:</dt>
+                        <dd id="element-type">-</dd>
+                        <dt>HTML-Tag:</dt>
+                        <dd id="tag-name" class="font-mono">-</dd>
+                        <dt>Text/Inhalt:</dt>
+                        <dd id="element-text">-</dd>
+                        <dt>ID-Attribut:</dt>
+                        <dd id="element-id" class="font-mono">-</dd>
+                        <dt>CSS-Klassen:</dt>
+                        <dd id="element-class" class="font-mono">-</dd>
+                    </dl>
+                </details>
 
-                <div class="section">
-                    <h4>Interaktion & Fokus</h4>
-                    <p><strong>Ist interaktiv:</strong> <span id="is-interactive">-</span></p>
-                    <p><strong>Ist fokussierbar:</strong> <span id="is-focusable">-</span></p>
-                    <p><strong>Tab-Index:</strong> <span id="tab-index">-</span></p>
-                    <p><strong>Deaktiviert:</strong> <span id="disabled">-</span></p>
-                </div>
+                <!-- Accessibility Information -->
+                <details class="section" open>
+                    <summary class="section__title">
+                        <span aria-hidden="true">♿</span> Barrierefreiheit (ARIA)
+                    </summary>
+                    <dl>
+                        <dt>Zugänglicher Name:</dt>
+                        <dd id="accessible-name">-</dd>
+                        <dt>Zugängliche Beschreibung:</dt>
+                        <dd id="accessible-description">-</dd>
+                        <dt>ARIA-Label:</dt>
+                        <dd id="aria-label" class="font-mono">-</dd>
+                        <dt>ARIA-Role:</dt>
+                        <dd id="aria-role" class="font-mono">-</dd>
+                        <dt>ARIA-Hidden:</dt>
+                        <dd id="aria-hidden" class="font-mono">-</dd>
+                        <dt>ARIA-Expanded:</dt>
+                        <dd id="aria-expanded" class="font-mono">-</dd>
+                        <dt>ARIA-Pressed:</dt>
+                        <dd id="aria-pressed" class="font-mono">-</dd>
+                        <dt>ARIA-Checked:</dt>
+                        <dd id="aria-checked" class="font-mono">-</dd>
+                        <dt>ARIA-Disabled:</dt>
+                        <dd id="aria-disabled" class="font-mono">-</dd>
+                        <dt>ARIA-Required:</dt>
+                        <dd id="aria-required" class="font-mono">-</dd>
+                    </dl>
+                </details>
 
-                <div class="section">
-                    <h4>Link-Informationen</h4>
-                    <p><strong>Link-URL:</strong> <span id="link-url">-</span></p>
-                    <p><strong>Link-Ziel:</strong> <span id="link-target">-</span></p>
-                </div>
+                <!-- Interaction & Focus -->
+                <details class="section">
+                    <summary class="section__title">
+                        <span aria-hidden="true">⚡</span> Interaktion & Fokus
+                    </summary>
+                    <dl>
+                        <dt>Ist interaktiv:</dt>
+                        <dd id="is-interactive">-</dd>
+                        <dt>Ist fokussierbar:</dt>
+                        <dd id="is-focusable">-</dd>
+                        <dt>Tab-Index:</dt>
+                        <dd id="tab-index" class="font-mono">-</dd>
+                        <dt>Deaktiviert:</dt>
+                        <dd id="disabled">-</dd>
+                    </dl>
+                </details>
 
-                <div class="section">
-                    <h4>Formular-Informationen</h4>
-                    <p><strong>Name:</strong> <span id="form-name">-</span></p>
-                    <p><strong>Type:</strong> <span id="form-type">-</span></p>
-                    <p><strong>Wert:</strong> <span id="form-value">-</span></p>
-                    <p><strong>Placeholder:</strong> <span id="placeholder">-</span></p>
-                    <p><strong>Erforderlich:</strong> <span id="required">-</span></p>
-                </div>
+                <!-- Link Information -->
+                <details class="section">
+                    <summary class="section__title">
+                        <span aria-hidden="true">🔗</span> Link-Informationen
+                    </summary>
+                    <dl>
+                        <dt>Link-URL:</dt>
+                        <dd id="link-url" class="font-mono">-</dd>
+                        <dt>Link-Ziel:</dt>
+                        <dd id="link-target" class="font-mono">-</dd>
+                    </dl>
+                </details>
 
-                <div class="section">
-                    <h4>Technische Details</h4>
-                    <p><strong>CSS-Selector:</strong> <span id="css-selector">-</span></p>
-                    <p><strong>XPath:</strong> <span id="xpath">-</span></p>
-                </div>
+                <!-- Form Information -->
+                <details class="section">
+                    <summary class="section__title">
+                        <span aria-hidden="true">📝</span> Formular-Informationen
+                    </summary>
+                    <dl>
+                        <dt>Name-Attribut:</dt>
+                        <dd id="form-name" class="font-mono">-</dd>
+                        <dt>Type-Attribut:</dt>
+                        <dd id="form-type" class="font-mono">-</dd>
+                        <dt>Aktueller Wert:</dt>
+                        <dd id="form-value">-</dd>
+                        <dt>Placeholder-Text:</dt>
+                        <dd id="placeholder">-</dd>
+                        <dt>Erforderlich:</dt>
+                        <dd id="required">-</dd>
+                    </dl>
+                </details>
+
+                <!-- Technical Details -->
+                <details class="section">
+                    <summary class="section__title">
+                        <span aria-hidden="true">🔧</span> Technische Details
+                    </summary>
+                    <dl>
+                        <dt>CSS-Selector:</dt>
+                        <dd id="css-selector" class="font-mono">-</dd>
+                        <dt>XPath:</dt>
+                        <dd id="xpath" class="font-mono">-</dd>
+                    </dl>
+                </details>
+
             </div>
-        </div>
+        </section>
 
-        <textarea id="note-content" placeholder="Hier können Sie Ihre Notiz eingeben..."></textarea>
+        <!-- Note Form -->
+        <section aria-labelledby="note-form-title">
+            <h2 id="note-form-title" class="sr-only">Notiz erstellen</h2>
 
-        <div class="button-container">
-            <button id="save-button">Notiz speichern</button>
-        </div>
-    </div>
+            <form id="note-form" novalidate>
+                <div class="form-group">
+                    <label for="note-content" class="form-label">
+                        Ihre Barrierefreiheits-Notiz:
+                        <span class="sr-only">(Erforderlich)</span>
+                    </label>
+                    <textarea
+                        id="note-content"
+                        class="form-textarea form-input--large"
+                        placeholder="Beschreiben Sie hier Ihre Beobachtungen zur Barrierefreiheit..."
+                        required
+                        aria-describedby="note-help"
+                        spellcheck="true"></textarea>
+                    <div id="note-help" class="form-help">
+                        <small>Beschreiben Sie das Problem, geben Sie Verbesserungsvorschläge und verweisen Sie auf relevante WCAG-Kriterien.</small>
+                    </div>
+                </div>
 
+                <div class="controls">
+                    <button type="button" id="cancel-button" class="btn btn--secondary">
+                        <span aria-hidden="true">❌</span>
+                        Abbrechen
+                    </button>
+                    <button type="submit" id="save-button" class="btn btn--primary">
+                        <span aria-hidden="true">💾</span>
+                        Notiz speichern
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script src="scripts/theme-toggle.js"></script>
     <script src="note.js"></script>
 </body>
 </html>

@@ -107,41 +107,175 @@ noteContent.value = prefillText;
 noteContent.focus();
 noteContent.setSelectionRange(prefillText.length, prefillText.length);
 
-// Event Listener für den Save-Button
-document.getElementById('save-button').addEventListener('click', function() {
-    const note = document.getElementById('note-content').value;
-    if (note.trim()) {
-        // Erstelle Dateiname mit Zeitstempel
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const fileName = `accessibility-note-${timestamp}.txt`;
+// Enhanced form handling with accessibility
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('note-form');
+    const saveButton = document.getElementById('save-button');
+    const cancelButton = document.getElementById('cancel-button');
+    const noteContent = document.getElementById('note-content');
 
-        // Erstelle Download-Link
-        const blob = new Blob([note], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
+    // Form submission handling
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        saveNote();
+    });
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = fileName;
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    // Save button click (redundant but for backward compatibility)
+    saveButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        saveNote();
+    });
 
-        // Auch in localStorage für die Übersicht speichern
-        const noteData = {
-            content: note,
-            timestamp: new Date().toISOString(),
-            url: contextData.url || '',
-            title: contextData.title || '',
-            elementType: contextData.elementType || '',
-            fileName: fileName
-        };
-        localStorage.setItem('note_' + Date.now(), JSON.stringify(noteData));
+    // Cancel button handling
+    cancelButton.addEventListener('click', function() {
+        if (confirm('Möchten Sie wirklich abbrechen? Nicht gespeicherte Änderungen gehen verloren.')) {
+            window.close();
+        }
+    });
 
-        alert('Notiz wurde als Datei gespeichert!');
-        window.close();
-    } else {
-        alert('Bitte geben Sie eine Notiz ein.');
+    // Auto-save draft functionality
+    let autoSaveTimer;
+    noteContent.addEventListener('input', function() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(saveDraft, 2000); // Save draft after 2 seconds of inactivity
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+S or Cmd+S to save
+        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+            e.preventDefault();
+            saveNote();
+        }
+        // Escape to cancel
+        if (e.key === 'Escape') {
+            cancelButton.click();
+        }
+    });
+
+    function saveNote() {
+        const note = noteContent.value.trim();
+
+        if (!note) {
+            // Focus back to textarea and show error
+            noteContent.focus();
+            showNotification('Bitte geben Sie eine Notiz ein.', 'error');
+            return;
+        }
+
+        try {
+            // Create filename with timestamp
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `accessibility-note-${timestamp}.txt`;
+
+            // Create download link
+            const blob = new Blob([note], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Save to localStorage for overview
+            const noteData = {
+                content: note,
+                timestamp: new Date().toISOString(),
+                url: contextData.url || '',
+                title: contextData.title || '',
+                elementType: contextData.elementType || '',
+                fileName: fileName
+            };
+            localStorage.setItem('note_' + Date.now(), JSON.stringify(noteData));
+
+            // Clear draft
+            clearDraft();
+
+            showNotification('Notiz wurde erfolgreich gespeichert!', 'success');
+
+            // Close window after short delay
+            setTimeout(() => {
+                window.close();
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error saving note:', error);
+            showNotification('Fehler beim Speichern der Notiz.', 'error');
+        }
     }
+
+    function saveDraft() {
+        const note = noteContent.value.trim();
+        if (note) {
+            try {
+                localStorage.setItem('accnotes_draft', note);
+            } catch (e) {
+                console.warn('Could not save draft to localStorage');
+            }
+        }
+    }
+
+    function loadDraft() {
+        try {
+            const draft = localStorage.getItem('accnotes_draft');
+            if (draft && !noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+                const confirmLoad = confirm('Es wurde ein Entwurf gefunden. Möchten Sie ihn laden?');
+                if (confirmLoad) {
+                    noteContent.value = draft;
+                    noteContent.focus();
+                    noteContent.setSelectionRange(draft.length, draft.length);
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load draft from localStorage');
+        }
+    }
+
+    function clearDraft() {
+        try {
+            localStorage.removeItem('accnotes_draft');
+        } catch (e) {
+            console.warn('Could not clear draft from localStorage');
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        // Create accessible notification
+        const notification = document.createElement('div');
+        notification.className = `notification notification--${type}`;
+        notification.setAttribute('role', 'alert');
+        notification.setAttribute('aria-live', 'assertive');
+        notification.textContent = message;
+
+        // Style the notification
+        Object.assign(notification.style, {
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            padding: '16px 20px',
+            borderRadius: '8px',
+            color: 'white',
+            fontWeight: '600',
+            zIndex: '1000',
+            maxWidth: '400px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            backgroundColor: type === 'error' ? '#c62828' : type === 'success' ? '#2e7d32' : '#1565c0'
+        });
+
+        document.body.appendChild(notification);
+
+        // Remove notification after 4 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 4000);
+    }
+
+    // Load draft on page load
+    loadDraft();
 });

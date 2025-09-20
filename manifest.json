@@ -1,16 +1,44 @@
 {
   "manifest_version": 2,
-  "name": "Notiz hinzufügen",
-  "version": "1.0",
-  "description": "Fügt einen Kontextmenü-Eintrag hinzu.",
-  "permissions": ["contextMenus", "tabs", "activeTab"],
+  "name": "AccNotes - Accessibility Testing Assistant",
+  "version": "0.2.0",
+  "description": "Professional browser extension for accessibility testing and documentation. Create detailed WCAG-compliant notes with automatic element analysis.",
+  "author": "Heiko Folkerts",
+  "homepage_url": "https://github.com/heikofolkerts/AccNotes",
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+
+  "permissions": [
+    "contextMenus",
+    "tabs",
+    "activeTab",
+    "storage"
+  ],
+
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
-  "web_accessible_resources": ["note.html", "note.js", "notes-overview.html", "notes-overview.js"],
+
+  "web_accessible_resources": [
+    "note.html",
+    "note.js",
+    "notes-overview.html",
+    "notes-overview.js",
+    "styles/modern-theme.css",
+    "scripts/theme-toggle.js"
+  ],
+
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["content.js"]
-  }]
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }],
+
+  "content_security_policy": "script-src 'self'; object-src 'self'"
 }
