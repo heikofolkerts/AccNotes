@@ -154,14 +154,100 @@
             </div>
         </section>
 
+        <!-- BITV Test Selection -->
+        <section class="info-panel" aria-labelledby="bitv-section-title">
+            <h2 id="bitv-section-title" class="info-panel__title">✅ BITV-Prüfschritt</h2>
+
+            <div class="form-group">
+                <label for="bitv-category" class="form-label">
+                    Kategorie auswählen:
+                </label>
+                <select id="bitv-category" class="form-select" aria-describedby="bitv-category-help">
+                    <option value="">-- Bitte Kategorie wählen --</option>
+                </select>
+                <div id="bitv-category-help" class="form-help">
+                    <small>Wählen Sie die passende BITV-Kategorie für Ihre Beobachtung aus.</small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="bitv-step" class="form-label">
+                    Prüfschritt auswählen:
+                </label>
+                <select id="bitv-step" class="form-select" aria-describedby="bitv-step-help" disabled>
+                    <option value="">-- Erst Kategorie wählen --</option>
+                </select>
+                <div id="bitv-step-help" class="form-help">
+                    <small>Wählen Sie den spezifischen Prüfschritt aus, der für diese Notiz relevant ist.</small>
+                </div>
+            </div>
+
+            <div id="bitv-step-details" class="section" style="display: none;">
+                <h3 class="section__title">📋 Prüfschritt-Details</h3>
+                <dl>
+                    <dt>Titel:</dt>
+                    <dd id="step-title">-</dd>
+                    <dt>Beschreibung:</dt>
+                    <dd id="step-description">-</dd>
+                    <dt>Level:</dt>
+                    <dd id="step-level">-</dd>
+                </dl>
+            </div>
+
+            <div class="form-group" id="evaluation-group" style="display: none;">
+                <fieldset>
+                    <legend class="form-label">Bewertung für diesen Prüfschritt:</legend>
+                    <div class="radio-group">
+                        <label class="radio-label">
+                            <input type="radio" name="evaluation" value="passed" class="radio-input">
+                            <span class="radio-indicator" aria-hidden="true">✅</span>
+                            Bestanden
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="evaluation" value="failed" class="radio-input">
+                            <span class="radio-indicator" aria-hidden="true">❌</span>
+                            Nicht bestanden
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="evaluation" value="partial" class="radio-input">
+                            <span class="radio-indicator" aria-hidden="true">⚠️</span>
+                            Teilweise bestanden
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="evaluation" value="needs_review" class="radio-input">
+                            <span class="radio-indicator" aria-hidden="true">📝</span>
+                            Zu überprüfen
+                        </label>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+
         <!-- Note Form -->
         <section aria-labelledby="note-form-title">
             <h2 id="note-form-title" class="sr-only">Notiz erstellen</h2>
 
             <form id="note-form" novalidate>
                 <div class="form-group">
+                    <label for="note-title" class="form-label">
+                        Titel der Notiz:
+                        <span class="sr-only">(Erforderlich)</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="note-title"
+                        class="form-input"
+                        placeholder="Kurzer, aussagekräftiger Titel..."
+                        required
+                        aria-describedby="title-help">
+                    <div id="title-help" class="form-help">
+                        <small>Geben Sie einen aussagekräftigen Titel für diese Accessibility-Beobachtung ein.</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label for="note-content" class="form-label">
-                        Ihre Barrierefreiheits-Notiz:
+                        Detaillierte Beschreibung:
                         <span class="sr-only">(Erforderlich)</span>
                     </label>
                     <textarea
@@ -172,7 +258,22 @@
                         aria-describedby="note-help"
                         spellcheck="true"></textarea>
                     <div id="note-help" class="form-help">
-                        <small>Beschreiben Sie das Problem, geben Sie Verbesserungsvorschläge und verweisen Sie auf relevante WCAG-Kriterien.</small>
+                        <small>Beschreiben Sie das Problem, geben Sie Verbesserungsvorschläge und verweisen Sie auf relevante BITV-Kriterien.</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="recommendation" class="form-label">
+                        Empfehlung zur Behebung:
+                    </label>
+                    <textarea
+                        id="recommendation"
+                        class="form-textarea"
+                        placeholder="Konkrete Vorschläge zur Verbesserung der Barrierefreiheit..."
+                        aria-describedby="recommendation-help"
+                        spellcheck="true"></textarea>
+                    <div id="recommendation-help" class="form-help">
+                        <small>Geben Sie konkrete, umsetzbare Empfehlungen zur Behebung des Problems.</small>
                     </div>
                 </div>
 
@@ -191,6 +292,7 @@
     </main>
 
     <script src="scripts/theme-toggle.js"></script>
+    <script src="scripts/bitv-catalog.js"></script>
     <script src="note.js"></script>
 </body>
 </html>

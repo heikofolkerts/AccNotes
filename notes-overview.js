@@ -1,8 +1,14 @@
 // Notes Overview JavaScript
 let allNotes = [];
+let bitvCategories = [];
 
 // Lade alle Notizen beim Seitenstart
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize BITV categories if BitvCatalog is available
+    if (typeof BitvCatalog !== 'undefined') {
+        bitvCategories = BitvCatalog.getCategories();
+        initializeBitvFilters();
+    }
     loadNotes();
 });
 
@@ -49,9 +55,20 @@ function updateStats() {
 
     const uniquePages = new Set(allNotes.map(note => note.url)).size;
 
+    // BITV-specific stats
+    const bitvNotes = allNotes.filter(note => note.bitvTest).length;
+    const failedTests = allNotes.filter(note =>
+        note.bitvTest && note.bitvTest.evaluation === 'failed'
+    ).length;
+
     document.getElementById('total-notes').textContent = totalNotes;
     document.getElementById('notes-today').textContent = notesToday;
     document.getElementById('unique-pages').textContent = uniquePages;
+    document.getElementById('bitv-notes').textContent = bitvNotes;
+    document.getElementById('failed-tests').textContent = failedTests;
+
+    // Update BITV dashboard
+    updateBitvDashboard();
 }
 
 function displayNotes() {
@@ -77,13 +94,39 @@ function createNoteHTML(note) {
     const date = new Date(note.timestamp);
     const formattedDate = date.toLocaleDateString('de-DE') + ' ' + date.toLocaleTimeString('de-DE');
 
+    // BITV-specific styling and info
+    const isBitvNote = note.bitvTest;
+    const bitvClass = isBitvNote ? `note-item--bitv note-item--${note.bitvTest.evaluation || 'needs_review'}` : '';
+
+    let bitvInfo = '';
+    if (isBitvNote) {
+        const evaluationTexts = {
+            passed: '✅ Bestanden',
+            failed: '❌ Nicht bestanden',
+            partial: '⚠️ Teilweise bestanden',
+            needs_review: '📝 Zu überprüfen'
+        };
+
+        bitvInfo = `
+            <div class="bitv-note-info">
+                <span class="bitv-step-badge">
+                    📋 ${note.bitvTest.stepId} - ${note.bitvTest.stepTitle}
+                </span>
+                <span class="bitv-evaluation-badge bitv-evaluation-badge--${note.bitvTest.evaluation}">
+                    ${evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review}
+                </span>
+            </div>
+        `;
+    }
+
     return `
-        <div class="note-item">
+        <div class="note-item ${bitvClass}">
             <div class="note-header">
                 <div class="note-info">
-                    <div class="note-title">${note.title || 'Unbekannte Seite'} - ${note.elementType || 'Element'}</div>
+                    <div class="note-title">${note.title || note.pageTitle || 'Unbekannte Seite'}</div>
                     <div class="note-url">${note.url || 'Keine URL'}</div>
-                    <div class="note-meta">📅 ${formattedDate} | 📄 ${note.fileName || 'Keine Datei'}</div>
+                    <div class="note-meta">📅 ${formattedDate} | 🎯 ${note.element?.type || note.elementType || 'Element'}</div>
+                    ${bitvInfo}
                 </div>
                 <div class="note-actions">
                     <button onclick="downloadNote('${note.id}')">📥 Download</button>
@@ -105,22 +148,68 @@ function getSortedNotes() {
         case 'oldest':
             return sorted.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         case 'page':
-            return sorted.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+            return sorted.sort((a, b) => (a.title || a.pageTitle || '').localeCompare(b.title || b.pageTitle || ''));
+        case 'bitv-step':
+            return sorted.sort((a, b) => {
+                const aStep = a.bitvTest ? a.bitvTest.stepId : 'zzz';
+                const bStep = b.bitvTest ? b.bitvTest.stepId : 'zzz';
+                return aStep.localeCompare(bStep);
+            });
+        case 'evaluation':
+            return sorted.sort((a, b) => {
+                const evaluationOrder = { 'failed': 0, 'partial': 1, 'needs_review': 2, 'passed': 3 };
+                const aEval = a.bitvTest ? evaluationOrder[a.bitvTest.evaluation] ?? 4 : 5;
+                const bEval = b.bitvTest ? evaluationOrder[b.bitvTest.evaluation] ?? 4 : 5;
+                return aEval - bEval;
+            });
         default:
             return sorted;
     }
 }
 
 function getFilteredNotes(notes) {
-    const searchTerm = document.getElementById('search-input').value.toLowerCase();
-    if (!searchTerm) return notes;
+    let filtered = notes;
 
-    return notes.filter(note =>
-        (note.content || '').toLowerCase().includes(searchTerm) ||
-        (note.title || '').toLowerCase().includes(searchTerm) ||
-        (note.url || '').toLowerCase().includes(searchTerm) ||
-        (note.elementType || '').toLowerCase().includes(searchTerm)
-    );
+    // Text search
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(note =>
+            (note.content || '').toLowerCase().includes(searchTerm) ||
+            (note.title || '').toLowerCase().includes(searchTerm) ||
+            (note.pageTitle || '').toLowerCase().includes(searchTerm) ||
+            (note.url || '').toLowerCase().includes(searchTerm) ||
+            (note.elementType || '').toLowerCase().includes(searchTerm) ||
+            (note.element?.type || '').toLowerCase().includes(searchTerm) ||
+            (note.bitvTest?.stepTitle || '').toLowerCase().includes(searchTerm) ||
+            (note.bitvTest?.stepId || '').toLowerCase().includes(searchTerm)
+        );
+    }
+
+    // BITV Category filter
+    const categoryFilter = document.getElementById('bitv-category-filter')?.value;
+    if (categoryFilter) {
+        filtered = filtered.filter(note =>
+            note.bitvTest && note.bitvTest.category === categoryFilter
+        );
+    }
+
+    // BITV Evaluation filter
+    const evaluationFilter = document.getElementById('bitv-evaluation-filter')?.value;
+    if (evaluationFilter) {
+        filtered = filtered.filter(note =>
+            note.bitvTest && note.bitvTest.evaluation === evaluationFilter
+        );
+    }
+
+    // Notes type filter
+    const typeFilter = document.getElementById('notes-type-filter')?.value;
+    if (typeFilter === 'bitv') {
+        filtered = filtered.filter(note => note.bitvTest);
+    } else if (typeFilter === 'general') {
+        filtered = filtered.filter(note => !note.bitvTest);
+    }
+
+    return filtered;
 }
 
 function sortNotes() {
@@ -260,4 +349,161 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// BITV-specific functions
+function initializeBitvFilters() {
+    const categoryFilter = document.getElementById('bitv-category-filter');
+    if (categoryFilter && bitvCategories) {
+        bitvCategories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category.id;
+            option.textContent = category.title;
+            categoryFilter.appendChild(option);
+        });
+    }
+}
+
+function clearFilters() {
+    document.getElementById('search-input').value = '';
+    document.getElementById('bitv-category-filter').value = '';
+    document.getElementById('bitv-evaluation-filter').value = '';
+    document.getElementById('notes-type-filter').value = '';
+    document.getElementById('sort-select').value = 'newest';
+    displayNotes();
+}
+
+function updateBitvDashboard() {
+    const bitvNotes = allNotes.filter(note => note.bitvTest);
+    const dashboard = document.getElementById('bitv-dashboard');
+    const container = document.getElementById('bitv-progress-container');
+
+    if (bitvNotes.length === 0) {
+        dashboard.style.display = 'none';
+        return;
+    }
+
+    dashboard.style.display = 'block';
+
+    // Group notes by category
+    const categoryStats = {};
+    bitvCategories.forEach(category => {
+        categoryStats[category.id] = {
+            title: category.title,
+            total: 0,
+            passed: 0,
+            failed: 0,
+            partial: 0,
+            needs_review: 0
+        };
+    });
+
+    bitvNotes.forEach(note => {
+        const category = note.bitvTest.category;
+        if (categoryStats[category]) {
+            categoryStats[category].total++;
+            const evaluation = note.bitvTest.evaluation || 'needs_review';
+            categoryStats[category][evaluation]++;
+        }
+    });
+
+    // Generate dashboard HTML
+    let dashboardHTML = '<div class="bitv-progress">';
+
+    Object.keys(categoryStats).forEach(categoryId => {
+        const stats = categoryStats[categoryId];
+        if (stats.total === 0) return;
+
+        const passedPercentage = Math.round((stats.passed / stats.total) * 100);
+        const failedPercentage = Math.round((stats.failed / stats.total) * 100);
+        const partialPercentage = Math.round((stats.partial / stats.total) * 100);
+
+        dashboardHTML += `
+            <div class="bitv-category">
+                <div class="bitv-category__title">${stats.title}</div>
+                <div class="bitv-progress-bar">
+                    <div class="bitv-progress-bar__info">
+                        <div class="bitv-progress-bar__label">Fortschritt (${stats.total} Prüfschritte)</div>
+                        <div class="bitv-progress-bar__track">
+                            <div class="bitv-progress-bar__fill bitv-progress-bar__fill--passed" style="width: ${passedPercentage}%"></div>
+                        </div>
+                        <div class="bitv-progress-bar__stats">
+                            <span>✅ ${stats.passed} bestanden</span>
+                            <span>❌ ${stats.failed} nicht bestanden</span>
+                            <span>⚠️ ${stats.partial} teilweise</span>
+                            <span>📝 ${stats.needs_review} zu überprüfen</span>
+                        </div>
+                    </div>
+                    <div class="bitv-progress-bar__percentage">${passedPercentage}%</div>
+                </div>
+            </div>
+        `;
+    });
+
+    dashboardHTML += '</div>';
+    container.innerHTML = dashboardHTML;
+}
+
+function exportBitvReport() {
+    const bitvNotes = allNotes.filter(note => note.bitvTest);
+
+    if (bitvNotes.length === 0) {
+        alert('Keine BITV-Notizen zum Exportieren vorhanden.');
+        return;
+    }
+
+    let reportContent = `BITV-SOFTWARETEST BERICHT\n`;
+    reportContent += `Erstellt am: ${new Date().toLocaleString('de-DE')}\n`;
+    reportContent += `Anzahl geprüfte Elemente: ${bitvNotes.length}\n`;
+    reportContent += `${'='.repeat(60)}\n\n`;
+
+    // Summary by category
+    const categoryStats = {};
+    bitvCategories.forEach(category => {
+        categoryStats[category.id] = {
+            title: category.title,
+            notes: bitvNotes.filter(note => note.bitvTest.category === category.id)
+        };
+    });
+
+    Object.keys(categoryStats).forEach(categoryId => {
+        const category = categoryStats[categoryId];
+        if (category.notes.length === 0) return;
+
+        reportContent += `KATEGORIE: ${category.title.toUpperCase()}\n`;
+        reportContent += `${'-'.repeat(40)}\n`;
+
+        category.notes.forEach(note => {
+            const evaluationTexts = {
+                passed: '✅ BESTANDEN',
+                failed: '❌ NICHT BESTANDEN',
+                partial: '⚠️ TEILWEISE BESTANDEN',
+                needs_review: '📝 ZU ÜBERPRÜFEN'
+            };
+
+            reportContent += `\nPrüfschritt: ${note.bitvTest.stepId} - ${note.bitvTest.stepTitle}\n`;
+            reportContent += `Bewertung: ${evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review}\n`;
+            reportContent += `URL: ${note.url}\n`;
+            reportContent += `Element: ${note.element?.type || note.elementType || 'Unbekannt'}\n`;
+            reportContent += `Beschreibung: ${note.content}\n`;
+            if (note.recommendation) {
+                reportContent += `Empfehlung: ${note.recommendation}\n`;
+            }
+            reportContent += `-`.repeat(30) + '\n';
+        });
+
+        reportContent += '\n';
+    });
+
+    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bitv-softwaretest-bericht-${new Date().toISOString().split('T')[0]}.txt`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }

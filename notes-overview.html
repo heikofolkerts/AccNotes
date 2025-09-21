@@ -37,6 +37,22 @@
                     <div class="stat__number" id="unique-pages" aria-label="Anzahl eindeutige Seiten">0</div>
                     <div class="stat__label">Seiten</div>
                 </div>
+                <div class="stat">
+                    <div class="stat__number" id="bitv-notes" aria-label="Anzahl BITV-Notizen">0</div>
+                    <div class="stat__label">BITV-Tests</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__number" id="failed-tests" aria-label="Anzahl nicht bestandene Tests">0</div>
+                    <div class="stat__label">Nicht bestanden</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- BITV Progress Dashboard -->
+        <section class="info-panel" aria-labelledby="bitv-progress-title" id="bitv-dashboard" style="display: none;">
+            <h2 id="bitv-progress-title" class="info-panel__title">📊 BITV-Fortschritt</h2>
+            <div id="bitv-progress-container">
+                <!-- Progress bars will be generated here -->
             </div>
         </section>
 
@@ -52,6 +68,10 @@
                     <button type="button" onclick="exportNotesAsCSV()" class="btn btn--secondary">
                         <span aria-hidden="true">📊</span>
                         Als CSV exportieren
+                    </button>
+                    <button type="button" onclick="exportBitvReport()" class="btn btn--primary">
+                        <span aria-hidden="true">✅</span>
+                        BITV-Bericht exportieren
                     </button>
                 </div>
                 <div class="controls__group">
@@ -80,6 +100,8 @@
                         <option value="newest">Neueste zuerst</option>
                         <option value="oldest">Älteste zuerst</option>
                         <option value="page">Nach Seite</option>
+                        <option value="bitv-step">Nach BITV-Prüfschritt</option>
+                        <option value="evaluation">Nach Bewertung</option>
                     </select>
                 </div>
 
@@ -88,11 +110,48 @@
                     <input type="search"
                            id="search-input"
                            class="form-input"
-                           style="width: 300px;"
+                           style="width: 250px;"
                            placeholder="Notizen durchsuchen..."
                            onkeyup="filterNotes()"
                            aria-describedby="search-help">
-                    <div id="search-help" class="sr-only">Durchsucht Titel, URL und Inhalt der Notizen</div>
+                    <div id="search-help" class="sr-only">Durchsucht Titel, URL, Inhalt und BITV-Prüfschritte</div>
+                </div>
+            </div>
+
+            <!-- BITV Filter Controls -->
+            <div class="controls bitv-filters">
+                <div class="controls__group">
+                    <label for="bitv-category-filter" class="form-label">BITV-Kategorie:</label>
+                    <select id="bitv-category-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                        <option value="">Alle Kategorien</option>
+                    </select>
+                </div>
+
+                <div class="controls__group">
+                    <label for="bitv-evaluation-filter" class="form-label">Bewertung:</label>
+                    <select id="bitv-evaluation-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                        <option value="">Alle Bewertungen</option>
+                        <option value="passed">✅ Bestanden</option>
+                        <option value="failed">❌ Nicht bestanden</option>
+                        <option value="partial">⚠️ Teilweise bestanden</option>
+                        <option value="needs_review">📝 Zu überprüfen</option>
+                    </select>
+                </div>
+
+                <div class="controls__group">
+                    <label for="notes-type-filter" class="form-label">Typ:</label>
+                    <select id="notes-type-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                        <option value="">Alle Notizen</option>
+                        <option value="bitv">Nur BITV-Tests</option>
+                        <option value="general">Nur allgemeine Notizen</option>
+                    </select>
+                </div>
+
+                <div class="controls__group">
+                    <button type="button" onclick="clearFilters()" class="btn btn--secondary btn--small">
+                        <span aria-hidden="true">🗑️</span>
+                        Filter zurücksetzen
+                    </button>
                 </div>
             </div>
         </section>
@@ -110,6 +169,7 @@
     </main>
 
     <script src="scripts/theme-toggle.js"></script>
+    <script src="scripts/bitv-catalog.js"></script>
     <script src="notes-overview.js"></script>
 </body>
 </html>

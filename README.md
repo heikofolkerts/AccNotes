@@ -4,26 +4,30 @@
 
 AccNotes ist eine spezialisierte Browser-Extension für UX/UI-Designer, Entwickler und Accessibility-Experten zur effizienten Dokumentation von Barrierefreiheitsbefunden während der Website-Analyse.
 
-![AccNotes Demo](https://img.shields.io/badge/Status-Active%20Development-brightgreen)
+![AccNotes Demo](https://img.shields.io/badge/Version-0.3.0-brightgreen)
+![BITV Support](https://img.shields.io/badge/BITV-Softwaretest%20Ready-blue)
 ![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue)
 ![Browser Support](https://img.shields.io/badge/Browser-Chrome%2C%20Firefox%2C%20Edge-orange)
 
 ## ✨ Features
 
-### 🎯 Aktuelle Funktionen (v1.1)
+### 🎯 Aktuelle Funktionen (v0.3.0 - BITV-Edition)
 - **Kontextmenü-Integration**: Schnelle Notizenerstellung per Rechtsklick
+- **BITV-Prüfschritt-Integration**: Vollständiger Katalog aller 54 BITV-Prüfschritte von bit-inklusiv.de
+- **Strukturierte Bewertung**: Bewertungssystem (Bestanden/Nicht bestanden/Teilweise/Zu überprüfen)
+- **BITV-Filter & Suche**: Erweiterte Filter nach Kategorien, Bewertungen und Prüfschritten
+- **BITV-Fortschritts-Dashboard**: Visuelle Fortschrittsanzeige pro BITV-Kategorie
+- **Professional BITV-Reports**: Strukturierte BITV-Berichte für offizielle Dokumentation
 - **Detaillierte Element-Analyse**: Automatische Extraktion von ARIA-Attributen, Fokus-Eigenschaften und Accessibility-Informationen
-- **WCAG-strukturierte Notizen**: Vorgefertigte Templates für professionelle Accessibility-Audits
-- **Lokale Speicherung**: Persistent storage mit Export-Funktionalität
 - **Moderne UI**: WCAG 2.1 AA konforme Benutzeroberfläche mit Dark Mode
-- **Notizen-Übersicht**: Zentrale Verwaltung aller Accessibility-Befunde
 
-### 🚀 Kommende Features
-- **Erweiterte Suchfunktionen** und Filter
-- **Team-Kollaboration** und Notizen-Sharing
-- **PDF & Excel Export** für professionelle Reports
+### 🚀 Kommende BITV-Features (v0.4.0+)
+- **BITV-Template-System** für alle 54 Prüfschritte mit vorgefertigten Texten
+- **PDF/Excel-Reports** mit professioneller BITV-Struktur
+- **BITV-Team-Kollaboration** und Prüfschritt-Assignment
 - **Screenshot-Integration** mit Element-Highlighting
-- **Template-System** für verschiedene Audit-Typen
+- **Multi-Projekt-Management** für größere BITV-Audits
+- **KI-basierte Prüfschritt-Empfehlungen**
 
 ## 🚀 Installation
 
@@ -79,10 +83,13 @@ AccNotes/
 ├── styles/
 │   └── modern-theme.css       # Modernes, zugängliches Design-System
 ├── scripts/
-│   └── theme-toggle.js        # Dark/Light Mode Toggle
+│   ├── theme-toggle.js        # Dark/Light Mode Toggle
+│   └── bitv-catalog.js        # BITV-Prüfschritt-Katalog und Hilfsfunktionen
 ├── docs/
-│   ├── PROJECT_VISION.md      # Projektvision und Roadmap
-│   └── PRODUCT_BACKLOG.md     # Priorisiertes Product Backlog
+│   ├── PROJECT_VISION.md      # BITV-fokussierte Projektvision und Roadmap
+│   ├── PRODUCT_BACKLOG.md     # BITV-spezifisches Product Backlog
+│   ├── PROJECT_VISION_OLD.md  # Originale Projektvision (Archiv)
+│   └── PRODUCT_BACKLOG_OLD.md # Originales Product Backlog (Archiv)
 └── README.md                  # Diese Datei
 ```
 
@@ -162,13 +169,13 @@ Wir freuen uns über Beiträge! Bitte beachte:
 
 ## 📋 Roadmap
 
-Siehe [PRODUCT_BACKLOG.md](PRODUCT_BACKLOG.md) für detaillierte Feature-Planung.
+Siehe [docs/PRODUCT_BACKLOG.md](docs/PRODUCT_BACKLOG.md) für detaillierte BITV-Feature-Planung.
 
 ### Nächste Releases
-- **v1.2**: Erweiterte Notizen-Verwaltung (Suche, Filter, Sortierung)
-- **v1.3**: Template-System für verschiedene Audit-Typen
-- **v1.4**: Screenshot-Integration mit Element-Highlighting
-- **v2.0**: Team-Kollaboration und Cloud-Sync
+- **v0.4.0**: BITV-Template-System für alle 54 Prüfschritte
+- **v0.5.0**: Professional PDF/Excel-Reports mit BITV-Struktur
+- **v0.6.0**: Screenshot-Integration mit Element-Highlighting
+- **v1.0.0**: BITV-Team-Kollaboration und Multi-Projekt-Management
 
 ## 📄 Lizenz
 

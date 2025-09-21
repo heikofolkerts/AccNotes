@@ -107,12 +107,94 @@ noteContent.value = prefillText;
 noteContent.focus();
 noteContent.setSelectionRange(prefillText.length, prefillText.length);
 
+// BITV integration
+let currentBitvStep = null;
+let currentEvaluation = null;
+
+// Initialize BITV UI
+function initializeBitvUI() {
+    const categorySelect = document.getElementById('bitv-category');
+    const stepSelect = document.getElementById('bitv-step');
+    const stepDetails = document.getElementById('bitv-step-details');
+    const evaluationGroup = document.getElementById('evaluation-group');
+
+    // Populate categories
+    const categories = BitvCatalog.getCategories();
+    categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.id;
+        option.textContent = category.title;
+        categorySelect.appendChild(option);
+    });
+
+    // Category change handler
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        stepSelect.innerHTML = '<option value="">-- Prüfschritt wählen --</option>';
+        stepSelect.disabled = !categoryId;
+        stepDetails.style.display = 'none';
+        evaluationGroup.style.display = 'none';
+        currentBitvStep = null;
+
+        if (categoryId) {
+            const steps = BitvCatalog.getStepsByCategory(categoryId);
+            steps.forEach(step => {
+                const option = document.createElement('option');
+                option.value = step.id;
+                option.textContent = `${step.id} - ${step.title}`;
+                stepSelect.appendChild(option);
+            });
+        }
+    });
+
+    // Step change handler
+    stepSelect.addEventListener('change', function() {
+        const stepId = this.value;
+
+        if (stepId) {
+            currentBitvStep = BitvCatalog.getStep(stepId);
+            if (currentBitvStep) {
+                // Show step details
+                document.getElementById('step-title').textContent = currentBitvStep.title;
+                document.getElementById('step-description').textContent = currentBitvStep.description;
+                document.getElementById('step-level').textContent = `WCAG ${currentBitvStep.level}`;
+                stepDetails.style.display = 'block';
+                evaluationGroup.style.display = 'block';
+
+                // Pre-fill note title if empty
+                const noteTitle = document.getElementById('note-title');
+                if (!noteTitle.value.trim()) {
+                    noteTitle.value = `${stepId}: ${currentBitvStep.title}`;
+                }
+            }
+        } else {
+            stepDetails.style.display = 'none';
+            evaluationGroup.style.display = 'none';
+            currentBitvStep = null;
+        }
+    });
+
+    // Evaluation change handler
+    const evaluationInputs = document.querySelectorAll('input[name="evaluation"]');
+    evaluationInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.checked) {
+                currentEvaluation = this.value;
+            }
+        });
+    });
+}
+
 // Enhanced form handling with accessibility
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize BITV UI
+    initializeBitvUI();
+
     const form = document.getElementById('note-form');
     const saveButton = document.getElementById('save-button');
     const cancelButton = document.getElementById('cancel-button');
     const noteContent = document.getElementById('note-content');
+    const noteTitle = document.getElementById('note-title');
 
     // Form submission handling
     form.addEventListener('submit', function(e) {
@@ -154,22 +236,101 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function saveNote() {
+        const title = noteTitle.value.trim();
         const note = noteContent.value.trim();
+        const recommendation = document.getElementById('recommendation').value.trim();
+
+        if (!title) {
+            noteTitle.focus();
+            showNotification('Bitte geben Sie einen Titel ein.', 'error');
+            return;
+        }
 
         if (!note) {
-            // Focus back to textarea and show error
             noteContent.focus();
-            showNotification('Bitte geben Sie eine Notiz ein.', 'error');
+            showNotification('Bitte geben Sie eine Beschreibung ein.', 'error');
             return;
         }
 
         try {
-            // Create filename with timestamp
+            // Create enhanced note data structure
+            const noteData = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                title: title,
+                content: note,
+                recommendation: recommendation,
+                url: contextData.url || '',
+                pageTitle: contextData.title || '',
+                element: {
+                    type: contextData.elementType || '',
+                    tagName: contextData.tagName || '',
+                    text: contextData.text || '',
+                    id: contextData.id || '',
+                    className: contextData.className || '',
+                    selector: contextData.selector || '',
+                    accessibleName: contextData.accessibleName || '',
+                    ariaRole: contextData.ariaRole || ''
+                },
+                bitvTest: currentBitvStep ? {
+                    category: currentBitvStep.category,
+                    stepId: currentBitvStep.id,
+                    stepTitle: currentBitvStep.title,
+                    stepDescription: currentBitvStep.description,
+                    level: currentBitvStep.level,
+                    evaluation: currentEvaluation || 'needs_review'
+                } : null
+            };
+
+            // Create detailed text output for download
+            let outputText = `=== BITV-SOFTWARETEST NOTIZ ===\n`;
+            outputText += `Erstellt: ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}\n`;
+            outputText += `Titel: ${title}\n\n`;
+
+            if (currentBitvStep) {
+                outputText += `=== BITV-PRÜFSCHRITT ===\n`;
+                outputText += `Kategorie: ${BitvCatalog.getCategories().find(c => c.id === currentBitvStep.category)?.title || currentBitvStep.category}\n`;
+                outputText += `Prüfschritt: ${currentBitvStep.id} - ${currentBitvStep.title}\n`;
+                outputText += `Level: WCAG ${currentBitvStep.level}\n`;
+                outputText += `Beschreibung: ${currentBitvStep.description}\n`;
+
+                const evaluationTexts = {
+                    passed: '✅ Bestanden',
+                    failed: '❌ Nicht bestanden',
+                    partial: '⚠️ Teilweise bestanden',
+                    needs_review: '📝 Zu überprüfen'
+                };
+                outputText += `Bewertung: ${evaluationTexts[currentEvaluation] || evaluationTexts.needs_review}\n\n`;
+            }
+
+            outputText += `=== KONTEXT ===\n`;
+            outputText += `Seite: ${contextData.title || 'Unbekannt'}\n`;
+            outputText += `URL: ${contextData.url || 'Unbekannt'}\n`;
+            outputText += `Element: ${contextData.elementType || 'Unbekannt'} (${contextData.tagName || 'unbekannt'})\n`;
+
+            if (contextData.text) {
+                outputText += `Elementtext: "${contextData.text}"\n`;
+            }
+            if (contextData.accessibleName) {
+                outputText += `Zugänglicher Name: "${contextData.accessibleName}"\n`;
+            }
+            if (contextData.ariaRole) {
+                outputText += `ARIA-Role: ${contextData.ariaRole}\n`;
+            }
+
+            outputText += `\n=== BESCHREIBUNG ===\n${note}\n`;
+
+            if (recommendation) {
+                outputText += `\n=== EMPFEHLUNG ===\n${recommendation}\n`;
+            }
+
+            // Create filename with BITV step reference
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `accessibility-note-${timestamp}.txt`;
+            const stepPrefix = currentBitvStep ? `${currentBitvStep.id}_` : '';
+            const fileName = `bitv-note-${stepPrefix}${timestamp}.txt`;
 
             // Create download link
-            const blob = new Blob([note], { type: 'text/plain;charset=utf-8' });
+            const blob = new Blob([outputText], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
 
             const a = document.createElement('a');
@@ -181,21 +342,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            // Save to localStorage for overview
-            const noteData = {
-                content: note,
-                timestamp: new Date().toISOString(),
-                url: contextData.url || '',
-                title: contextData.title || '',
-                elementType: contextData.elementType || '',
-                fileName: fileName
-            };
-            localStorage.setItem('note_' + Date.now(), JSON.stringify(noteData));
+            // Save to localStorage for overview with enhanced structure
+            noteData.fileName = fileName;
+            localStorage.setItem('note_' + noteData.id, JSON.stringify(noteData));
 
             // Clear draft
             clearDraft();
 
-            showNotification('Notiz wurde erfolgreich gespeichert!', 'success');
+            const successMessage = currentBitvStep
+                ? `BITV-Notiz für Prüfschritt ${currentBitvStep.id} wurde erfolgreich gespeichert!`
+                : 'Notiz wurde erfolgreich gespeichert!';
+            showNotification(successMessage, 'success');
 
             // Close window after short delay
             setTimeout(() => {
