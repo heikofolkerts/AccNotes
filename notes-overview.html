@@ -63,7 +63,11 @@
                 <div class="controls__group">
                     <button type="button" onclick="exportAllNotes()" class="btn btn--secondary">
                         <span aria-hidden="true">📦</span>
-                        Als ZIP exportieren
+                        Alle als ZIP exportieren
+                    </button>
+                    <button type="button" onclick="exportFilteredNotes()" class="btn btn--secondary">
+                        <span aria-hidden="true">🎯</span>
+                        Gefilterte exportieren
                     </button>
                     <button type="button" onclick="exportNotesAsCSV()" class="btn btn--secondary">
                         <span aria-hidden="true">📊</span>
@@ -75,11 +79,17 @@
                     </button>
                 </div>
                 <div class="controls__group">
+                    <button type="button" onclick="bulkDeleteFiltered()" class="btn btn--warning"
+                            aria-describedby="bulk-delete-help">
+                        <span aria-hidden="true">🎯🗑️</span>
+                        Gefilterte löschen
+                    </button>
                     <button type="button" onclick="clearAllNotes()" class="btn btn--danger"
                             aria-describedby="clear-help">
                         <span aria-hidden="true">🗑️</span>
                         Alle löschen
                     </button>
+                    <div id="bulk-delete-help" class="sr-only">Löscht alle Notizen, die den aktuellen Filterkriterien entsprechen</div>
                     <div id="clear-help" class="sr-only">Löscht alle gespeicherten Notizen unwiderruflich</div>
                 </div>
             </div>
@@ -144,6 +154,13 @@
                         <option value="">Alle Notizen</option>
                         <option value="bitv">Nur BITV-Tests</option>
                         <option value="general">Nur allgemeine Notizen</option>
+                    </select>
+                </div>
+
+                <div class="controls__group">
+                    <label for="website-filter" class="form-label">Website:</label>
+                    <select id="website-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                        <option value="">Alle Websites</option>
                     </select>
                 </div>
 
