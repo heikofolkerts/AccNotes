@@ -105,6 +105,48 @@ const BITV_CATALOG = {
         description: "Die visuelle Darstellung von Text und Bildern von Text hat ein Kontrastverhältnis von mindestens 4,5:1.",
         level: "AA",
         category: "wahrnehmbarkeit"
+      },
+      "1.4.4": {
+        id: "1.4.4",
+        title: "Textgröße ändern",
+        description: "Text kann ohne Hilfstechnologie auf bis zu 200% vergrößert werden, ohne dass dabei Inhalt oder Funktionalität verloren geht.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
+      },
+      "1.4.5": {
+        id: "1.4.5",
+        title: "Schriftgrafiken",
+        description: "Wenn die verwendeten Techniken die visuelle Präsentation bewerkstelligen können, wird für die Vermittlung von Informationen Text statt Schriftgrafiken verwendet.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
+      },
+      "1.4.10": {
+        id: "1.4.10",
+        title: "Umbruch der Inhalte",
+        description: "Inhalte können ohne horizontales Scrollen bei einer Breite von 320 CSS-Pixeln dargestellt werden.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
+      },
+      "1.4.11": {
+        id: "1.4.11",
+        title: "Nicht-Text Kontrast",
+        description: "Die visuelle Darstellung von grafischen Objekten und Teilen von grafischen Objekten hat ein Kontrastverhältnis von mindestens 3:1 zu angrenzenden Farben.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
+      },
+      "1.4.12": {
+        id: "1.4.12",
+        title: "Textabstand anpassbar",
+        description: "Bei Inhalten, die mit Markup-Sprachen implementiert sind, geht kein Inhalt oder keine Funktionalität verloren, wenn Textabstände angepasst werden.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
+      },
+      "1.4.13": {
+        id: "1.4.13",
+        title: "Eingeblendete Inhalte",
+        description: "Wenn das Zeigen oder Verbergen von zusätzlichen Inhalten durch Hover oder Fokus ausgelöst wird, dann gelten bestimmte Bedingungen.",
+        level: "AA",
+        category: "wahrnehmbarkeit"
       }
     }
   },
@@ -203,6 +245,34 @@ const BITV_CATALOG = {
         description: "Jede durch Tastatur bedienbare Benutzerschnittstelle hat einen Bedienmodus, bei dem der Tastaturfokus sichtbar ist.",
         level: "AA",
         category: "bedienbarkeit"
+      },
+      "2.5.1": {
+        id: "2.5.1",
+        title: "Zeigergesten",
+        description: "Alle Funktionalitäten, die Multipoint- oder pfadbasierte Gesten für die Bedienung verwenden, können auch mit einem einzigen Zeiger ohne pfadbasierte Geste bedient werden.",
+        level: "A",
+        category: "bedienbarkeit"
+      },
+      "2.5.2": {
+        id: "2.5.2",
+        title: "Zeiger-Stornierung",
+        description: "Für Funktionalitäten, die mit einem einzigen Zeiger bedient werden können, ist mindestens eine der folgenden Aussagen wahr.",
+        level: "A",
+        category: "bedienbarkeit"
+      },
+      "2.5.3": {
+        id: "2.5.3",
+        title: "Beschriftung im Namen",
+        description: "Bei Benutzerschnittstellen-Komponenten mit Beschriftungen, die Text oder Bilder von Text enthalten, beinhaltet der Name den Text, der visuell dargestellt wird.",
+        level: "A",
+        category: "bedienbarkeit"
+      },
+      "2.5.4": {
+        id: "2.5.4",
+        title: "Bewegungsaktivierung",
+        description: "Funktionalitäten, die durch Bewegung des Geräts oder durch Benutzerbewegung aktiviert werden können, können auch durch Benutzerschnittstellen-Komponenten bedient werden.",
+        level: "A",
+        category: "bedienbarkeit"
       }
     }
   },
@@ -259,6 +329,27 @@ const BITV_CATALOG = {
         description: "Wenn ein Eingabefehler automatisch erkannt wird, dann wird das fehlerhafte Element identifiziert und der Fehler wird dem Benutzer in Textform beschrieben.",
         level: "A",
         category: "verstaendlichkeit"
+      },
+      "3.3.2": {
+        id: "3.3.2",
+        title: "Beschriftungen oder Anweisungen",
+        description: "Beschriftungen oder Anweisungen werden bereitgestellt, wenn der Inhalt eine Benutzereingabe verlangt.",
+        level: "A",
+        category: "verstaendlichkeit"
+      },
+      "3.3.3": {
+        id: "3.3.3",
+        title: "Fehlervorschlag",
+        description: "Wenn ein Eingabefehler automatisch erkannt wird und Korrekturvorschläge bekannt sind, dann werden die Vorschläge dem Benutzer bereitgestellt.",
+        level: "AA",
+        category: "verstaendlichkeit"
+      },
+      "3.3.4": {
+        id: "3.3.4",
+        title: "Fehlervermeidung (rechtlich, finanziell, Daten)",
+        description: "Für Webseiten, die rechtliche Verpflichtungen oder finanzielle Transaktionen für den Benutzer zur Folge haben, ist mindestens eine der folgenden Aussagen wahr.",
+        level: "AA",
+        category: "verstaendlichkeit"
       }
     }
   },
@@ -295,28 +386,132 @@ const BITV_CATALOG = {
     title: "5. Interoperabilität mit assistiven Technologien",
     description: "Software muss mit assistiven Technologien interoperabel sein.",
     steps: {
-      "5.1.1": {
-        id: "5.1.1",
-        title: "Plattform-Accessibility-Services",
-        description: "Software verwendet die Accessibility-Services der jeweiligen Plattform.",
+      "5.1": {
+        id: "5.1",
+        title: "Assistenztechnologien (geschlossene Funktionalität)",
+        description: "Prüfung der Assistenztechnologien bei geschlossener Funktionalität.",
         level: "A",
         category: "interoperabilitaet"
       },
-      "5.1.2": {
-        id: "5.1.2",
-        title: "Keine Störung von Accessibility-Features",
-        description: "Software stört keine aktivierten Accessibility-Features der Plattform oder der assistiven Technologien.",
+      "5.2.1": {
+        id: "5.2.1",
+        title: "Plattformunterstützung von Barrierefreiheitsdiensten für Software mit einer Benutzungsschnittstelle",
+        description: "Software mit einer Benutzungsschnittstelle unterstützt die Barrierefreiheitsdienste der Plattform.",
         level: "A",
         category: "interoperabilitaet"
       },
-      "5.1.3": {
-        id: "5.1.3",
-        title: "Accessibility-Services verfügbar",
-        description: "Software stellt sicher, dass alle Accessibility-Services verfügbar sind, wenn assistive Technologien aktiv sind.",
+      "5.2.2": {
+        id: "5.2.2",
+        title: "Plattformunterstützung von Barrierefreiheitsdiensten für Assistenztechnologien",
+        description: "Plattformunterstützung für Assistenztechnologien wird bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.3": {
+        id: "5.2.3",
+        title: "Verwendung von Barrierefreiheitsdiensten",
+        description: "Software verwendet verfügbare Barrierefreiheitsdienste der Plattform.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.4": {
+        id: "5.2.4",
+        title: "Assistenztechnologie",
+        description: "Software unterstützt den Einsatz von Assistenztechnologien.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.5": {
+        id: "5.2.5",
+        title: "Objektinformationen",
+        description: "Objektinformationen werden für Assistenztechnologien bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.6": {
+        id: "5.2.6",
+        title: "Zeile, Spalte und Kopfzeilen",
+        description: "Informationen über Zeilen, Spalten und Kopfzeilen werden bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.7": {
+        id: "5.2.7",
+        title: "Werte",
+        description: "Werte von UI-Elementen werden für Assistenztechnologien zugänglich gemacht.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.8": {
+        id: "5.2.8",
+        title: "Label-Beziehungen",
+        description: "Beziehungen zwischen Labels und UI-Elementen werden bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.9": {
+        id: "5.2.9",
+        title: "Eltern-Kind-Beziehungen",
+        description: "Hierarchische Beziehungen zwischen UI-Elementen werden bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.10": {
+        id: "5.2.10",
+        title: "Text",
+        description: "Textinformationen werden für Assistenztechnologien bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.11": {
+        id: "5.2.11",
+        title: "Liste der verfügbaren Handlungen",
+        description: "Verfügbare Aktionen werden für Assistenztechnologien aufgelistet.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.12": {
+        id: "5.2.12",
+        title: "Ausführung verfügbarer Handlungen",
+        description: "Verfügbare Aktionen können durch Assistenztechnologien ausgeführt werden.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.13": {
+        id: "5.2.13",
+        title: "Verfolgung von Fokus- und Auswahlattributen",
+        description: "Fokus- und Auswahlzustände werden für Assistenztechnologien bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.14": {
+        id: "5.2.14",
+        title: "Änderung der Fokus- und Auswahlattribute",
+        description: "Änderungen von Fokus- und Auswahlzuständen werden ermöglicht.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.15": {
+        id: "5.2.15",
+        title: "Änderungsbenachrichtigung",
+        description: "Änderungen werden an Assistenztechnologien kommuniziert.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.16": {
+        id: "5.2.16",
+        title: "Änderungen von Zuständen und Eigenschaften",
+        description: "Änderungen von UI-Element-Zuständen und -Eigenschaften werden bereitgestellt.",
+        level: "A",
+        category: "interoperabilitaet"
+      },
+      "5.2.17": {
+        id: "5.2.17",
+        title: "Änderungen von Werten und Text",
+        description: "Änderungen von Werten und Textinhalten werden an Assistenztechnologien übermittelt.",
         level: "A",
         category: "interoperabilitaet"
       }
-      // Weitere 14 Prüfschritte der Interoperabilität...
     }
   }
 };
