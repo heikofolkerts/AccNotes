@@ -5,6 +5,76 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2025-01-13
+
+### ✅ **Phase 1 ABGESCHLOSSEN: Automatische Barriere-Erkennung**
+
+### 🚀 Neue Features
+
+#### Automatische Barriere-Erkennung Engine
+- **5 Erkennungsalgorithmen**: Alt-Text, Button-Labels, Formular-Labels, Kontrast, Überschriften-Struktur
+- **Laienverständliche Beschreibungen**: "Button-Beschriftung fehlt" statt technischer BITV-IDs
+- **BITV-Referenzen**: Automatische Zuordnung zu korrekten BITV-Prüfschritten
+- **Schweregrad-Bewertung**: Critical, Major, Minor, Cosmetic
+- **Performance-optimiert**: <500ms Zielzeit für Element-Analyse
+
+#### Element-Informationen + Barriere-Integration
+- **Unified Data Flow**: Element-Informationen und erkannte Probleme in einer Notiz
+- **Storage-basierte Datenübertragung**: Robuste Alternative zu Message Passing
+- **Cross-Browser Kompatibilität**: Chrome und Firefox Storage-APIs
+- **Auto-Population**: Notizen werden automatisch mit erkannten Problemen vorbefüllt
+
+#### Erkennungs-Algorithmen im Detail
+- **Alt-Text-Erkennung**: Bilder ohne `alt`-Attribut oder leeren Alt-Text
+- **Button-Label-Erkennung**: Icon-Buttons ohne aria-label oder sichtbaren Text
+- **Formular-Label-Erkennung**: Input-Felder ohne Label-Zuordnung
+- **Kontrast-Checker**: WCAG-konforme Kontrastberechnung (4.5:1 minimum)
+- **Überschriften-Struktur**: Validierung der H1-H6 Hierarchie
+
+### 🔧 Technische Verbesserungen
+
+#### Robust Message Passing & Storage
+- **Hybride Kommunikation**: Content Script ↔ Background Script ↔ Storage
+- **Error-Resiliente Storage-APIs**: Callback- und Promise-basierte Zugriffe
+- **Automatic Cleanup**: Temporäre Storage-Daten werden automatisch bereinigt
+- **Cross-Browser Storage**: Einheitliche API für Chrome und Firefox
+
+#### Performance-Optimierungen
+- **Async Element Analysis**: Nicht-blockierende Barriere-Erkennung
+- **DOM-Referenz-Bereinigung**: Serialisierbare Datenstrukturen für Storage
+- **Optimized Logging**: Reduzierte Debug-Ausgaben für Production-Ready Code
+
+### 🐛 Bugfixes
+
+#### Storage & Message Passing Issues
+- **DataCloneError behoben**: DOM-Elemente werden vor Storage-Speicherung entfernt
+- **Message Passing Fallbacks**: Storage-basierte Alternative bei Message-Failures
+- **Element-Info Übertragung repariert**: Korrekte Weiterleitung von Content → Background → Note
+
+#### Cross-Browser Compatibility
+- **Storage API Konsistenz**: Einheitliche Promise/Callback-Behandlung
+- **Error Handling**: Robuste Fehlerbehandlung bei Storage-Zugriff
+- **Performance Timing**: Optimierte Wartezeiten für Script-Koordination
+
+### 📋 Product Backlog Updates
+
+#### Neue High-Priority Story
+- **Screen-Reader-optimierte Element-Erkennung** (Story #7): 13 Story Points
+- **Problem**: Screen-Reader Browse-Mode erkennt nur Body-Element statt fokussiertes Element
+- **Zielgruppe**: Menschen mit Sehbehinderungen (Hauptzielgruppe)
+- **Nächste Sprint-Priorität**: Accessibility-kritische Verbesserung
+
+### 🧹 Code-Aufräumung
+- **50% weniger Debug-Logs**: Production-ready Console-Output
+- **Vereinfachte Funktionen**: Streamlined Code ohne überkomplizierte Logik
+- **Bessere Wartbarkeit**: Klarere, fokussierte Funktionsaufteilung
+- **Error-Only Logging**: Nur kritische Fehler werden geloggt
+
+### 🔍 Bekannte Einschränkungen
+- **Screen-Reader-Kompatibilität**: Element-Erkennung funktioniert noch nicht optimal mit Screen-Readern im Browse-Mode (wird in v0.5.0 adressiert)
+- **Kontrast-Erkennung**: Funktioniert nur bei direkt berechneten CSS-Farben
+- **Komplexe ARIA-Strukturen**: Erkennung beschränkt auf Standard-HTML-Patterns
+
 ## [0.4.0] - 2024-12-24
 
 ### ✅ **Product Backlog Item #3 ABGESCHLOSSEN: Erweiterte BITV-Notizen-Verwaltung**

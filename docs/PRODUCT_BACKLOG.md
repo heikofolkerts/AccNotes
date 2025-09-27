@@ -169,6 +169,51 @@
 
 ---
 
+#### 7. Screen-Reader-optimierte Element-Erkennung *(Story Points: 13)*
+**Status**: 📋 Ready for Development
+**Priorität**: HIGH (Accessibility-kritisch)
+
+**Problem Statement**:
+Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kontextmenü nicht das vom Screen-Reader aktuell fokussierte Element, sondern fällt auf den gesamten Body-Container zurück. Dies macht die Extension für die Hauptzielgruppe (Menschen mit Behinderungen) schwer nutzbar.
+
+**User Stories**:
+- Als **Maria (Screen-Reader-Nutzerin)** möchte ich Barrieren melden können, ohne den Screen-Reader-Modus wechseln zu müssen
+- Als **Thomas (Aktivist mit Sehbehinderung)** möchte ich das Element dokumentieren, das mein Screen-Reader gerade vorliest
+- Als **BITV-Tester mit Behinderung** möchte ich die Extension genauso effizient nutzen können wie sehende Kollegen
+
+**Technical Requirements**:
+- [ ] Erkennung des aktuell vom Screen-Reader fokussierten Elements
+- [ ] Alternative Element-Identifikation über Aria-Navigation und DOM-Position
+- [ ] Keyboard-basierte Element-Auswahl ohne Maus-Interaktion
+- [ ] Integration mit gängigen Screen-Reader-APIs (NVDA, JAWS, VoiceOver)
+- [ ] Fallback-Mechanismen für verschiedene Assistive Technologies
+
+**Tasks**:
+- [ ] Screen-Reader-Fokus-Tracking implementieren
+- [ ] Alternative zu Rechtsklick-basierter Element-Auswahl entwickeln
+- [ ] Keyboard-Shortcuts für direkte Element-Erfassung (z.B. Ctrl+Shift+E)
+- [ ] Screen-Reader-spezifische Element-Identifikation über Aria-Eigenschaften
+- [ ] Testing mit NVDA, JAWS und VoiceOver
+- [ ] Dokumentation für Screen-Reader-Nutzer erstellen
+
+**Acceptance Criteria**:
+- [ ] Screen-Reader-Nutzer können Elemente erfassen, ohne Maus zu verwenden
+- [ ] Element-Erkennung funktioniert in allen gängigen Screen-Reader-Modi
+- [ ] Keyboard-Shortcuts sind mit Screen-Reader-Shortcuts kompatibel
+- [ ] Performance: <500ms Element-Identifikation auch bei komplexen DOM-Strukturen
+- [ ] Umfassende Tests mit echten Screen-Reader-Nutzern
+- [ ] Dokumentierte Workflows für verschiedene Assistive Technologies
+
+**Testing-Anforderungen**:
+- [ ] Tests mit NVDA (Windows)
+- [ ] Tests mit JAWS (Windows)
+- [ ] Tests mit VoiceOver (macOS)
+- [ ] Tests mit Orca (Linux)
+- [ ] User Testing mit Screen-Reader-Nutzern aus der Community
+- [ ] Performance-Tests bei verschiedenen Website-Komplexitäten
+
+---
+
 ## 🔧 **Kontextmenü-Konzept für verschiedene Nutzergruppen**
 
 ### **Intelligentes Kontextmenü (abhängig von erkannten Problemen)**
@@ -425,5 +470,12 @@ Rechtsklick auf Element ohne erkannte Probleme:
 
 ---
 
-*Letzte Aktualisierung: Dezember 2024*
-*Fokus: Deutsche BITV-Softwaretest-Standards*
+*Letzte Aktualisierung: Januar 2025*
+*Fokus: Deutsche BITV-Softwaretest-Standards & Screen-Reader-Accessibility*
+
+## 🔄 **Nächste Sprint-Prioritäten**
+
+**Nach Phase 1 (Barriere-Erkennung abgeschlossen):**
+1. **Screen-Reader-optimierte Element-Erkennung** (Story #7) - ACCESSIBILITY-KRITISCH
+2. **Vereinfachter Melde-Workflow** (Story #5) - Bürgermeldungen
+3. **Bürgerfreundliche BITV-Referenzen** (Story #6) - Usability

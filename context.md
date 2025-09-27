@@ -1,8 +1,8 @@
 # AccNotes - Code-Basis Kontext
 
-*Generiert am: 2024-12-24*
-*Version: 0.4.0*
-*Status: Product Backlog Item #3 ABGESCHLOSSEN*
+*Generiert am: 2025-01-13*
+*Version: 0.4.1*
+*Status: Phase 1 ABGESCHLOSSEN - Automatische Barriere-Erkennung*
 
 ## 🏗️ Projekt-Architektur
 

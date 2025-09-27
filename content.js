@@ -29,15 +29,9 @@ document.addEventListener('contextmenu', function(event) {
     // Sammle Element-Informationen sofort für direkte Verwendung
     try {
         const elementInfo = getElementAccessibilityInfo(event.target);
-        console.log('✅ Element info collected:', {
-            tagName: elementInfo.tagName,
-            elementType: elementInfo.elementType,
-            detectedProblemsCount: elementInfo.detectedProblems?.length || 0
-        });
 
         // Speichere für direkte Verwendung (ohne Background Script)
         window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
-        console.log('💾 Element info stored in window object for direct access');
 
         // Zusätzlich auch im Storage speichern für Background Script
         const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
@@ -46,31 +40,10 @@ document.addEventListener('contextmenu', function(event) {
             'temp_timestamp': Date.now()
         };
 
-        console.log('💾 Content Script: About to store data:', {
-            hasElementInfo: !!cleanElementInfo,
-            tagName: cleanElementInfo?.tagName,
-            elementType: cleanElementInfo?.elementType,
-            detectedProblemsCount: cleanElementInfo?.detectedProblems?.length || 0
-        });
-
-        // Verwende Callback-basierte Storage API für bessere Kompatibilität
+        // Speichere Element-Informationen im Storage
         browserAPI.storage.local.set(storageData, () => {
             if (browserAPI.runtime.lastError) {
-                console.error('❌ Content Script: Failed to store element info:', browserAPI.runtime.lastError);
-            } else {
-                console.log('✅ Content Script: Element info successfully stored in browser storage');
-
-                // Verifikation: Lese die Daten sofort zurück
-                browserAPI.storage.local.get(['temp_elementInfo', 'temp_timestamp'], (result) => {
-                    if (browserAPI.runtime.lastError) {
-                        console.error('❌ Content Script: Verification read failed:', browserAPI.runtime.lastError);
-                    } else {
-                        console.log('✅ Content Script: Storage verification - data successfully read back:', {
-                            hasData: !!result.temp_elementInfo,
-                            timestamp: result.temp_timestamp
-                        });
-                    }
-                });
+                console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
             }
         });
     } catch (error) {
@@ -191,15 +164,11 @@ function cleanElementInfoForStorage(elementInfo) {
 
 // Funktion zur Extraktion umfassender Element-Informationen
 function getElementAccessibilityInfo(element) {
-    console.log('📋 getElementAccessibilityInfo called with element:', element);
-
     if (!element) {
-        console.warn('❌ No element provided to getElementAccessibilityInfo');
         return { tagName: 'UNKNOWN', elementType: 'Unbekannt', detectedProblems: [] };
     }
 
     const elementType = getElementType(element);
-    console.log('🔍 Element type calculated:', elementType, 'for', element.tagName);
 
     const info = {
         // Basis-Informationen (KRITISCH - müssen immer vorhanden sein)
@@ -262,11 +231,8 @@ function getElementAccessibilityInfo(element) {
 
             if (analysisResult && analysisResult.hasProblems && analysisResult.problems && analysisResult.problems.length > 0) {
                 info.detectedProblems = analysisResult.problems;
-                console.log('✅ BarrierDetector found', analysisResult.problems.length, 'problem(s):',
-                    analysisResult.problems.map(p => p.title).join(', '));
             } else {
-                console.log('ℹ️ No barriers detected for this element');
-                info.detectedProblems = []; // Explizit leeres Array setzen
+                info.detectedProblems = [];
             }
         } catch (error) {
             console.error('❌ Error during barrier detection:', error);
@@ -277,13 +243,6 @@ function getElementAccessibilityInfo(element) {
         info.detectedProblems = []; // Nicht verfügbar: leeres Array
     }
 
-    console.log('📤 Final element info being sent:', {
-        tagName: info.tagName,
-        elementType: info.elementType,
-        text: info.text,
-        detectedProblemsCount: info.detectedProblems.length,
-        barrierDetectorAvailable: typeof window.BarrierDetector !== 'undefined'
-    });
 
     return info;
 }
@@ -471,45 +430,24 @@ document.addEventListener('keydown', function(event) {
 
 // Alternative: Direktes Öffnen der Notiz-Seite
 function createNoteFromCurrentElement() {
-    console.log('🚀 Content Script: Creating note from current element...');
-
-    if (!lastClickedElement) {
-        console.warn('❌ No element selected for note creation');
-        return;
-    }
-
-    if (!window.lastElementInfo) {
-        console.warn('❌ No element info available for note creation');
+    if (!lastClickedElement || !window.lastElementInfo) {
+        console.warn('❌ No element or element info available for note creation');
         return;
     }
 
     try {
-        // Verwende bereits gesammelte Element-Informationen
-        const elementInfo = window.lastElementInfo;
-
-        // Sammle Seiten-Informationen
+        // Sammle Kontext-Informationen
         const contextData = {
             url: window.location.href,
             title: document.title,
             selectedText: window.getSelection().toString(),
-            // Element-Informationen aus gespeicherten Daten
-            ...elementInfo
+            ...window.lastElementInfo
         };
 
-        console.log('🚀 Content Script: Opening note page with data:', {
-            tagName: contextData.tagName,
-            elementType: contextData.elementType,
-            detectedProblemsCount: contextData.detectedProblems?.length || 0,
-            url: contextData.url
-        });
-
-        // Erstelle URL-Parameter mit bereinigten Daten
+        // Erstelle URL-Parameter und öffne Notiz-Seite
         const params = new URLSearchParams();
         params.set('contextData', JSON.stringify(contextData));
-
-        // Öffne Notiz-Seite
         const notePageUrl = browserAPI.runtime.getURL('note.html') + '?' + params.toString();
-        console.log('🔗 Opening note page URL:', notePageUrl);
         window.open(notePageUrl, '_blank');
 
     } catch (error) {
@@ -519,12 +457,9 @@ function createNoteFromCurrentElement() {
 
 // Höre auf Nachrichten vom Background Script (Cross-Browser kompatibel)
 browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log('📨 Content Script received message:', request.action);
-
     if (request.action === 'getElementInfo') {
         try {
             const elementInfo = getElementAccessibilityInfo(lastClickedElement);
-            console.log('📤 Content Script sending element info with', elementInfo.detectedProblems?.length || 0, 'detected problems');
             sendResponse(elementInfo);
         } catch (error) {
             console.error('❌ Error in getElementInfo:', error);
@@ -535,7 +470,7 @@ browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse)
                 error: error.message
             });
         }
-        return true; // Wichtig für asynchrone Antworten
+        return true;
     }
 
     if (request.action === 'createNote') {
@@ -544,39 +479,21 @@ browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse)
         return true;
     }
 
-    if (request.action === 'logFromBackground') {
-        // Zeige Background Script Logs in der Content Script Konsole
-        console.log(request.message, request.data || '');
-        return false; // Keine Antwort nötig
-    }
-
     if (request.action === 'prepareElementInfo') {
-        console.log('📨 Content Script: Background script requests element info preparation');
-
-        // Falls es ein zuletzt geklicktes Element gibt, aktualisiere die Storage-Daten
         if (lastClickedElement && window.lastElementInfo) {
-            try {
-                browserAPI.storage.local.set({
-                    'temp_elementInfo': window.lastElementInfo,
-                    'temp_timestamp': Date.now()
-                }).then(() => {
-                    console.log('✅ Element info refreshed in storage for background script');
-                    sendResponse({ success: true, hasElementInfo: true });
-                }).catch(error => {
-                    console.error('❌ Failed to refresh element info in storage:', error);
-                    sendResponse({ success: false, error: error.message });
-                });
-            } catch (error) {
-                console.error('❌ Error preparing element info:', error);
+            browserAPI.storage.local.set({
+                'temp_elementInfo': window.lastElementInfo,
+                'temp_timestamp': Date.now()
+            }).then(() => {
+                sendResponse({ success: true, hasElementInfo: true });
+            }).catch(error => {
                 sendResponse({ success: false, error: error.message });
-            }
+            });
         } else {
-            console.warn('⚠️ No element info available to prepare');
             sendResponse({ success: false, hasElementInfo: false });
         }
         return true;
     }
 
-    console.warn('❓ Content Script: Unknown action:', request.action);
     return false;
 });

@@ -5,17 +5,8 @@ const contextDataStr = urlParams.get('contextData');
 let contextData = {};
 try {
     contextData = JSON.parse(contextDataStr) || {};
-    console.log('📥 note.js: Received contextData:', {
-        hasTagName: !!contextData.tagName,
-        hasElementType: !!contextData.elementType,
-        hasText: !!contextData.text,
-        hasDetectedProblems: !!contextData.detectedProblems,
-        detectedProblemsCount: contextData.detectedProblems?.length || 0,
-        rawData: contextData
-    });
 } catch (e) {
-    console.error('❌ note.js: Fehler beim Parsen der Kontextdaten:', e);
-    console.log('📥 note.js: Raw contextDataStr:', contextDataStr);
+    console.error('Fehler beim Parsen der Kontextdaten:', e);
 }
 
 // Funktion zum sicheren Setzen von Werten
