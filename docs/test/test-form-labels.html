@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Formularfeld-Label-Probleme</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .test-section { border: 2px solid #ccc; padding: 20px; margin: 20px 0; }
+        .problem { background-color: #ffebee; }
+        .good { background-color: #e8f5e8; }
+        h2 { color: #d32f2f; }
+        .good h2 { color: #2e7d32; }
+        .form-group { margin: 15px 0; }
+        input, select, textarea { padding: 8px; margin: 5px; border: 1px solid #ccc; }
+        label { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <h1>📝 Formularfeld-Label Test-Seite</h1>
+    <p>Diese Seite testet die automatische Erkennung von Formularfeldern ohne Labels.</p>
+
+    <div class="test-section problem">
+        <h2>❌ PROBLEME - Diese Felder sollten erkannt werden:</h2>
+
+        <form>
+            <h3>1. Input-Felder ohne Label</h3>
+            <div class="form-group">
+                Benutzername: <input type="text" placeholder="Benutzername eingeben">
+            </div>
+            <div class="form-group">
+                <input type="email" placeholder="E-Mail-Adresse">
+            </div>
+            <div class="form-group">
+                <input type="password">
+            </div>
+
+            <h3>2. Select ohne Label</h3>
+            <div class="form-group">
+                Land auswählen:
+                <select>
+                    <option>Deutschland</option>
+                    <option>Österreich</option>
+                    <option>Schweiz</option>
+                </select>
+            </div>
+
+            <h3>3. Textarea ohne Label</h3>
+            <div class="form-group">
+                <textarea rows="3" placeholder="Kommentar eingeben..."></textarea>
+            </div>
+
+            <h3>4. Checkbox ohne Label</h3>
+            <div class="form-group">
+                <input type="checkbox"> Ich stimme den Bedingungen zu
+            </div>
+
+            <h3>5. Radio-Buttons ohne Label</h3>
+            <div class="form-group">
+                <input type="radio" name="gender" value="m"> Männlich
+                <input type="radio" name="gender" value="f"> Weiblich
+                <input type="radio" name="gender" value="d"> Divers
+            </div>
+        </form>
+    </div>
+
+    <div class="test-section good">
+        <h2>✅ KORREKT - Diese sollten NICHT als Problem erkannt werden:</h2>
+
+        <form>
+            <h3>6. Input mit korrektem Label (for-Attribut)</h3>
+            <div class="form-group">
+                <label for="username">Benutzername:</label>
+                <input type="text" id="username">
+            </div>
+
+            <h3>7. Input innerhalb Label-Tag</h3>
+            <div class="form-group">
+                <label>
+                    E-Mail-Adresse:
+                    <input type="email">
+                </label>
+            </div>
+
+            <h3>8. Input mit aria-label</h3>
+            <div class="form-group">
+                <input type="search" aria-label="Webseite durchsuchen" placeholder="Suchen...">
+            </div>
+
+            <h3>9. Input mit aria-labelledby</h3>
+            <div class="form-group">
+                <span id="pwd-label">Passwort:</span>
+                <input type="password" aria-labelledby="pwd-label">
+            </div>
+
+            <h3>10. Select mit Label</h3>
+            <div class="form-group">
+                <label for="country">Land:</label>
+                <select id="country">
+                    <option>Deutschland</option>
+                    <option>Österreich</option>
+                </select>
+            </div>
+
+            <h3>11. Textarea mit Label</h3>
+            <div class="form-group">
+                <label for="comment">Kommentar:</label>
+                <textarea id="comment" rows="3"></textarea>
+            </div>
+
+            <h3>12. Checkbox mit Label</h3>
+            <div class="form-group">
+                <input type="checkbox" id="terms">
+                <label for="terms">Ich stimme den AGB zu</label>
+            </div>
+
+            <h3>13. Radio-Buttons mit Labels</h3>
+            <div class="form-group">
+                <input type="radio" name="gender2" value="m" id="male">
+                <label for="male">Männlich</label>
+                <input type="radio" name="gender2" value="f" id="female">
+                <label for="female">Weiblich</label>
+            </div>
+        </form>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5;">
+        <h3>🧪 Test-Anleitung:</h3>
+        <ol>
+            <li>Rechtsklick auf die Formularfelder im <strong>PROBLEME</strong>-Bereich</li>
+            <li>Wähle "Note zu diesem Element hinzufügen"</li>
+            <li>Prüfe, ob automatisch <strong>"Formularfeld ohne Label"</strong> oder ähnliche Probleme erkannt werden</li>
+            <li>Teste auch die Felder im <strong>KORREKT</strong>-Bereich - hier sollten KEINE Label-Probleme erkannt werden</li>
+        </ol>
+        <p><strong>Erwartete BITV-Referenz:</strong> BITV 3.3.2 - Beschriftungen oder Anweisungen</p>
+    </div>
+</body>
+</html>

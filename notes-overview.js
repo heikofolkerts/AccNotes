@@ -17,7 +17,39 @@ document.addEventListener('DOMContentLoaded', function() {
     loadNotes();
 });
 
-function loadNotes() {
+async function loadNotes() {
+    allNotes = [];
+
+    try {
+        // Erste Migration von localStorage, falls vorhanden
+        if (typeof StorageHelper !== 'undefined') {
+            await StorageHelper.migrateFromLocalStorage();
+
+            // Lade alle Notizen aus chrome.storage
+            allNotes = await StorageHelper.loadAllNotes();
+        } else {
+            // Fallback zu localStorage (Development/Fallback)
+            console.warn('StorageHelper nicht verfügbar, verwende localStorage als Fallback');
+            loadNotesFromLocalStorage();
+        }
+
+        console.log(`${allNotes.length} Notizen geladen`);
+
+        // Update website filter after loading notes
+        initializeWebsiteFilter();
+        updateStats();
+        updateStorageStats();
+        displayNotes();
+    } catch (error) {
+        console.error('Fehler beim Laden der Notizen:', error);
+
+        // Fallback zu localStorage bei Fehlern
+        loadNotesFromLocalStorage();
+    }
+}
+
+// Fallback-Funktion für localStorage (Backward-Kompatibilität)
+function loadNotesFromLocalStorage() {
     allNotes = [];
 
     // Durchlaufe alle localStorage Items
@@ -47,7 +79,7 @@ function loadNotes() {
         }
     }
 
-    // Update website filter after loading notes
+    // Update UI
     initializeWebsiteFilter();
     updateStats();
     displayNotes();
@@ -319,10 +351,19 @@ function loadMoreNotes() {
     displayNotes();
 }
 
-function deleteNote(noteId) {
+async function deleteNote(noteId) {
     if (confirm('Möchten Sie diese Notiz wirklich löschen?')) {
-        localStorage.removeItem(noteId);
-        loadNotes();
+        try {
+            if (typeof StorageHelper !== 'undefined') {
+                await StorageHelper.deleteNote(noteId);
+            } else {
+                localStorage.removeItem(noteId);
+            }
+            loadNotes();
+        } catch (error) {
+            console.error('Fehler beim Löschen der Notiz:', error);
+            alert('Fehler beim Löschen der Notiz. Bitte versuchen Sie es erneut.');
+        }
     }
 }
 
@@ -427,20 +468,29 @@ function exportNotesAsCSV() {
     URL.revokeObjectURL(url);
 }
 
-function clearAllNotes() {
+async function clearAllNotes() {
     if (confirm('Möchten Sie wirklich ALLE Notizen löschen? Diese Aktion kann nicht rückgängig gemacht werden!')) {
-        // Lösche alle note_* Einträge
-        const keysToDelete = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('note_')) {
-                keysToDelete.push(key);
+        try {
+            if (typeof StorageHelper !== 'undefined') {
+                await StorageHelper.clearAllNotes();
+            } else {
+                // Fallback: localStorage
+                const keysToDelete = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && key.startsWith('note_')) {
+                        keysToDelete.push(key);
+                    }
+                }
+                keysToDelete.forEach(key => localStorage.removeItem(key));
             }
-        }
 
-        keysToDelete.forEach(key => localStorage.removeItem(key));
-        loadNotes();
-        alert('Alle Notizen wurden gelöscht.');
+            loadNotes();
+            alert('Alle Notizen wurden gelöscht.');
+        } catch (error) {
+            console.error('Fehler beim Löschen aller Notizen:', error);
+            alert('Fehler beim Löschen der Notizen. Bitte versuchen Sie es erneut.');
+        }
     }
 }
 
@@ -651,6 +701,35 @@ function updateBitvDashboard() {
     container.innerHTML = dashboardHTML;
 }
 
+async function updateStorageStats() {
+    if (typeof StorageHelper === 'undefined') {
+        document.getElementById('storage-stats').style.display = 'none';
+        return;
+    }
+
+    try {
+        const stats = await StorageHelper.getStorageStats();
+        if (stats) {
+            document.getElementById('storage-stats').style.display = 'block';
+            document.getElementById('storage-usage').textContent =
+                `${stats.totalSizeKB} KB von ${stats.maxSizeKB} KB (${stats.usagePercent}%)`;
+
+            const statusElement = document.getElementById('storage-status');
+            if (stats.usagePercent > 80) {
+                statusElement.textContent = '⚠️ Speicher fast voll';
+                statusElement.style.color = 'var(--error, #dc2626)';
+            } else {
+                const browserInfo = StorageHelper.browserInfo || 'Browser Storage';
+                statusElement.textContent = `✅ ${browserInfo}`;
+                statusElement.style.color = 'var(--success, #059669)';
+            }
+        }
+    } catch (error) {
+        console.error('Fehler beim Abrufen der Storage-Statistiken:', error);
+        document.getElementById('storage-stats').style.display = 'none';
+    }
+}
+
 function exportBitvReport() {
     // Export filtered notes instead of all BITV notes
     const filteredNotes = getFilteredNotes(getSortedNotes());
@@ -817,7 +896,7 @@ function getActiveFilters() {
     return filters;
 }
 
-function bulkDeleteFiltered() {
+async function bulkDeleteFiltered() {
     const filteredNotes = getFilteredNotes(getSortedNotes());
 
     if (filteredNotes.length === 0) {
@@ -835,10 +914,22 @@ function bulkDeleteFiltered() {
     message += 'Diese Aktion kann nicht rückgängig gemacht werden!';
 
     if (confirm(message)) {
-        filteredNotes.forEach(note => {
-            localStorage.removeItem(note.id);
-        });
-        loadNotes();
-        alert(`${filteredNotes.length} Notizen wurden gelöscht.`);
+        try {
+            if (typeof StorageHelper !== 'undefined') {
+                // Parallel löschen für bessere Performance
+                await Promise.all(filteredNotes.map(note => StorageHelper.deleteNote(note.id)));
+            } else {
+                // Fallback: localStorage
+                filteredNotes.forEach(note => {
+                    localStorage.removeItem(note.id);
+                });
+            }
+
+            loadNotes();
+            alert(`${filteredNotes.length} Notizen wurden gelöscht.`);
+        } catch (error) {
+            console.error('Fehler beim Bulk-Löschen:', error);
+            alert('Fehler beim Löschen einiger Notizen. Bitte versuchen Sie es erneut.');
+        }
     }
 }

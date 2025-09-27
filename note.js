@@ -5,8 +5,17 @@ const contextDataStr = urlParams.get('contextData');
 let contextData = {};
 try {
     contextData = JSON.parse(contextDataStr) || {};
+    console.log('📥 note.js: Received contextData:', {
+        hasTagName: !!contextData.tagName,
+        hasElementType: !!contextData.elementType,
+        hasText: !!contextData.text,
+        hasDetectedProblems: !!contextData.detectedProblems,
+        detectedProblemsCount: contextData.detectedProblems?.length || 0,
+        rawData: contextData
+    });
 } catch (e) {
-    console.error('Fehler beim Parsen der Kontextdaten:', e);
+    console.error('❌ note.js: Fehler beim Parsen der Kontextdaten:', e);
+    console.log('📥 note.js: Raw contextDataStr:', contextDataStr);
 }
 
 // Funktion zum sicheren Setzen von Werten
@@ -98,10 +107,35 @@ if (contextData.selectedText) {
     prefillText += `Ausgewählter Text: "${contextData.selectedText}"\n`;
 }
 
+// Automatisch erkannte Probleme hinzufügen
+if (contextData.detectedProblems && contextData.detectedProblems.length > 0) {
+    prefillText += `\n=== AUTOMATISCH ERKANNTE PROBLEME ===\n`;
+    contextData.detectedProblems.forEach((problem, index) => {
+        prefillText += `${index + 1}. ${problem.title}\n`;
+        prefillText += `   Problem: ${problem.description}\n`;
+        if (problem.solution) {
+            prefillText += `   Empfehlung: ${problem.solution}\n`;
+        }
+        if (problem.bitvReference) {
+            prefillText += `   BITV-Bezug: ${problem.bitvReference}\n`;
+        }
+        prefillText += `   Schweregrad: ${problem.severity}\n\n`;
+    });
+}
+
 prefillText += `\n=== BARRIEREFREIHEITS-NOTIZ ===\n`;
-prefillText += `Problem/Beobachtung:\n\n`;
-prefillText += `Empfehlung:\n\n`;
-prefillText += `WCAG-Kriterium:\n\n`;
+
+// Bei erkannten Problemen automatisch das erste Problem als Basis nehmen
+if (contextData.detectedProblems && contextData.detectedProblems.length > 0) {
+    const firstProblem = contextData.detectedProblems[0];
+    prefillText += `Problem/Beobachtung:\n${firstProblem.description}\n\n`;
+    prefillText += `Empfehlung:\n${firstProblem.solution || 'Siehe automatisch erkanntes Problem oben'}\n\n`;
+    prefillText += `BITV-Kriterium:\n${firstProblem.bitvReference || 'Siehe automatisch erkanntes Problem oben'}\n\n`;
+} else {
+    prefillText += `Problem/Beobachtung:\n\n`;
+    prefillText += `Empfehlung:\n\n`;
+    prefillText += `WCAG-Kriterium:\n\n`;
+}
 
 noteContent.value = prefillText;
 noteContent.focus();
@@ -235,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function saveNote() {
+    async function saveNote() {
         const title = noteTitle.value.trim();
         const note = noteContent.value.trim();
         const recommendation = document.getElementById('recommendation').value.trim();
@@ -342,9 +376,21 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            // Save to localStorage for overview with enhanced structure
+            // Save to persistent storage for overview with enhanced structure
             noteData.fileName = fileName;
-            localStorage.setItem('note_' + noteData.id, JSON.stringify(noteData));
+
+            try {
+                if (typeof StorageHelper !== 'undefined') {
+                    await StorageHelper.saveNote('note_' + noteData.id, noteData);
+                } else {
+                    // Fallback: localStorage
+                    localStorage.setItem('note_' + noteData.id, JSON.stringify(noteData));
+                }
+            } catch (error) {
+                console.error('Fehler beim Speichern der Notiz:', error);
+                alert('Fehler beim Speichern der Notiz. Bitte versuchen Sie es erneut.');
+                return;
+            }
 
             // Clear draft
             clearDraft();

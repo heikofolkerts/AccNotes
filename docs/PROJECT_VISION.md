@@ -1,8 +1,8 @@
-# AccNotes - Projektvision 2.0 🎯
+# AccNotes - Projektvision 3.0 🎯
 
 ## Mission Statement
 
-**AccNotes entwickelt sich von einer allgemeinen Accessibility-Dokumentationsextension zu einem spezialisierten BITV-Softwaretest-Werkzeug, das Accessibility-Experten dabei unterstützt, strukturierte und normkonforme Prüfungen durchzuführen.**
+**AccNotes unterstützt primär Privatpersonen dabei, BITV-Verstöße schnell zu erfassen und zu melden, bietet aber auch erweiterte Funktionen für professionelle BITV-Audits. Die Extension automatisiert die Erkennung typischer Barrieren und skaliert von einfachen Bürgermeldungen bis hin zu strukturierten Compliance-Prüfungen.**
 
 ## 📋 Aktuelle Kernfunktionen (Version 2.0)
 
@@ -17,37 +17,61 @@
 
 ## 👥 Zielgruppen & User Personas
 
-### Primäre Persona: "Sarah - BITV-Prüferin & UX Accessibility Specialist"
+### 🥇 **PRIMÄRE ZIELGRUPPE: Privatpersonen & Bürgermeldungen**
+
+#### Hauptpersona: "Maria - Bürgerin mit Behinderung"
+- 🎯 **Rolle**: Möchte Barrieren auf behördlichen Websites melden
+- 💼 **Kontext**: Nutzt regelmäßig Online-Services (Terminbuchung, Anträge, Formulare)
+- 🔄 **Bedürfnisse**:
+  - Schnelle Dokumentation von Problemen beim Formular ausfüllen
+  - Einfache, verständliche Meldungen ohne Fachwissen
+  - Nachverfolgung von gemeldeten Problemen und deren Behebung
+- 📊 **Ziele**: Barrierefreie Nutzung öffentlicher Online-Services
+- ⚡ **Typische Probleme**: Fehlende Alt-Texte, unlabeled Formularfelder, schlechte Kontraste
+
+#### "Thomas - Selbstadvokat & Aktivist"
+- 🔧 **Rolle**: Sensibilisiert für Barrierefreiheit und dokumentiert systematisch Verstöße
+- ⚡ **Bedürfnisse**:
+  - Strukturierte Sammlung von BITV-Verstößen für Beschwerden
+  - Export von Dokumentationen für Behörden und Organisationen
+  - Verständliche BITV-Referenzen für fundierte Meldungen
+- 🎯 **Fokus**: Rechtlich verwertbare Dokumentation, Meldeverfahren
+
+#### "Petra - Ehrenamtliche Beraterin"
+- 🧪 **Rolle**: Unterstützt Menschen bei der Nutzung digitaler Services
+- 📝 **Bedürfnisse**: Einfache Tools zur Dokumentation häufiger Barrieren
+- 🎯 **Fokus**: Schnelle Problemerfassung ohne technische Komplexität
+
+### 🥈 **SEKUNDÄRE ZIELGRUPPE: Professionelle BITV-Tester**
+
+#### "Sarah - BITV-Prüferin & UX Accessibility Specialist"
 - 🎯 **Rolle**: Führt professionelle BITV-Softwaretests und WCAG-Audits durch
 - 💼 **Kontext**: Arbeitet in Beratungsagenturen mit mehreren Compliance-Projekten
 - 🔄 **Bedürfnisse**:
   - Systematische Prüfung anhand definierter BITV-Prüfschritte
   - Strukturierte, wiederverwendbare BITV-konforme Reports
   - Nachvollziehbare Zuordnung zu Prüfschritten
-- 📊 **Ziele**: Effiziente und normkonforme Dokumentation, Projektübersichten
+- 📊 **Ziele**: Effiziente und normkonforme Dokumentation
 
-### Sekundäre Persona: "Max - Frontend-Entwickler"
+#### "Max - Frontend-Entwickler"
 - 🔧 **Rolle**: Implementiert Accessibility-Fixes basierend auf BITV-Anforderungen
-- ⚡ **Bedürfnisse**:
-  - Schnelle Element-Identifikation mit technischen Details
-  - Verständliche Prüfkriterien und Zuordnung zu BITV-Anforderungen
-- 🎯 **Fokus**: Technische Details (Selektoren, ARIA), BITV-Compliance
+- ⚡ **Bedürfnisse**: Technische Details (Selektoren, ARIA), BITV-Compliance
 - 🔄 **Arbeitsweise**: Iterativ mit Accessibility-Experten zusammenarbeitend
 
-### Tertiäre Persona: "Lisa - QA-Testerin"
-- 🧪 **Rolle**: Testet systematisch verschiedene Browser/Devices gegen BITV-Kriterien
-- 📝 **Bedürfnisse**: Strukturierte Bug-Reports für Entwicklung mit BITV-Referenz
-- 🎯 **Fokus**: Screenshots, Reproduktionsschritte und Compliance-Status
-- 📊 **Ziele**: Fortschritt von BITV-Fixes verfolgen
+## Kernfunktionen für Bürgermeldungen
 
-## Kernfunktionen
+### 1. Automatische Barriere-Erkennung 🤖
+- **Häufige Verstöße automatisch erkennen**:
+  - Bilder ohne Alt-Texte
+  - Formularfelder ohne Labels
+  - Schlechte Farbkontraste
+  - Fehlende Überschriften-Struktur
+- **Ein-Klick-Problemerfassung**: Automatische Dokumentation mit wenig Benutzerinteraktion
+- **Laienverständliche Beschreibungen**: Keine technischen BITV-IDs, sondern verständliche Problembeschreibungen
 
-### 1. BITV-Prüfschritt Integration 🔍
-- **Vollständiger BITV-Katalog**: Integration aller Prüfschritte von bit-inklusiv.de
-- **Kategorisierung**:
-  - Wahrnehmbarkeit (14 Prüfschritte)
-  - Bedienbarkeit (13 Prüfschritte)
-  - Verständlichkeit (7 Prüfschritte)
+### 2. Vereinfachte BITV-Referenzen 📋
+- **Relevante Prüfschritte**: Fokus auf häufigste Probleme statt vollständigem Katalog
+- **Bürgerfreundliche Sprache**: "Fehlendes Label" statt "BITV 3.3.2"
   - Robustheit (3 Prüfschritte)
   - Interoperabilität mit assistiven Technologien (17 Prüfschritte)
 - **Prüfschritt-Auswahl**: Dropdown/Auswahlmenü für aktiven Prüfschritt

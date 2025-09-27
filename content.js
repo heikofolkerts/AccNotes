@@ -1,20 +1,211 @@
 // Content Script zur Extraktion von Element-Informationen für Barrierefreiheitstests
 let lastClickedElement = null;
+let contentScriptReady = false;
 
-// Speichere das zuletzt geklickte Element
+// Vereinfachte Initialisierung
+function initializeContentScript() {
+    console.log('🚀 Content Script initializing...');
+
+    // Warte kurz auf BarrierDetector (wird parallel geladen)
+    setTimeout(() => {
+        const barrierDetectorLoaded = typeof window.BarrierDetector !== 'undefined';
+        console.log('✅ Content Script ready, BarrierDetector available:', barrierDetectorLoaded);
+        contentScriptReady = true;
+    }, 50);
+}
+
+// Initialisiere sofort
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeContentScript);
+} else {
+    initializeContentScript();
+}
+
+// Speichere das zuletzt geklickte Element und Element-Informationen
 document.addEventListener('contextmenu', function(event) {
     lastClickedElement = event.target;
+    console.log('🎯 Right-clicked element:', event.target, 'Tag:', event.target.tagName);
+
+    // Sammle Element-Informationen sofort für direkte Verwendung
+    try {
+        const elementInfo = getElementAccessibilityInfo(event.target);
+        console.log('✅ Element info collected:', {
+            tagName: elementInfo.tagName,
+            elementType: elementInfo.elementType,
+            detectedProblemsCount: elementInfo.detectedProblems?.length || 0
+        });
+
+        // Speichere für direkte Verwendung (ohne Background Script)
+        window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
+        console.log('💾 Element info stored in window object for direct access');
+
+        // Zusätzlich auch im Storage speichern für Background Script
+        const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
+        const storageData = {
+            'temp_elementInfo': cleanElementInfo,
+            'temp_timestamp': Date.now()
+        };
+
+        console.log('💾 Content Script: About to store data:', {
+            hasElementInfo: !!cleanElementInfo,
+            tagName: cleanElementInfo?.tagName,
+            elementType: cleanElementInfo?.elementType,
+            detectedProblemsCount: cleanElementInfo?.detectedProblems?.length || 0
+        });
+
+        // Verwende Callback-basierte Storage API für bessere Kompatibilität
+        browserAPI.storage.local.set(storageData, () => {
+            if (browserAPI.runtime.lastError) {
+                console.error('❌ Content Script: Failed to store element info:', browserAPI.runtime.lastError);
+            } else {
+                console.log('✅ Content Script: Element info successfully stored in browser storage');
+
+                // Verifikation: Lese die Daten sofort zurück
+                browserAPI.storage.local.get(['temp_elementInfo', 'temp_timestamp'], (result) => {
+                    if (browserAPI.runtime.lastError) {
+                        console.error('❌ Content Script: Verification read failed:', browserAPI.runtime.lastError);
+                    } else {
+                        console.log('✅ Content Script: Storage verification - data successfully read back:', {
+                            hasData: !!result.temp_elementInfo,
+                            timestamp: result.temp_timestamp
+                        });
+                    }
+                });
+            }
+        });
+    } catch (error) {
+        console.error('❌ Error during element info collection:', error);
+        window.lastElementInfo = null;
+    }
 }, true);
+
+// Direktes Kontextmenü erstellen (da Background Script nicht funktioniert)
+function createDirectContextMenu(event) {
+    // Prüfe ob schon ein Menü existiert
+    const existingMenu = document.getElementById('accnotes-context-menu');
+    if (existingMenu) {
+        existingMenu.remove();
+    }
+
+    const menu = document.createElement('div');
+    menu.id = 'accnotes-context-menu';
+    menu.style.cssText = `
+        position: fixed;
+        z-index: 10000;
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        min-width: 200px;
+        cursor: pointer;
+    `;
+
+    const hasProblems = window.lastElementInfo?.detectedProblems?.length > 0;
+    const problemText = hasProblems ? ` (${window.lastElementInfo.detectedProblems.length} Problem${window.lastElementInfo.detectedProblems.length > 1 ? 'e' : ''} erkannt)` : '';
+
+    menu.innerHTML = `
+        <div style="padding: 8px 12px; border-bottom: 1px solid #eee;">
+            <strong>AccNotes</strong>
+        </div>
+        <div id="accnotes-add-note" style="padding: 8px 12px; hover:background-color: #f0f0f0;">
+            📝 Notiz hinzufügen${problemText}
+        </div>
+        <div id="accnotes-view-notes" style="padding: 8px 12px; hover:background-color: #f0f0f0;">
+            📄 Alle Notizen anzeigen
+        </div>
+    `;
+
+    // Position bei Mauszeiger
+    menu.style.left = event.pageX + 'px';
+    menu.style.top = event.pageY + 'px';
+
+    document.body.appendChild(menu);
+
+    // Event Listener für Menü-Aktionen
+    document.getElementById('accnotes-add-note').addEventListener('click', function() {
+        createNoteFromCurrentElement();
+        menu.remove();
+    });
+
+    document.getElementById('accnotes-view-notes').addEventListener('click', function() {
+        const notesOverviewUrl = browserAPI.runtime.getURL('notes-overview.html');
+        window.open(notesOverviewUrl, '_blank');
+        menu.remove();
+    });
+
+    // Klick außerhalb schließt Menü
+    setTimeout(() => {
+        document.addEventListener('click', function closeMenu() {
+            menu.remove();
+            document.removeEventListener('click', closeMenu);
+        }, true);
+    }, 100);
+}
+
+// Keyboard Shortcut für direkte Notiz-Erstellung
+document.addEventListener('keydown', function(event) {
+    // Ctrl+Shift+N für Notiz hinzufügen
+    if (event.ctrlKey && event.shiftKey && event.key === 'N') {
+        event.preventDefault();
+        if (lastClickedElement && window.lastElementInfo) {
+            createNoteFromCurrentElement();
+        } else {
+            console.warn('⚠️ Kein Element ausgewählt für Notiz-Erstellung');
+        }
+    }
+
+    // Ctrl+Shift+M für direktes Menü
+    if (event.ctrlKey && event.shiftKey && event.key === 'M') {
+        event.preventDefault();
+        createDirectContextMenu({ pageX: window.innerWidth / 2, pageY: window.innerHeight / 2 });
+    }
+});
+
+// Funktion zum Bereinigen der Element-Informationen für Storage
+function cleanElementInfoForStorage(elementInfo) {
+    if (!elementInfo) return {};
+
+    // Erstelle eine tiefe Kopie ohne DOM-Referenzen
+    const cleanInfo = JSON.parse(JSON.stringify(elementInfo, (key, value) => {
+        // Entferne DOM-Element-Referenzen
+        if (value && typeof value === 'object' && value.nodeType) {
+            return undefined; // DOM-Elemente entfernen
+        }
+        return value;
+    }));
+
+    // Bereinige detectedProblems Array - entferne 'element' Referenzen
+    if (cleanInfo.detectedProblems && Array.isArray(cleanInfo.detectedProblems)) {
+        cleanInfo.detectedProblems = cleanInfo.detectedProblems.map(problem => {
+            const cleanProblem = { ...problem };
+            // Entferne DOM-Element-Referenz, aber behalte andere Daten
+            delete cleanProblem.element;
+            return cleanProblem;
+        });
+    }
+
+    return cleanInfo;
+}
 
 // Funktion zur Extraktion umfassender Element-Informationen
 function getElementAccessibilityInfo(element) {
-    if (!element) return {};
+    console.log('📋 getElementAccessibilityInfo called with element:', element);
+
+    if (!element) {
+        console.warn('❌ No element provided to getElementAccessibilityInfo');
+        return { tagName: 'UNKNOWN', elementType: 'Unbekannt', detectedProblems: [] };
+    }
+
+    const elementType = getElementType(element);
+    console.log('🔍 Element type calculated:', elementType, 'for', element.tagName);
 
     const info = {
-        // Basis-Informationen
-        tagName: element.tagName,
-        elementType: getElementType(element),
-        text: getElementText(element),
+        // Basis-Informationen (KRITISCH - müssen immer vorhanden sein)
+        tagName: element.tagName || 'UNKNOWN',
+        elementType: elementType || 'Unbekannt',
+        text: getElementText(element) || '',
 
         // Accessibility-Attribute
         ariaLabel: element.getAttribute('aria-label') || '',
@@ -58,8 +249,41 @@ function getElementAccessibilityInfo(element) {
 
         // DOM-Position für bessere Identifikation
         xpath: getXPath(element),
-        selector: generateSelector(element)
+        selector: generateSelector(element),
+
+        // Automatische Barriere-Erkennung
+        detectedProblems: []
     };
+
+    // Führe automatische Barriere-Erkennung durch (falls verfügbar)
+    if (typeof window.BarrierDetector !== 'undefined') {
+        try {
+            const analysisResult = window.BarrierDetector.analyzeElement(element);
+
+            if (analysisResult && analysisResult.hasProblems && analysisResult.problems && analysisResult.problems.length > 0) {
+                info.detectedProblems = analysisResult.problems;
+                console.log('✅ BarrierDetector found', analysisResult.problems.length, 'problem(s):',
+                    analysisResult.problems.map(p => p.title).join(', '));
+            } else {
+                console.log('ℹ️ No barriers detected for this element');
+                info.detectedProblems = []; // Explizit leeres Array setzen
+            }
+        } catch (error) {
+            console.error('❌ Error during barrier detection:', error);
+            info.detectedProblems = []; // Fehlerfall: leeres Array
+        }
+    } else {
+        console.warn('⚠️ BarrierDetector not available - proceeding without barrier detection');
+        info.detectedProblems = []; // Nicht verfügbar: leeres Array
+    }
+
+    console.log('📤 Final element info being sent:', {
+        tagName: info.tagName,
+        elementType: info.elementType,
+        text: info.text,
+        detectedProblemsCount: info.detectedProblems.length,
+        barrierDetectorAvailable: typeof window.BarrierDetector !== 'undefined'
+    });
 
     return info;
 }
@@ -69,9 +293,32 @@ function getElementType(element) {
     const role = element.getAttribute('role');
     const type = element.type;
 
-    if (role) return `${tag} (role: ${role})`;
-    if (tag === 'input' && type) return `${tag} (type: ${type})`;
-    if (tag === 'button') return 'Button';
+    // Erweiterte Button-Erkennung (gleiche Logik wie BarrierDetector)
+    const isButton = tag === 'button' ||
+                     (tag === 'input' && ['button', 'submit', 'reset', 'image'].includes(type)) ||
+                     role === 'button' ||
+                     (tag === 'a' && element.onclick);
+
+    if (isButton) {
+        // Detailliertere Button-Typ-Erkennung
+        if (tag === 'button') {
+            const textContent = element.textContent?.trim() || '';
+            if (textContent === '' || /^[\u{1F000}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}🔍❤️⚙️]+$/u.test(textContent)) {
+                return 'Icon-Button';
+            }
+            return 'Button';
+        }
+        if (tag === 'input' && type === 'submit') return 'Submit-Button';
+        if (tag === 'input' && type === 'reset') return 'Reset-Button';
+        if (tag === 'input' && type === 'image') return 'Bild-Button';
+        if (tag === 'input' && type === 'button') return 'Input-Button';
+        if (tag === 'a' && element.onclick) return 'Link-Button';
+        if (role === 'button') return `${tag} (Button-Rolle)`;
+    }
+
+    // Andere Elementtypen
+    if (role && !isButton) return `${tag} (role: ${role})`;
+    if (tag === 'input' && type && !isButton) return `${tag} (type: ${type})`;
     if (tag === 'a') return 'Link';
     if (tag === 'img') return 'Bild';
     if (tag === 'form') return 'Formular';
@@ -91,15 +338,23 @@ function getElementText(element) {
     const altText = element.alt || '';
     const titleText = element.title || '';
     const placeholderText = element.placeholder || '';
+    const ariaLabel = element.getAttribute('aria-label') || '';
 
-    // Priorisiere sichtbaren Text
-    if (directText && directText.length < 200) return directText;
+    // Prüfe ob es nur Unicode-Symbole sind
+    const isOnlyUnicodeSymbols = directText && /^[\u{1F000}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}🔍❤️⚙️]+$/u.test(directText);
+
+    // Priorisiere zugänglichen Text für Screen-Reader
+    if (ariaLabel) return `ARIA-Label: ${ariaLabel}`;
+    if (directText && directText.length < 200 && !isOnlyUnicodeSymbols) return directText;
     if (valueText) return `Wert: ${valueText}`;
     if (altText) return `Alt: ${altText}`;
     if (titleText) return `Titel: ${titleText}`;
     if (placeholderText) return `Placeholder: ${placeholderText}`;
 
-    return directText.substring(0, 100) + (directText.length > 100 ? '...' : '');
+    // Für Icon-Buttons: Zeige Unicode-Symbole, aber markiere sie als problematisch
+    if (isOnlyUnicodeSymbols) return `Symbol: ${directText} (möglicherweise nicht zugänglich)`;
+
+    return directText.substring(0, 100) + (directText.length > 100 ? '...' : '') || '(Kein Text)';
 }
 
 function getAccessibleName(element) {
@@ -202,10 +457,126 @@ function generateSelector(element) {
     return path.join(' > ');
 }
 
-// Höre auf Nachrichten vom Background Script
-browser.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.action === 'getElementInfo') {
-        const elementInfo = getElementAccessibilityInfo(lastClickedElement);
-        sendResponse(elementInfo);
+// Cross-Browser-API
+const browserAPI = (typeof chrome !== 'undefined' && chrome.runtime) ? chrome : browser;
+
+// Backup: Direct context menu handling in content script
+document.addEventListener('keydown', function(event) {
+    // Ctrl+Shift+N für Notiz hinzufügen (Fallback)
+    if (event.ctrlKey && event.shiftKey && event.key === 'N') {
+        event.preventDefault();
+        createNoteFromCurrentElement();
     }
+});
+
+// Alternative: Direktes Öffnen der Notiz-Seite
+function createNoteFromCurrentElement() {
+    console.log('🚀 Content Script: Creating note from current element...');
+
+    if (!lastClickedElement) {
+        console.warn('❌ No element selected for note creation');
+        return;
+    }
+
+    if (!window.lastElementInfo) {
+        console.warn('❌ No element info available for note creation');
+        return;
+    }
+
+    try {
+        // Verwende bereits gesammelte Element-Informationen
+        const elementInfo = window.lastElementInfo;
+
+        // Sammle Seiten-Informationen
+        const contextData = {
+            url: window.location.href,
+            title: document.title,
+            selectedText: window.getSelection().toString(),
+            // Element-Informationen aus gespeicherten Daten
+            ...elementInfo
+        };
+
+        console.log('🚀 Content Script: Opening note page with data:', {
+            tagName: contextData.tagName,
+            elementType: contextData.elementType,
+            detectedProblemsCount: contextData.detectedProblems?.length || 0,
+            url: contextData.url
+        });
+
+        // Erstelle URL-Parameter mit bereinigten Daten
+        const params = new URLSearchParams();
+        params.set('contextData', JSON.stringify(contextData));
+
+        // Öffne Notiz-Seite
+        const notePageUrl = browserAPI.runtime.getURL('note.html') + '?' + params.toString();
+        console.log('🔗 Opening note page URL:', notePageUrl);
+        window.open(notePageUrl, '_blank');
+
+    } catch (error) {
+        console.error('❌ Error creating note:', error);
+    }
+}
+
+// Höre auf Nachrichten vom Background Script (Cross-Browser kompatibel)
+browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log('📨 Content Script received message:', request.action);
+
+    if (request.action === 'getElementInfo') {
+        try {
+            const elementInfo = getElementAccessibilityInfo(lastClickedElement);
+            console.log('📤 Content Script sending element info with', elementInfo.detectedProblems?.length || 0, 'detected problems');
+            sendResponse(elementInfo);
+        } catch (error) {
+            console.error('❌ Error in getElementInfo:', error);
+            sendResponse({
+                tagName: 'ERROR',
+                elementType: 'Fehler',
+                detectedProblems: [],
+                error: error.message
+            });
+        }
+        return true; // Wichtig für asynchrone Antworten
+    }
+
+    if (request.action === 'createNote') {
+        createNoteFromCurrentElement();
+        sendResponse({ success: true });
+        return true;
+    }
+
+    if (request.action === 'logFromBackground') {
+        // Zeige Background Script Logs in der Content Script Konsole
+        console.log(request.message, request.data || '');
+        return false; // Keine Antwort nötig
+    }
+
+    if (request.action === 'prepareElementInfo') {
+        console.log('📨 Content Script: Background script requests element info preparation');
+
+        // Falls es ein zuletzt geklicktes Element gibt, aktualisiere die Storage-Daten
+        if (lastClickedElement && window.lastElementInfo) {
+            try {
+                browserAPI.storage.local.set({
+                    'temp_elementInfo': window.lastElementInfo,
+                    'temp_timestamp': Date.now()
+                }).then(() => {
+                    console.log('✅ Element info refreshed in storage for background script');
+                    sendResponse({ success: true, hasElementInfo: true });
+                }).catch(error => {
+                    console.error('❌ Failed to refresh element info in storage:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+            } catch (error) {
+                console.error('❌ Error preparing element info:', error);
+                sendResponse({ success: false, error: error.message });
+            }
+        } else {
+            console.warn('⚠️ No element info available to prepare');
+            sendResponse({ success: false, hasElementInfo: false });
+        }
+        return true;
+    }
+
+    console.warn('❓ Content Script: Unknown action:', request.action);
+    return false;
 });

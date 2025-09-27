@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Überschriften-Struktur-Probleme</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .test-section { border: 2px solid #ccc; padding: 20px; margin: 20px 0; }
+        .problem { background-color: #ffebee; }
+        .good { background-color: #e8f5e8; }
+        .section-title { color: #d32f2f; }
+        .good .section-title { color: #2e7d32; }
+        h1, h2, h3, h4, h5, h6 { margin: 10px 0; }
+        .heading-level { font-size: 0.8em; color: #666; margin-left: 10px; }
+    </style>
+</head>
+<body>
+    <h1>📋 Überschriften-Struktur Test-Seite</h1>
+    <p>Diese Seite testet die automatische Erkennung von Problemen in der Überschriften-Hierarchie.</p>
+
+    <div class="test-section problem">
+        <h2 class="section-title">❌ PROBLEME - Diese Überschriften sollten als Struktur-Problem erkannt werden:</h2>
+
+        <h3>Bereich 1: Übersprungene Ebenen</h3>
+        <h1>H1 nach H3 - falsche Reihenfolge!</h1>
+        <span class="heading-level">(H1 sollte nicht nach H3 kommen)</span>
+
+        <h5>H5 ohne H4 davor - Level übersprungen!</h5>
+        <span class="heading-level">(Von H3 direkt zu H5 gesprungen)</span>
+
+        <h3>Bereich 2: Mehrere H1</h3>
+        <h1>Zweite H1 auf der Seite</h1>
+        <span class="heading-level">(Nur eine H1 pro Seite empfohlen)</span>
+
+        <h1>Dritte H1 - definitiv falsch!</h1>
+        <span class="heading-level">(Mehrere H1 sind problematisch)</span>
+
+        <h3>Bereich 3: Große Sprünge rückwärts</h3>
+        <h6>H6 Unterunterunterpunkt</h6>
+        <h2>H2 nach H6 - großer Sprung!</h2>
+        <span class="heading-level">(Von H6 direkt zu H2 ist verwirrend)</span>
+
+        <h3>Bereich 4: Fehlende mittlere Ebenen</h3>
+        <h2>H2 Hauptbereich</h2>
+        <h4>H4 ohne H3 - übersprungen!</h4>
+        <span class="heading-level">(H3-Ebene fehlt dazwischen)</span>
+        <h6>H6 ohne H5 - wieder übersprungen!</h6>
+        <span class="heading-level">(Von H4 direkt zu H6)</span>
+    </div>
+
+    <div class="test-section good">
+        <h2 class="section-title">✅ KORREKT - Diese Überschriften-Struktur ist richtig:</h2>
+
+        <h3>Beispiel für korrekte Hierarchie</h3>
+        <p>Die folgenden Überschriften folgen der korrekten Struktur:</p>
+
+        <h2>2. Hauptbereich</h2>
+        <span class="heading-level">(H2 nach der H1 der Seite)</span>
+
+        <h3>2.1 Unterbereich</h3>
+        <span class="heading-level">(H3 nach H2)</span>
+
+        <h4>2.1.1 Detailbereich</h4>
+        <span class="heading-level">(H4 nach H3)</span>
+
+        <h4>2.1.2 Noch ein Detailbereich</h4>
+        <span class="heading-level">(Weitere H4 auf gleicher Ebene)</span>
+
+        <h3>2.2 Nächster Unterbereich</h3>
+        <span class="heading-level">(Zurück zu H3-Ebene)</span>
+
+        <h2>3. Nächster Hauptbereich</h2>
+        <span class="heading-level">(Nächste H2-Ebene)</span>
+
+        <h3>3.1 Erster Unterbereich</h3>
+        <span class="heading-level">(H3 unter der neuen H2)</span>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5;">
+        <h3>🧪 Test-Anleitung:</h3>
+        <ol>
+            <li>Rechtsklick auf die Überschriften im <strong>PROBLEME</strong>-Bereich</li>
+            <li>Wähle "Note zu diesem Element hinzufügen"</li>
+            <li>Prüfe, ob automatisch <strong>"Fehlerhafte Überschriften-Struktur"</strong> oder ähnliche Probleme erkannt werden</li>
+            <li>Teste auch die Überschriften im <strong>KORREKT</strong>-Bereich - hier sollten KEINE Struktur-Probleme erkannt werden</li>
+        </ol>
+
+        <h4>Regeln für korrekte Überschriften-Struktur:</h4>
+        <ul>
+            <li><strong>Eine H1 pro Seite:</strong> Meist der Haupttitel</li>
+            <li><strong>Sequentielle Ebenen:</strong> H1 → H2 → H3 → H4 → H5 → H6</li>
+            <li><strong>Keine Ebenen überspringen:</strong> Nicht von H2 direkt zu H4</li>
+            <li><strong>Logische Hierarchie:</strong> Überschriften strukturieren den Inhalt</li>
+        </ul>
+
+        <p><strong>Erwartete BITV-Referenz:</strong> BITV 1.3.1 - Info und Beziehungen</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Kontrast-Probleme</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .test-section { border: 2px solid #ccc; padding: 20px; margin: 20px 0; }
+        .problem { background-color: #ffebee; }
+        .good { background-color: #e8f5e8; }
+        h2 { color: #d32f2f; }
+        .good h2 { color: #2e7d32; }
+
+        /* Problematische Kontraste */
+        .low-contrast-1 { color: #999999; background-color: #ffffff; } /* 2.8:1 - zu niedrig */
+        .low-contrast-2 { color: #cccccc; background-color: #ffffff; } /* 1.6:1 - zu niedrig */
+        .low-contrast-3 { color: #777777; background-color: #cccccc; } /* 1.8:1 - zu niedrig */
+        .low-contrast-4 { color: #ffff00; background-color: #ffffff; } /* 1.1:1 - sehr niedrig */
+        .low-contrast-5 { color: #ff6b6b; background-color: #ffebee; } /* ~2.5:1 - zu niedrig */
+
+        /* Grenzfälle für großen Text */
+        .large-text-problem { font-size: 24px; font-weight: bold; color: #767676; background-color: #ffffff; } /* 2.9:1 - für großen Text zu niedrig */
+
+        /* Gute Kontraste */
+        .good-contrast-1 { color: #333333; background-color: #ffffff; } /* 12.6:1 - sehr gut */
+        .good-contrast-2 { color: #ffffff; background-color: #333333; } /* 12.6:1 - sehr gut */
+        .good-contrast-3 { color: #0066cc; background-color: #ffffff; } /* 7.0:1 - gut */
+        .good-contrast-4 { color: #2e7d32; background-color: #ffffff; } /* 7.4:1 - gut */
+        .large-text-good { font-size: 24px; font-weight: bold; color: #666666; background-color: #ffffff; } /* 3.1:1 - für großen Text OK */
+
+        .test-box { padding: 15px; margin: 10px 0; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>🎨 Kontrast Test-Seite</h1>
+    <p>Diese Seite testet die automatische Erkennung von Farbkontrast-Problemen nach WCAG-Standards.</p>
+
+    <div class="test-section problem">
+        <h2>❌ PROBLEME - Diese Texte sollten als Kontrast-Problem erkannt werden:</h2>
+
+        <div class="test-box low-contrast-1">
+            <p>Dieser Text hat einen Kontrast von nur 2.8:1 (grauer Text auf weiß). Das ist zu niedrig für normalen Text (Min: 4.5:1).</p>
+        </div>
+
+        <div class="test-box low-contrast-2">
+            <p>Dieser sehr helle graue Text hat nur 1.6:1 Kontrast. Extrem schwer lesbar!</p>
+        </div>
+
+        <div class="test-box low-contrast-3">
+            <p>Grauer Text auf hellgrauem Hintergrund - nur 1.8:1 Kontrast.</p>
+        </div>
+
+        <div class="test-box low-contrast-4">
+            <p>Gelber Text auf weißem Hintergrund - praktisch unsichtbar (1.1:1)!</p>
+        </div>
+
+        <div class="test-box low-contrast-5">
+            <p>Roter Text auf sehr hellem rosa Hintergrund - schwer lesbar (~2.5:1).</p>
+        </div>
+
+        <div class="test-box large-text-problem">
+            <p>Großer Text mit 2.9:1 Kontrast - auch für große Schrift zu niedrig (Min: 3:1).</p>
+        </div>
+    </div>
+
+    <div class="test-section good">
+        <h2>✅ KORREKT - Diese sollten KEINE Kontrast-Probleme haben:</h2>
+
+        <div class="test-box good-contrast-1">
+            <p>Schwarzer Text auf weißem Hintergrund - klassisch und sehr gut lesbar (12.6:1).</p>
+        </div>
+
+        <div class="test-box good-contrast-2">
+            <p>Weißer Text auf schwarzem Hintergrund - ebenfalls sehr gut lesbar (12.6:1).</p>
+        </div>
+
+        <div class="test-box good-contrast-3">
+            <p>Blauer Text auf weißem Hintergrund - guter Kontrast für Links (7.0:1).</p>
+        </div>
+
+        <div class="test-box good-contrast-4">
+            <p>Grüner Text auf weißem Hintergrund - guter Kontrast (7.4:1).</p>
+        </div>
+
+        <div class="test-box large-text-good">
+            <p>Großer Text mit 3.1:1 Kontrast - für große Schrift ausreichend.</p>
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5;">
+        <h3>🧪 Test-Anleitung:</h3>
+        <ol>
+            <li>Rechtsklick auf die Texte im <strong>PROBLEME</strong>-Bereich</li>
+            <li>Wähle "Note zu diesem Element hinzufügen"</li>
+            <li>Prüfe, ob automatisch <strong>"Schlechter Farbkontrast"</strong> oder ähnliche Probleme erkannt werden</li>
+            <li>Teste auch die Texte im <strong>KORREKT</strong>-Bereich - hier sollten KEINE Kontrast-Probleme erkannt werden</li>
+        </ol>
+
+        <h4>WCAG-Standards:</h4>
+        <ul>
+            <li><strong>Normaler Text:</strong> Mindestens 4.5:1 Kontrast</li>
+            <li><strong>Großer Text (18pt+ oder 14pt+ bold):</strong> Mindestens 3:1 Kontrast</li>
+        </ul>
+
+        <p><strong>Erwartete BITV-Referenz:</strong> BITV 1.4.3 - Kontrast (Minimum)</p>
+    </div>
+</body>
+</html>

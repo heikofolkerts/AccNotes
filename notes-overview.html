@@ -56,6 +56,21 @@
             </div>
         </section>
 
+        <!-- Storage Statistics Section -->
+        <section class="info-panel" aria-labelledby="storage-title" id="storage-stats" style="display: none;">
+            <h2 id="storage-title" class="info-panel__title">💾 Speicher-Statistiken</h2>
+            <div class="storage-info">
+                <div class="storage-stat">
+                    <span class="storage-stat__label">Speicherverbrauch:</span>
+                    <span class="storage-stat__value" id="storage-usage">-</span>
+                </div>
+                <div class="storage-stat">
+                    <span class="storage-stat__label">Status:</span>
+                    <span class="storage-stat__value" id="storage-status">chrome.storage.local</span>
+                </div>
+            </div>
+        </section>
+
         <!-- Export Section -->
         <section class="info-panel" aria-labelledby="export-title">
             <h2 id="export-title" class="info-panel__title">📥 Export & Verwaltung</h2>
@@ -187,6 +202,7 @@
 
     <script src="scripts/theme-toggle.js"></script>
     <script src="scripts/bitv-catalog.js"></script>
+    <script src="scripts/storage-helper.js"></script>
     <script src="notes-overview.js"></script>
 </body>
 </html>

@@ -1,8 +1,10 @@
-# AccNotes - Product Backlog (BITV-fokussiert)
+# AccNotes - Product Backlog (Bürgermeldungen-fokussiert)
 
 ## 📋 Priorisiertes Product Backlog
 
-### 🔥 HIGH PRIORITY (Sofort umsetzbar)
+*Neu-Priorisierung: Privatpersonen-Features vor Profi-Tools*
+
+### 🔥 HIGH PRIORITY (Bürgermeldungen - Sofort umsetzbar)
 
 #### 1. UI/UX Modernisierung *(Story Points: 8)* ✅ COMPLETED
 **Status**: ✅ Abgeschlossen
@@ -74,10 +76,157 @@
 
 ---
 
-### ⚡ MEDIUM PRIORITY (Nächste Iteration)
-
-#### 4. BITV-Template-System *(Story Points: 8)*
+#### 4. Automatische Barriere-Erkennung für Bürgermeldungen *(Story Points: 21)*
 **Status**: 📋 Ready for Development
+
+**User Stories**:
+- Als **Maria** möchte ich Probleme automatisch erkennen lassen, ohne technisches Wissen haben zu müssen
+- Als **Thomas** möchte ich typische BITV-Verstöße schnell dokumentieren können
+- Als **Petra** möchte ich Beratungsklienten einfach zeigen, was Barrieren sind
+
+**Tasks**:
+- [ ] Automatische Erkennung fehlender Alt-Texte auf Bildern
+- [ ] Erkennung fehlender Alternativtexte auf Buttons (Icon-Buttons, Image-Buttons)
+- [ ] Erkennung von Buttons ohne zugänglichen Namen (aria-label, aria-labelledby, Textinhalt)
+- [ ] Spezielle Behandlung für häufige Button-Typen: Submit-Buttons, Close-Buttons, Menu-Toggle
+- [ ] Erkennung von CSS-Background-Image-Buttons ohne Textinhalt
+- [ ] Erkennung von Formularfeldern ohne Labels
+- [ ] Kontrast-Checker für Text-Hintergrund-Kombinationen
+- [ ] Überschriften-Struktur-Validator (H1-H6 Hierarchie)
+- [ ] Integration in bestehendes Kontextmenü (keine zusätzlichen Buttons)
+- [ ] Kontextmenü zeigt erkannte Probleme direkt an ("Button-Beschriftung fehlt", "Alt-Text fehlt")
+- [ ] Automatische Vor-Ausfüllung der Notiz basierend auf erkanntem Problem
+- [ ] Laienverständliche Problembeschreibungen (keine BITV-IDs)
+- [ ] Automatische Lösungsvorschläge für häufige Probleme
+
+**Acceptance Criteria**:
+- [ ] Automatische Erkennung von mind. 5 häufigsten Barriere-Typen:
+  - [ ] Bilder ohne Alt-Text
+  - [ ] Icon-Buttons ohne Beschriftung
+  - [ ] Image-Buttons ohne Alternativtext
+  - [ ] Formularfelder ohne Labels
+  - [ ] Schlechte Farbkontraste
+- [ ] Kontextmenü zeigt erkannte Probleme kontextuell an
+- [ ] Spezifische Erkennung für Button-Typen (button, input[type="button"], role="button")
+- [ ] Verständliche Beschreibungen für Nicht-Experten ("Button-Beschriftung fehlt")
+- [ ] Automatische Vor-Ausfüllung ohne manuelle BITV-Auswahl
+- [ ] Automatische Screenshots der erkannten Probleme
+- [ ] Performance: <500ms für Seiten-Scan
+- [ ] Nahtlose Integration in bestehenden Workflow
+
+---
+
+#### 5. Vereinfachter Melde-Workflow über Kontextmenü *(Story Points: 13)*
+**Status**: 📋 Ready for Development
+
+**User Stories**:
+- Als **Maria** möchte ich über das gewohnte Kontextmenü einfach "Problem melden" auswählen können
+- Als **Thomas** möchte ich im Kontextmenü zwischen "Schnelle Meldung" und "Detaillierte Dokumentation" wählen
+- Als **Petra** möchte ich Klienten das Kontextmenü als einzigen Einstiegspunkt zeigen
+
+**Tasks**:
+- [ ] Kontextmenü um "Problem melden (einfach)" erweitern
+- [ ] Vereinfachter Notiz-Modus ohne BITV-Prüfschritt-Auswahl
+- [ ] Automatische Auswahl des wahrscheinlichsten Problems
+- [ ] Vorausgefüllte E-Mail-Templates für Behördenmeldungen
+- [ ] PDF-Export im Meldungs-Format (kein technischer Report)
+- [ ] Nachverfolgungsmodus für gemeldete Probleme
+- [ ] Status-Tracking: Gemeldet → In Bearbeitung → Behoben
+- [ ] Kontextmenü-Option "Detaillierte BITV-Notiz" für Profis
+
+**Acceptance Criteria**:
+- [ ] Kontextmenü bietet sowohl einfache als auch detaillierte Optionen
+- [ ] Ein-Klick-Meldung ohne BITV-Kenntnisse nötig
+- [ ] Automatische Problem-Erkennung schlägt passenden Modus vor
+- [ ] Verständliche Meldungs-PDFs für Behörden
+- [ ] E-Mail-Template mit korrekten rechtlichen Verweisen
+- [ ] Nahtloser Workflow ohne zusätzliche UI-Elemente
+
+---
+
+#### 6. Bürgerfreundliche BITV-Referenzen *(Story Points: 8)*
+**Status**: 📋 Ready for Development
+
+**User Stories**:
+- Als **Maria** möchte ich verstehen, warum etwas ein Problem ist
+- Als **Thomas** möchte ich rechtlich fundierte Meldungen erstellen
+- Als **Petra** möchte ich Barrieren einfach erklären können
+
+**Tasks**:
+- [ ] Vereinfachte BITV-Beschreibungen in Alltagssprache
+- [ ] Fokus auf häufigste 15-20 Prüfschritte statt aller 54
+- [ ] "Warum ist das ein Problem"-Erklärungen
+- [ ] Rechtliche Grundlagen für Bürgermeldungen
+- [ ] Beispiele für korrekte Umsetzungen
+- [ ] Link zu Schlichtungsstelle und Beauftragte für Barrierefreiheit
+
+**Acceptance Criteria**:
+- [ ] Verständlich für Menschen ohne IT-Hintergrund
+- [ ] Rechtlich korrekte Verweise auf BITV/BGG
+- [ ] Priorisiert nach Häufigkeit der Probleme
+- [ ] Kontaktdaten für zuständige Stellen integriert
+- [ ] Mobile-optimiert für unterwegs
+
+---
+
+## 🔧 **Kontextmenü-Konzept für verschiedene Nutzergruppen**
+
+### **Intelligentes Kontextmenü (abhängig von erkannten Problemen)**
+
+```
+Rechtsklick auf Bild ohne Alt-Text:
+┌─────────────────────────────────────────────┐
+│ 🚨 Problem erkannt: Alt-Text fehlt          │
+│ ├─ 📝 Problem schnell melden               │
+│ ├─ 📋 Detaillierte BITV-Notiz erstellen    │
+│ └─ ❓ Was bedeutet das?                    │
+├─────────────────────────────────────────────┤
+│ 🔍 Element untersuchen                      │
+│ 📄 Seitenübersicht                         │
+└─────────────────────────────────────────────┘
+
+Rechtsklick auf Icon-Button ohne Beschriftung:
+┌─────────────────────────────────────────────┐
+│ 🚨 Problem erkannt: Button-Beschriftung fehlt │
+│ ├─ 📝 Problem schnell melden               │
+│ ├─ 📋 Detaillierte BITV-Notiz erstellen    │
+│ └─ ❓ Was bedeutet das?                    │
+├─────────────────────────────────────────────┤
+│ 🔍 Element untersuchen                      │
+│ 📄 Seitenübersicht                         │
+└─────────────────────────────────────────────┘
+
+Rechtsklick auf Element ohne erkannte Probleme:
+┌─────────────────────────────────────────────┐
+│ 📝 Notiz zu diesem Element                  │
+│ ├─ 🚀 Schnelle Meldung                     │
+│ ├─ 📋 Detaillierte BITV-Dokumentation      │
+│ └─ 🔍 Barrierefreiheit prüfen              │
+├─────────────────────────────────────────────┤
+│ 📄 Notizen-Übersicht                       │
+└─────────────────────────────────────────────┘
+```
+
+### **Nutzergruppen-spezifische Workflows**
+
+#### **Maria (Bürgerin)**: Bevorzugt "Problem schnell melden"
+- Automatische Problemerkennung → vorgefülltes einfaches Formular
+- Rechtliche Hinweise und Kontakte werden automatisch hinzugefügt
+
+#### **Thomas (Aktivist)**: Nutzt beide Modi je nach Situation
+- Schnellmeldung für offensichtliche Probleme
+- Detaillierte Dokumentation für Beschwerdeverfahren
+
+#### **Sarah (BITV-Prüferin)**: Bevorzugt "Detaillierte BITV-Dokumentation"
+- Vollständiger BITV-Prüfschritt-Workflow
+- Professionelle Reports und Dokumentation
+
+---
+
+### ⚡ MEDIUM PRIORITY (Professionelle Features - Nächste Iteration)
+
+#### 7. BITV-Template-System *(Story Points: 8)*
+**Status**: 📋 Ready for Development (Professional Feature)
 
 **User Stories**:
 - Als **Sarah** möchte ich vorgefertigte Templates für BITV-Prüfschritte haben
@@ -99,8 +248,8 @@
 
 ---
 
-#### 5. BITV-Reporting & Export *(Story Points: 13)*
-**Status**: 📋 Ready for Development
+#### 8. BITV-Reporting & Export *(Story Points: 13)*
+**Status**: 📋 Ready for Development (Professional Feature)
 
 **User Stories**:
 - Als **Sarah** möchte ich BITV-konforme PDF-Reports generieren
@@ -123,8 +272,8 @@
 
 ---
 
-#### 6. BITV-Fortschritts-Tracking *(Story Points: 8)*
-**Status**: 📋 Ready for Development
+#### 9. BITV-Fortschritts-Tracking *(Story Points: 8)*
+**Status**: 📋 Ready for Development (Professional Feature)
 
 **User Stories**:
 - Als **Sarah** möchte ich den BITV-Test-Fortschritt pro Website verfolgen
@@ -149,8 +298,8 @@
 
 ### 🚀 LOW PRIORITY (Future Features)
 
-#### 7. BITV-Team-Kollaboration *(Story Points: 21)*
-**Status**: 💭 Future Consideration
+#### 10. BITV-Team-Kollaboration *(Story Points: 21)*
+**Status**: 💭 Future Consideration (Professional Feature)
 
 **Epic**: BITV-Team-Zusammenarbeit ermöglichen
 
@@ -168,8 +317,8 @@
 
 ---
 
-#### 8. BITV-Automatisierung *(Story Points: 21)*
-**Status**: 💭 Future Consideration
+#### 11. BITV-Automatisierung *(Story Points: 21)*
+**Status**: 💭 Future Consideration (Professional Feature)
 
 **Epic**: Intelligente BITV-Unterstützung
 
@@ -187,8 +336,8 @@
 
 ---
 
-#### 9. BITV-Enterprise-Features *(Story Points: 34)*
-**Status**: 💭 Future Consideration
+#### 12. BITV-Enterprise-Features *(Story Points: 34)*
+**Status**: 💭 Future Consideration (Professional Feature)
 
 **Epic**: Enterprise-Level BITV-Management
 

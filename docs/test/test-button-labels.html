@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Button-Label-Probleme</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .test-section { border: 2px solid #ccc; padding: 20px; margin: 20px 0; }
+        .problem { background-color: #ffebee; }
+        .good { background-color: #e8f5e8; }
+        h2 { color: #d32f2f; }
+        .good h2 { color: #2e7d32; }
+        button { margin: 10px; padding: 10px; cursor: pointer; }
+        .icon-btn { background: none; border: 1px solid #ccc; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔘 Button-Label Test-Seite</h1>
+    <p>Diese Seite testet die automatische Erkennung von Buttons ohne zugängliche Namen.</p>
+
+    <div class="test-section problem">
+        <h2>❌ PROBLEME - Diese Buttons sollten erkannt werden:</h2>
+
+        <h3>1. Icon-Button nur mit Symbol (Unicode)</h3>
+        <button class="icon-btn">🔍</button>
+        <button class="icon-btn">❤️</button>
+        <button class="icon-btn">⚙️</button>
+
+        <h3>2. Button mit nur CSS-Icon (kein Text)</h3>
+        <button class="icon-btn" style="background: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2220%22 height=%2220%22%3E%3Cpath fill=%22%23666%22 d=%22M10 2l8 8-8 8-8-8z%22/%3E%3C/svg%3E') no-repeat center; width: 30px; height: 30px;"></button>
+
+        <h3>3. Button mit nur Bild (ohne Alt-Text)</h3>
+        <button class="icon-btn">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='8' fill='%23ff5722'/%3E%3Ctext x='10' y='14' text-anchor='middle' fill='white' font-size='12'%3EX%3C/text%3E%3C/svg%3E" width="20" height="20">
+        </button>
+
+        <h3>4. Leerer Button</h3>
+        <button style="width: 40px; height: 40px; background-color: #f44336;"></button>
+
+        <h3>5. Button mit nur Leerzeichen</h3>
+        <button>   </button>
+    </div>
+
+    <div class="test-section good">
+        <h2>✅ KORREKT - Diese sollten NICHT als Problem erkannt werden:</h2>
+
+        <h3>6. Button mit sichtbarem Text</h3>
+        <button>Speichern</button>
+        <button>Abbrechen</button>
+
+        <h3>7. Icon-Button mit ARIA-Label</h3>
+        <button class="icon-btn" aria-label="Suchen">🔍</button>
+        <button class="icon-btn" aria-label="Zu Favoriten hinzufügen">❤️</button>
+
+        <h3>8. Button mit aria-labelledby</h3>
+        <span id="save-label">Dokument speichern</span>
+        <button class="icon-btn" aria-labelledby="save-label">💾</button>
+
+        <h3>9. Button mit title-Attribut</h3>
+        <button class="icon-btn" title="Einstellungen öffnen">⚙️</button>
+
+        <h3>10. Button mit Bild UND Alt-Text</h3>
+        <button class="icon-btn">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Ccircle cx='10' cy='10' r='8' fill='%234caf50'/%3E%3Ctext x='10' y='14' text-anchor='middle' fill='white' font-size='12'%3E✓%3C/text%3E%3C/svg%3E" alt="Bestätigen" width="20" height="20">
+        </button>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5;">
+        <h3>🧪 Test-Anleitung:</h3>
+        <ol>
+            <li>Rechtsklick auf die Buttons im <strong>PROBLEME</strong>-Bereich</li>
+            <li>Wähle "Note zu diesem Element hinzufügen"</li>
+            <li>Prüfe, ob automatisch <strong>"Button ohne zugänglichen Namen"</strong> oder ähnliche Probleme erkannt werden</li>
+            <li>Teste auch die Buttons im <strong>KORREKT</strong>-Bereich - hier sollten KEINE Button-Label-Probleme erkannt werden</li>
+        </ol>
+        <p><strong>Erwartete BITV-Referenz:</strong> BITV 2.4.6 - Überschriften und Beschriftungen</p>
+    </div>
+</body>
+</html>
