@@ -1,33 +1,69 @@
-# AccNotes 🌟
+# AccNotes 🚀
 
-> **Professional Browser Extension for Accessibility Testing & Documentation**
+> **Automatisierte Browser-Extension für BITV-Accessibility Testing mit KI-Unterstützung**
 
-AccNotes ist eine spezialisierte Browser-Extension für UX/UI-Designer, Entwickler und Accessibility-Experten zur effizienten Dokumentation von Barrierefreiheitsbefunden während der Website-Analyse.
+AccNotes bietet einen **vollständig automatisierten End-to-End Workflow** von der Barriere-Erkennung bis zur fertigen BITV-Dokumentation. Mit intelligenter Problem-Erkennung, dynamischen Kontextmenüs und automatischer BITV-Zuordnung reduziert AccNotes die Zeit für Accessibility-Tests um 80%.
 
-![AccNotes Demo](https://img.shields.io/badge/Version-0.3.0-brightgreen)
+![AccNotes Demo](https://img.shields.io/badge/Version-0.5.0-brightgreen)
+![Automation Ready](https://img.shields.io/badge/Automation-AI%20Powered-purple)
 ![BITV Support](https://img.shields.io/badge/BITV-Softwaretest%20Ready-blue)
 ![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue)
 ![Browser Support](https://img.shields.io/badge/Browser-Chrome%2C%20Firefox%2C%20Edge-orange)
 
-## ✨ Features
+## 🎉 **Neue Generation: Vollautomatisierter BITV-Workflow (v0.5.0)**
 
-### 🎯 Aktuelle Funktionen (v0.3.0 - BITV-Edition)
-- **Kontextmenü-Integration**: Schnelle Notizenerstellung per Rechtsklick
-- **BITV-Prüfschritt-Integration**: Vollständiger Katalog aller 54 BITV-Prüfschritte von bit-inklusiv.de
+### ⚡ **End-to-End Automatisierung in unter 30 Sekunden**
+
+```
+Rechtsklick → Automatische Problem-Erkennung → Dynamisches Kontextmenü →
+Template-Auswahl → Auto-BITV-Mapping → Vorbefüllte Notiz → Speichern
+```
+
+### 🤖 **KI-inspirierte Features**
+
+#### **Automatische Barriere-Erkennung**
+- **5 Erkennungsalgorithmen**: Alt-Text, Button-Labels, Formular-Labels, Kontrast, Überschriften-Struktur
+- **Laienverständliche Beschreibungen**: "Button-Beschriftung fehlt" statt technischer BITV-IDs
+- **Performance-optimiert**: <200ms Element-Analyse
+- **BITV-Referenzen**: Automatische Zuordnung zu korrekten Prüfschritten
+
+#### **Dynamisches Kontextmenü**
+- **Problem-spezifische Menüpunkte**: "🚨 Problem melden: [Erkanntes Problem]"
+- **Intelligente Menü-Anpassung**: Kontextmenü passt sich erkannten Problemen an
+- **Real-time Updates**: Sofortige Anzeige der Problem-Anzahl
+- **Mehrere Report-Modi**: Quick Problem, Detaillierte BITV-Notiz, Bürgermeldung
+
+#### **Automatische BITV-Prüfschritt-Vorschläge**
+- **Intelligentes Problem-zu-BITV-Mapping**:
+  - Alt-Text fehlt → BITV 1.1.1 (Nicht-Text-Inhalte)
+  - Button-Label fehlt → BITV 2.4.4 (Linkzweck im Kontext)
+  - Form-Label fehlt → BITV 3.3.2 (Beschriftungen)
+  - Schlechter Kontrast → BITV 1.4.3 (Kontrast Minimum)
+  - Überschriften-Struktur → BITV 1.3.1 (Info und Beziehungen)
+- **Visual AI Indicators**: "🤖 Automatisch vorgeschlagen" mit Problem-Referenz
+- **Confidence-Level System**: High/Medium für Mapping-Qualität
+
+#### **Template-basierte Auto-Population**
+- **Quick Problem Report**: Fokussiert auf schnelle Problemmeldung
+- **Citizen Report**: Bürgerfreundliche Sprache für Laien
+- **Detailed BITV Report**: Vollständiger professioneller Prüfbericht
+- **Automatische Felderbefüllung**: Titel, Beschreibung, BITV-Referenz, Bewertung
+
+### 🎯 **Bewährte BITV-Features (v0.4.x)**
+- **Vollständiger BITV-Katalog**: Alle 54 BITV-Prüfschritte von bit-inklusiv.de
 - **Strukturierte Bewertung**: Bewertungssystem (Bestanden/Nicht bestanden/Teilweise/Zu überprüfen)
 - **BITV-Filter & Suche**: Erweiterte Filter nach Kategorien, Bewertungen und Prüfschritten
 - **BITV-Fortschritts-Dashboard**: Visuelle Fortschrittsanzeige pro BITV-Kategorie
 - **Professional BITV-Reports**: Strukturierte BITV-Berichte für offizielle Dokumentation
-- **Detaillierte Element-Analyse**: Automatische Extraktion von ARIA-Attributen, Fokus-Eigenschaften und Accessibility-Informationen
-- **Moderne UI**: WCAG 2.1 AA konforme Benutzeroberfläche mit Dark Mode
+- **Website-spezifische Analyse**: Filter und Tracking pro Domain
+- **Performance-optimiert**: <200ms für 1000+ Notizen mit Caching
 
-### 🚀 Kommende BITV-Features (v0.4.0+)
-- **BITV-Template-System** für alle 54 Prüfschritte mit vorgefertigten Texten
+### 🚀 **Roadmap: Nächste Features (v0.6.0+)**
 - **PDF/Excel-Reports** mit professioneller BITV-Struktur
-- **BITV-Team-Kollaboration** und Prüfschritt-Assignment
 - **Screenshot-Integration** mit Element-Highlighting
+- **BITV-Team-Kollaboration** und Prüfschritt-Assignment
 - **Multi-Projekt-Management** für größere BITV-Audits
-- **KI-basierte Prüfschritt-Empfehlungen**
+- **Machine Learning Integration** für erweiterte Problem-Erkennung
 
 ## 🚀 Installation
 

@@ -44,6 +44,9 @@ document.addEventListener('contextmenu', function(event) {
         browserAPI.storage.local.set(storageData, () => {
             if (browserAPI.runtime.lastError) {
                 console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
+            } else {
+                // DYNAMISCHES KONTEXTMENÜ: Informiere Background Script über erkannte Probleme
+                updateDynamicContextMenu(cleanElementInfo);
             }
         });
     } catch (error) {
@@ -51,6 +54,36 @@ document.addEventListener('contextmenu', function(event) {
         window.lastElementInfo = null;
     }
 }, true);
+
+// Funktion zum Aktualisieren des dynamischen Kontextmenüs
+function updateDynamicContextMenu(elementInfo) {
+    try {
+        // Sende Element-Info an Background Script für dynamisches Kontextmenü
+        browserAPI.runtime.sendMessage({
+            action: 'updateContextMenu',
+            elementInfo: elementInfo
+        }, (response) => {
+            if (browserAPI.runtime.lastError) {
+                console.error('❌ Content: Error updating context menu:', browserAPI.runtime.lastError);
+            } else if (response?.success) {
+                console.log('✅ Content: Dynamic context menu updated');
+
+                // Log für Debugging
+                const problemCount = elementInfo?.detectedProblems?.length || 0;
+                if (problemCount > 0) {
+                    console.log(`🚨 Content: ${problemCount} problems detected, context menu shows problem-specific options`);
+                    elementInfo.detectedProblems.forEach((problem, index) => {
+                        console.log(`   ${index + 1}. ${problem.title}`);
+                    });
+                } else {
+                    console.log('✅ Content: No problems detected, context menu shows standard options');
+                }
+            }
+        });
+    } catch (error) {
+        console.error('❌ Content: Error in updateDynamicContextMenu:', error);
+    }
+}
 
 // Direktes Kontextmenü erstellen (da Background Script nicht funktioniert)
 function createDirectContextMenu(event) {
@@ -134,7 +167,134 @@ document.addEventListener('keydown', function(event) {
         event.preventDefault();
         createDirectContextMenu({ pageX: window.innerWidth / 2, pageY: window.innerHeight / 2 });
     }
+
+    // Ctrl+Shift+E für Screen-Reader Element-Erfassung (TEST)
+    if (event.ctrlKey && event.shiftKey && event.key === 'E') {
+        event.preventDefault();
+        captureCurrentFocusedElement();
+    }
 });
+
+// Funktion zur Erfassung des aktuell fokussierten Elements (für Screen-Reader Testing)
+function captureCurrentFocusedElement() {
+    console.log('🔍 === SCREEN-READER ELEMENT DETECTION TEST (Ctrl+Shift+E) ===');
+
+    let selectedElement = null;
+    let detectionMethod = 'none';
+
+    // PRIORITY METHOD: Text Selection (für Screen-Reader)
+    const selection = window.getSelection();
+    console.log('📍 1. TEXT SELECTION ANALYSIS:');
+    console.log('   Selection exists:', selection && selection.rangeCount > 0);
+
+    if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        const selectedText = selection.toString().trim();
+
+        console.log('   Selected text:', selectedText.substring(0, 100));
+        console.log('   Selection range:', range);
+
+        if (selectedText.length > 0) {
+            // Finde das umschließende Element
+            let container = range.commonAncestorContainer;
+
+            // Wenn es ein Text-Node ist, nimm das Parent-Element
+            if (container.nodeType === Node.TEXT_NODE) {
+                container = container.parentElement;
+            }
+
+            // Gehe hoch im DOM-Tree bis zu einem semantisch relevanten Element
+            let targetElement = container;
+            let attempts = 0;
+            const maxAttempts = 5;
+
+            while (targetElement && attempts < maxAttempts) {
+                const tag = targetElement.tagName?.toLowerCase();
+
+                // Stoppe bei semantisch relevanten Elementen
+                if (tag && !['span', 'font'].includes(tag)) {
+                    break;
+                }
+
+                // Oder bei Elementen mit wichtigen Eigenschaften
+                if (targetElement.className || targetElement.id ||
+                    targetElement.style?.color || targetElement.style?.backgroundColor) {
+                    break;
+                }
+
+                targetElement = targetElement.parentElement;
+                attempts++;
+            }
+
+            if (targetElement && targetElement !== document.body) {
+                selectedElement = targetElement;
+                detectionMethod = 'text-selection';
+
+                console.log('✅ ELEMENT FROM TEXT SELECTION:', selectedElement);
+                console.log('   Tag:', selectedElement.tagName);
+                console.log('   ID:', selectedElement.id || '(none)');
+                console.log('   Classes:', selectedElement.className || '(none)');
+                console.log('   Selected text:', selectedText.substring(0, 50));
+
+                // Analysiere Styling für Kontrast-Probleme
+                const computedStyle = window.getComputedStyle(selectedElement);
+                console.log('   🎨 Styling Analysis:');
+                console.log('      Color:', computedStyle.color);
+                console.log('      Background:', computedStyle.backgroundColor);
+                console.log('      Font family:', computedStyle.fontFamily);
+                console.log('      Font size:', computedStyle.fontSize);
+                console.log('      Font weight:', computedStyle.fontWeight);
+            }
+        }
+    }
+
+    // FALLBACK: Standard Focus Detection
+    if (!selectedElement) {
+        console.log('📍 2. FALLBACK - Standard focus detection:');
+        const activeElement = document.activeElement;
+        console.log('   document.activeElement:', activeElement?.tagName);
+        console.log('   Is body?:', activeElement === document.body);
+
+        if (activeElement && activeElement !== document.body) {
+            selectedElement = activeElement;
+            detectionMethod = 'focus';
+        }
+    }
+
+    // Element-Analyse und Speicherung
+    if (selectedElement) {
+        console.log(`✅ SELECTED ELEMENT (${detectionMethod.toUpperCase()}):`, selectedElement);
+
+        try {
+            const elementInfo = getElementAccessibilityInfo(selectedElement);
+            console.log('📋 Element Info:', {
+                tagName: elementInfo.tagName,
+                elementType: elementInfo.elementType,
+                text: elementInfo.text,
+                accessibleName: elementInfo.accessibleName,
+                ariaLabel: elementInfo.ariaLabel,
+                detectedProblems: elementInfo.detectedProblems?.length || 0
+            });
+
+            // Setze als lastClickedElement für weitere Tests
+            lastClickedElement = selectedElement;
+            window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
+
+            console.log('💾 Element stored as lastClickedElement for testing');
+            console.log('💡 You can now use Ctrl+Shift+N to create a note for this element');
+
+        } catch (error) {
+            console.error('❌ Error analyzing element:', error);
+        }
+    } else {
+        console.log('❌ NO ELEMENT DETECTED');
+        console.log('💡 TIPS:');
+        console.log('   1. SELECT TEXT with Shift+Arrow keys, then press Ctrl+Shift+E');
+        console.log('   2. Or navigate to focusable element with Tab, then press Ctrl+Shift+E');
+    }
+
+    console.log('🔍 === END SCREEN-READER ELEMENT DETECTION TEST ===');
+}
 
 // Funktion zum Bereinigen der Element-Informationen für Storage
 function cleanElementInfoForStorage(elementInfo) {

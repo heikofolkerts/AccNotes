@@ -208,6 +208,267 @@ function initializeBitvUI() {
             }
         });
     });
+
+    // === PHASE 3: AUTOMATISCHE BITV-PRÜFSCHRITT-VORSCHLÄGE ===
+    autoSuggestBitvStep();
+}
+
+// Funktion für automatische BITV-Prüfschritt-Vorschläge basierend auf erkannten Problemen
+function autoSuggestBitvStep() {
+    console.log('🤖 Phase 3: Analyzing problems for BITV step suggestions...');
+
+    if (!contextData.detectedProblems || contextData.detectedProblems.length === 0) {
+        console.log('📋 No detected problems - using manual BITV selection');
+        return;
+    }
+
+    // Debug: Zeige verfügbare Problem-Types
+    console.log('🔍 Phase 3: Available problem types:', contextData.detectedProblems.map(p => p.type));
+
+    // Problem-zu-BITV-Mapping für automatische Vorschläge
+    // WICHTIG: Verwende die korrekten Problem-Types aus barrier-detector.js
+    const problemToBitvMapping = {
+        'MISSING_ALT_TEXT': {
+            categoryId: 'wahrnehmbarkeit',
+            stepId: '1.1.1',
+            title: 'Nicht-Text-Inhalte',
+            confidence: 'high'
+        },
+        'MISSING_BUTTON_LABEL': {
+            categoryId: 'bedienbarkeit',
+            stepId: '2.4.4',
+            title: 'Linkzweck (im Kontext)',
+            confidence: 'high'
+        },
+        'MISSING_FORM_LABEL': {
+            categoryId: 'verständlichkeit',
+            stepId: '3.3.2',
+            title: 'Beschriftungen oder Anweisungen',
+            confidence: 'high'
+        },
+        'POOR_CONTRAST': {
+            categoryId: 'wahrnehmbarkeit',
+            stepId: '1.4.3',
+            title: 'Kontrast (Minimum)',
+            confidence: 'high'
+        },
+        'HEADING_STRUCTURE_ISSUE': {
+            categoryId: 'wahrnehmbarkeit',
+            stepId: '1.3.1',
+            title: 'Info und Beziehungen',
+            confidence: 'medium'
+        }
+    };
+
+    // Finde das erste Problem mit hoher Konfidenz
+    let suggestedStep = null;
+    let problemUsed = null;
+
+    for (const problem of contextData.detectedProblems) {
+        const mapping = problemToBitvMapping[problem.type];
+        if (mapping && mapping.confidence === 'high') {
+            suggestedStep = mapping;
+            problemUsed = problem;
+            break;
+        }
+    }
+
+    // Fallback: Verwende erstes verfügbares Mapping
+    if (!suggestedStep) {
+        for (const problem of contextData.detectedProblems) {
+            const mapping = problemToBitvMapping[problem.type];
+            if (mapping) {
+                suggestedStep = mapping;
+                problemUsed = problem;
+                break;
+            }
+        }
+    }
+
+    if (suggestedStep) {
+        console.log(`✅ Phase 3: Auto-suggesting BITV step ${suggestedStep.stepId} for problem: ${problemUsed.title}`);
+
+        // Automatisch BITV-Kategorie und Prüfschritt setzen
+        const categorySelect = document.getElementById('bitv-category');
+        const stepSelect = document.getElementById('bitv-step');
+
+        // Setze Kategorie
+        categorySelect.value = suggestedStep.categoryId;
+        categorySelect.dispatchEvent(new Event('change'));
+
+        // Warte kurz und setze dann Prüfschritt
+        setTimeout(() => {
+            stepSelect.value = suggestedStep.stepId;
+            stepSelect.dispatchEvent(new Event('change'));
+
+            // Auto-Population für spezielle Report-Types
+            autoPopulateFieldsBasedOnReportType(problemUsed, suggestedStep);
+
+            console.log(`🎯 Phase 3: BITV step ${suggestedStep.stepId} automatically selected`);
+        }, 100);
+
+        // Visual indicator für automatische Auswahl
+        showAutoSuggestionIndicator(suggestedStep, problemUsed);
+    } else {
+        console.log('⚠️ Phase 3: No BITV mapping found for detected problems');
+    }
+}
+
+// Auto-Population basierend auf Report-Type und Problem
+function autoPopulateFieldsBasedOnReportType(problem, bitvStep) {
+    console.log('📝 Phase 3: Auto-populating fields based on report type:', contextData.reportType);
+
+    const noteTitle = document.getElementById('note-title');
+    const noteContent = document.getElementById('note-content');
+
+    // Template-basierte Befüllung je nach Report-Type
+    if (contextData.reportType === 'quick-problem') {
+        // Schnell-Problemmeldung: Minimal aber vollständig
+        if (!noteTitle.value.trim()) {
+            noteTitle.value = `Barriere gemeldet: ${problem.title}`;
+        }
+
+        // Vereinfachte Notiz-Vorlage
+        const quickTemplate = generateQuickProblemTemplate(problem, bitvStep);
+        if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+            // Ersetze nur den Notiz-Teil
+            const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
+            noteContent.value = sections[0] + '=== BARRIEREFREIHEITS-NOTIZ ===\n' + quickTemplate;
+        }
+
+        // Automatische Bewertung setzen (Problem erkannt = nicht bestanden)
+        setTimeout(() => {
+            const failedRadio = document.querySelector('input[name="evaluation"][value="failed"]');
+            if (failedRadio) {
+                failedRadio.checked = true;
+                failedRadio.dispatchEvent(new Event('change'));
+            }
+        }, 200);
+
+    } else if (contextData.reportType === 'quick-citizen') {
+        // Bürgermeldung: Vereinfacht, verständlich
+        if (!noteTitle.value.trim()) {
+            noteTitle.value = `Bürgermeldung: Problem mit ${contextData.elementType}`;
+        }
+
+        const citizenTemplate = generateCitizenReportTemplate(problem, bitvStep);
+        if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+            const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
+            noteContent.value = sections[0] + '=== BÜRGERMELDUNG ===\n' + citizenTemplate;
+        }
+
+    } else if (contextData.reportType === 'detailed-bitv') {
+        // Detaillierte BITV-Dokumentation: Vollständig, technisch
+        if (!noteTitle.value.trim()) {
+            noteTitle.value = `BITV ${bitvStep.stepId}: ${bitvStep.title}`;
+        }
+
+        const detailedTemplate = generateDetailedBitvTemplate(problem, bitvStep);
+        if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+            const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
+            noteContent.value = sections[0] + '=== BITV-PRÜFBERICHT ===\n' + detailedTemplate;
+        }
+    }
+
+    console.log('✅ Phase 3: Fields auto-populated based on report type');
+}
+
+// Template-Generatoren für verschiedene Report-Types
+function generateQuickProblemTemplate(problem, bitvStep) {
+    return `PROBLEM ERKANNT:
+${problem.description}
+
+EMPFOHLENE LÖSUNG:
+${problem.recommendation || problem.solution || 'Siehe automatisch erkanntes Problem oben'}
+
+RECHTLICHE GRUNDLAGE:
+BITV ${bitvStep.stepId} - ${bitvStep.title}
+${problem.bitvReference || ''}
+
+SCHWEREGRAD: ${problem.severity || 'Mittel'}
+
+NÄCHSTE SCHRITTE:
+[ ] Problem an Website-Betreiber melden
+[ ] Nachfassen nach angemessener Frist
+[ ] Bei Bedarf Beschwerde bei zuständiger Stelle
+
+`;
+}
+
+function generateCitizenReportTemplate(problem, bitvStep) {
+    return `WAS IST DAS PROBLEM?
+Ich habe ein Problem mit der Barrierefreiheit auf dieser Website entdeckt:
+${problem.description}
+
+WAS SOLLTE VERBESSERT WERDEN?
+${problem.recommendation || problem.solution || 'Das Element sollte für Hilfstechnologien zugänglich gemacht werden.'}
+
+WARUM IST DAS WICHTIG?
+Dieses Problem erschwert Menschen mit Behinderungen die Nutzung der Website.
+
+RECHTLICHE GRUNDLAGE:
+Diese Website muss nach der Barrierefreie-Informationstechnik-Verordnung (BITV 2.0) zugänglich sein.
+Betroffener Prüfpunkt: ${bitvStep.stepId} - ${bitvStep.title}
+
+KONTAKT FÜR MELDUNG:
+Website-Betreiber kontaktieren oder an zuständige Überwachungsstelle wenden.
+
+`;
+}
+
+function generateDetailedBitvTemplate(problem, bitvStep) {
+    return `BITV-PRÜFSCHRITT: ${bitvStep.stepId} - ${bitvStep.title}
+
+BEFUND:
+❌ NICHT BESTANDEN
+${problem.description}
+
+TECHNICAL DETAILS:
+Element: ${contextData.elementType} (${contextData.tagName})
+${contextData.id ? `ID: ${contextData.id}` : ''}
+${contextData.className ? `CSS-Klassen: ${contextData.className}` : ''}
+Selector: ${contextData.selector || 'N/A'}
+
+FEHLERBESCHREIBUNG:
+${problem.title}
+${problem.description}
+
+LÖSUNGSEMPFEHLUNG:
+${problem.recommendation || problem.solution || 'Siehe Prüfschritt-Dokumentation'}
+
+BITV-REFERENZ:
+${problem.bitvReference || bitvStep.stepId + ' - ' + bitvStep.title}
+
+PRIORITÄT: ${problem.severity === 'critical' ? 'HOCH' : problem.severity === 'major' ? 'MITTEL' : 'NIEDRIG'}
+
+GETESTET MIT:
+- Browser: ${navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Firefox'}
+- Methode: Automatische Erkennung + manuelle Prüfung
+- Datum: ${new Date().toLocaleDateString('de-DE')}
+
+`;
+}
+
+// Visual Indicator für automatische Vorschläge
+function showAutoSuggestionIndicator(bitvStep, problem) {
+    const categorySelect = document.getElementById('bitv-category');
+    const stepSelect = document.getElementById('bitv-step');
+
+    // Füge visuelle Indikatoren hinzu
+    const indicator = document.createElement('div');
+    indicator.className = 'auto-suggestion-indicator';
+    indicator.innerHTML = `
+        <div style="background: #e8f5e8; border: 1px solid #4caf50; border-radius: 4px; padding: 8px; margin: 8px 0; font-size: 14px;">
+            🤖 <strong>Automatisch vorgeschlagen:</strong> BITV ${bitvStep.stepId} basierend auf erkanntem Problem "${problem.title}"
+            <button type="button" onclick="this.parentElement.parentElement.remove()" style="float: right; background: none; border: none; cursor: pointer;">✕</button>
+        </div>
+    `;
+
+    // Füge Indikator nach BITV-Auswahl ein
+    const bitvSection = document.querySelector('.bitv-section') || stepSelect.parentElement;
+    if (bitvSection) {
+        bitvSection.appendChild(indicator);
+    }
 }
 
 // Enhanced form handling with accessibility
