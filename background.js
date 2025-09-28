@@ -68,10 +68,29 @@ function createDynamicContextMenu(elementInfo) {
                     contexts: ["all"]
                 });
 
-                // DETAILLIERTE OPTIONEN
+                // REPORT-TYPE OPTIONEN
+                browserAPI.contextMenus.create({
+                    id: "quick-report",
+                    title: "🚀 Schnelle Bürgermeldung",
+                    contexts: ["all"]
+                });
+
                 browserAPI.contextMenus.create({
                     id: "detailed-note",
                     title: "📋 Detaillierte BITV-Notiz erstellen",
+                    contexts: ["all"]
+                });
+
+                browserAPI.contextMenus.create({
+                    id: "manual-problem-report",
+                    title: "⚠️ Anderes Problem manuell melden",
+                    contexts: ["all"]
+                });
+
+                // Separator
+                browserAPI.contextMenus.create({
+                    id: "separator-help",
+                    type: "separator",
                     contexts: ["all"]
                 });
 
@@ -81,7 +100,7 @@ function createDynamicContextMenu(elementInfo) {
                     contexts: ["all"]
                 });
 
-                currentMenuItems.push("separator-1", "detailed-note", "explain-problem");
+                currentMenuItems.push("separator-1", "quick-report", "detailed-note", "manual-problem-report", "separator-help", "explain-problem");
 
             } else {
                 console.log('✅ Background: No problems detected, creating standard menu');
@@ -95,9 +114,34 @@ function createDynamicContextMenu(elementInfo) {
                     contexts: ["all"]
                 });
 
+                // REPORT-TYPE AUSWAHL (auch ohne erkannte Probleme)
+                browserAPI.contextMenus.create({
+                    id: "separator-report-types",
+                    type: "separator",
+                    contexts: ["all"]
+                });
+
                 browserAPI.contextMenus.create({
                     id: "quick-report",
-                    title: "🚀 Schnelle Meldung",
+                    title: "🚀 Schnelle Bürgermeldung",
+                    contexts: ["all"]
+                });
+
+                browserAPI.contextMenus.create({
+                    id: "detailed-note",
+                    title: "📋 Detaillierte BITV-Notiz erstellen",
+                    contexts: ["all"]
+                });
+
+                browserAPI.contextMenus.create({
+                    id: "manual-problem-report",
+                    title: "⚠️ Problem manuell melden",
+                    contexts: ["all"]
+                });
+
+                browserAPI.contextMenus.create({
+                    id: "separator-tools",
+                    type: "separator",
                     contexts: ["all"]
                 });
 
@@ -107,7 +151,7 @@ function createDynamicContextMenu(elementInfo) {
                     contexts: ["all"]
                 });
 
-                currentMenuItems.push("add-note", "quick-report", "check-accessibility");
+                currentMenuItems.push("add-note", "separator-report-types", "quick-report", "detailed-note", "manual-problem-report", "separator-tools", "check-accessibility");
             }
 
             // ALLGEMEINE OPTIONEN (immer vorhanden)
@@ -178,8 +222,14 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
     }
 
     if (info.menuItemId === "quick-report") {
-        console.log('🚀 Background: Quick report requested');
+        console.log('🚀 Background: Quick citizen report requested');
         await handleQuickReport(tab, info);
+        return;
+    }
+
+    if (info.menuItemId === "manual-problem-report") {
+        console.log('⚠️ Background: Manual problem report requested');
+        await handleManualProblemReport(tab, info);
         return;
     }
 
@@ -386,7 +436,7 @@ async function handleExplainProblem(tab, info) {
 }
 
 async function handleQuickReport(tab, info) {
-    console.log('🚀 Background: Handling quick report');
+    console.log('🚀 Background: Handling quick citizen report');
 
     try {
         const elementInfo = await getElementInfo(tab);
@@ -402,7 +452,30 @@ async function handleQuickReport(tab, info) {
         await openNoteWithContext(contextData);
         console.log('✅ Background: Quick citizen report opened');
     } catch (error) {
-        console.error('❌ Background: Error in quick report:', error);
+        console.error('❌ Background: Error in quick citizen report:', error);
+    }
+}
+
+async function handleManualProblemReport(tab, info) {
+    console.log('⚠️ Background: Handling manual problem report');
+
+    try {
+        const elementInfo = await getElementInfo(tab);
+
+        const contextData = {
+            url: tab.url || 'Unbekannt',
+            title: tab.title || 'Unbekannt',
+            selectedText: info.selectionText || '',
+            ...elementInfo,
+            reportType: 'quick-problem',
+            // Für manuelle Berichte ohne erkannte Probleme
+            manualReport: true
+        };
+
+        await openNoteWithContext(contextData);
+        console.log('✅ Background: Manual problem report opened');
+    } catch (error) {
+        console.error('❌ Background: Error in manual problem report:', error);
     }
 }
 

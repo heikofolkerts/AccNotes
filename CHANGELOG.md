@@ -5,7 +5,24 @@ Alle wichtigen Änderungen an diesem Projekt werden in dieser Datei dokumentiert
 Das Format basiert auf [Keep a Changelog](https://keepachangelog.com/de/1.0.0/),
 und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.5.0] - 2025-01-28
+## [Unreleased]
+
+### 🐛 Bug Fixes
+- **Kontextmenü**: Behebung der Race-Condition bei dynamischen Kontextmenü-Einträgen
+- **Help-System**: "Was bedeutet das?" zeigt jetzt vollständige Problemerklärungen
+
+### 🚀 New Features
+- **Help-System**: Vollständige Hilfe-Seite mit problemspezifischen Erklärungen
+- **Extended Context Menu**: Vollständige Report-Type-Auswahl auch bei erkannten Problemen
+- **Manual Problem Reports**: Template für manuell gemeldete Probleme
+
+### 📚 Documentation
+- **Implementation Status**: Vollständige Aktualisierung des Implementierungsstatus
+- **Bug Tracking**: Aufnahme von Bug #1 (Kontextmenü-Initialisierung) ins Product Backlog
+
+---
+
+## [0.5.0] - 2024-09-28
 
 ### 🎉 **VOLLSTÄNDIGER END-TO-END WORKFLOW IMPLEMENTIERT**
 

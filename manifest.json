@@ -31,6 +31,8 @@
     "note.js",
     "notes-overview.html",
     "notes-overview.js",
+    "help.html",
+    "help.js",
     "styles/modern-theme.css",
     "scripts/theme-toggle.js",
     "scripts/bitv-catalog.js",

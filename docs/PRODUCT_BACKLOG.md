@@ -214,6 +214,39 @@ Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kon
 
 ---
 
+## 🐛 **BUGS & KNOWN ISSUES**
+
+### Bug #1: Kontextmenü-Initialisierung beim ersten Aufruf
+**Status**: 🔍 Identified - Ready for Development
+**Priority**: Medium
+**Reported**: 28.09.2024
+
+**Problem**:
+Beim ersten Rechtsklick auf ein Element mit erkannten Problemen werden die dynamischen Kontextmenü-Einträge manchmal nicht korrekt geladen. Beim zweiten Versuch funktioniert es meist.
+
+**Reproduktion**:
+1. Öffne docs/test/test-button-labels.html
+2. Rechtsklick auf ersten problematischen Button (🔍)
+3. Kontextmenü zeigt möglicherweise nur Standard-Einträge
+4. Zweiter Rechtsklick zeigt korrekte problem-spezifische Einträge
+
+**Vermutete Ursache**:
+Race-Condition zwischen Problem-Erkennung und Kontextmenü-Erstellung in `background.js:createDynamicContextMenu()`
+
+**Lösungsansätze**:
+- [ ] Timing/Synchronisation in `background.js` verbessern
+- [ ] Retry-Mechanismus für Element-Info-Abruf implementieren
+- [ ] Loading-State für Kontextmenü-Erstellung hinzufügen
+- [ ] Debug-Logging für Race-Condition-Analyse erweitern
+
+**Acceptance Criteria**:
+- [ ] Kontextmenü zeigt beim ersten Aufruf korrekte problem-spezifische Einträge
+- [ ] Keine Unterschiede zwischen erstem und zweitem Rechtsklick
+- [ ] Performance bleibt unter 200ms für Kontextmenü-Erstellung
+- [ ] Funktioniert konsistent über alle Test-Seiten
+
+---
+
 ## 🔧 **Kontextmenü-Konzept für verschiedene Nutzergruppen**
 
 ### **Intelligentes Kontextmenü (abhängig von erkannten Problemen)**

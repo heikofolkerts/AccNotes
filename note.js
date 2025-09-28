@@ -323,27 +323,41 @@ function autoPopulateFieldsBasedOnReportType(problem, bitvStep) {
 
     // Template-basierte Befüllung je nach Report-Type
     if (contextData.reportType === 'quick-problem') {
-        // Schnell-Problemmeldung: Minimal aber vollständig
-        if (!noteTitle.value.trim()) {
-            noteTitle.value = `Barriere gemeldet: ${problem.title}`;
-        }
-
-        // Vereinfachte Notiz-Vorlage
-        const quickTemplate = generateQuickProblemTemplate(problem, bitvStep);
-        if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
-            // Ersetze nur den Notiz-Teil
-            const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
-            noteContent.value = sections[0] + '=== BARRIEREFREIHEITS-NOTIZ ===\n' + quickTemplate;
-        }
-
-        // Automatische Bewertung setzen (Problem erkannt = nicht bestanden)
-        setTimeout(() => {
-            const failedRadio = document.querySelector('input[name="evaluation"][value="failed"]');
-            if (failedRadio) {
-                failedRadio.checked = true;
-                failedRadio.dispatchEvent(new Event('change'));
+        // Unterscheidung zwischen automatisch erkannten und manuellen Problemen
+        if (contextData.manualReport) {
+            // Manueller Problem-Report ohne automatische Erkennung
+            if (!noteTitle.value.trim()) {
+                noteTitle.value = `Manuell gemeldetes Problem: ${contextData.elementType}`;
             }
-        }, 200);
+
+            const manualTemplate = generateManualProblemTemplate(bitvStep);
+            if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+                const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
+                noteContent.value = sections[0] + '=== PROBLEM-MELDUNG ===\n' + manualTemplate;
+            }
+        } else {
+            // Automatisch erkanntes Problem
+            if (!noteTitle.value.trim()) {
+                noteTitle.value = `Barriere gemeldet: ${problem.title}`;
+            }
+
+            // Vereinfachte Notiz-Vorlage
+            const quickTemplate = generateQuickProblemTemplate(problem, bitvStep);
+            if (noteContent.value.includes('=== BARRIEREFREIHEITS-NOTIZ ===')) {
+                // Ersetze nur den Notiz-Teil
+                const sections = noteContent.value.split('=== BARRIEREFREIHEITS-NOTIZ ===');
+                noteContent.value = sections[0] + '=== BARRIEREFREIHEITS-NOTIZ ===\n' + quickTemplate;
+            }
+
+            // Automatische Bewertung setzen (Problem erkannt = nicht bestanden)
+            setTimeout(() => {
+                const failedRadio = document.querySelector('input[name="evaluation"][value="failed"]');
+                if (failedRadio) {
+                    failedRadio.checked = true;
+                    failedRadio.dispatchEvent(new Event('change'));
+                }
+            }, 200);
+        }
 
     } else if (contextData.reportType === 'quick-citizen') {
         // Bürgermeldung: Vereinfacht, verständlich
@@ -412,6 +426,41 @@ Betroffener Prüfpunkt: ${bitvStep.stepId} - ${bitvStep.title}
 
 KONTAKT FÜR MELDUNG:
 Website-Betreiber kontaktieren oder an zuständige Überwachungsstelle wenden.
+
+`;
+}
+
+function generateManualProblemTemplate(bitvStep) {
+    return `MANUELL GEMELDETES PROBLEM:
+
+BESCHREIBUNG DES PROBLEMS:
+[Bitte beschreiben Sie das Problem, das Sie festgestellt haben]
+
+BETROFFENES ELEMENT:
+Element-Typ: ${contextData.elementType || 'Unbekannt'}
+${contextData.text ? `Text/Inhalt: "${contextData.text}"` : ''}
+${contextData.accessibleName ? `Zugänglicher Name: "${contextData.accessibleName}"` : ''}
+
+WARUM IST DAS EIN PROBLEM?
+[Erklären Sie, warum dieses Element Probleme für Menschen mit Behinderungen verursacht]
+
+EMPFOHLENE LÖSUNG:
+[Beschreiben Sie, wie das Problem behoben werden könnte]
+
+RECHTLICHE GRUNDLAGE:
+${bitvStep ? `BITV ${bitvStep.stepId} - ${bitvStep.title}` : 'Bitte passenden BITV-Prüfschritt auswählen'}
+
+SCHWEREGRAD:
+[ ] Niedrig - Kosmetisches Problem
+[ ] Mittel - Beeinträchtigt Nutzung
+[ ] Hoch - Verhindert Nutzung
+[ ] Kritisch - Blockiert wichtige Funktionen
+
+NÄCHSTE SCHRITTE:
+[ ] Problem dokumentiert und beschrieben
+[ ] An Website-Betreiber melden
+[ ] Nachfassen nach angemessener Frist
+[ ] Bei Bedarf Beschwerde bei zuständiger Stelle
 
 `;
 }
