@@ -18,7 +18,8 @@
     "tabs",
     "activeTab",
     "storage",
-    "file://*/*"
+    "file://*/*",
+    "<all_urls>"
   ],
 
   "background": {
@@ -37,7 +38,8 @@
     "scripts/theme-toggle.js",
     "scripts/bitv-catalog.js",
     "scripts/storage-helper.js",
-    "scripts/barrier-detector.js"
+    "scripts/barrier-detector.js",
+    "scripts/screenshot-helper.js"
   ],
 
   "content_scripts": [{

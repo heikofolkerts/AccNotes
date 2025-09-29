@@ -522,6 +522,11 @@ function showAutoSuggestionIndicator(bitvStep, problem) {
 
 // Enhanced form handling with accessibility
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Screenshot Helper
+    if (typeof window.ScreenshotHelper !== 'undefined') {
+        ScreenshotHelper.init();
+    }
+
     // Initialize BITV UI
     initializeBitvUI();
 
@@ -556,6 +561,33 @@ document.addEventListener('DOMContentLoaded', function() {
         clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(saveDraft, 2000); // Save draft after 2 seconds of inactivity
     });
+
+    // Screenshot checkbox handler
+    const screenshotCheckbox = document.getElementById('include-screenshot');
+    if (screenshotCheckbox) {
+        screenshotCheckbox.addEventListener('change', function() {
+            const previewContainer = document.getElementById('screenshot-preview');
+            if (this.checked) {
+                console.log('📷 Screenshot option enabled');
+                if (previewContainer) {
+                    previewContainer.style.display = 'block';
+                    const info = document.getElementById('screenshot-info');
+                    if (info) {
+                        info.textContent = 'Screenshot wird beim Speichern erstellt...';
+                        info.style.color = 'var(--text-secondary, #666)';
+                    }
+                }
+            } else {
+                console.log('📷 Screenshot option disabled');
+                if (previewContainer) {
+                    previewContainer.style.display = 'none';
+                }
+                if (typeof ScreenshotHelper !== 'undefined') {
+                    ScreenshotHelper.hideScreenshotPreview();
+                }
+            }
+        });
+    }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
@@ -676,6 +708,52 @@ document.addEventListener('DOMContentLoaded', function() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+
+            // Screenshot erstellen wenn gewünscht
+            const includeScreenshot = document.getElementById('include-screenshot');
+            if (includeScreenshot && includeScreenshot.checked) {
+                try {
+                    console.log('📷 Creating screenshot for note...');
+
+                    // Element aus contextData rekonstruieren (falls möglich)
+                    let targetElement = null;
+                    if (window.lastClickedElement) {
+                        targetElement = window.lastClickedElement;
+                    } else if (contextData.cssSelector) {
+                        try {
+                            targetElement = document.querySelector(contextData.cssSelector);
+                        } catch (e) {
+                            console.warn('Could not find element by CSS selector:', contextData.cssSelector);
+                        }
+                    }
+
+                    if (targetElement && typeof ScreenshotHelper !== 'undefined') {
+                        const screenshotResult = await ScreenshotHelper.captureElementScreenshot(targetElement, {
+                            highlight: true,
+                            padding: 20,
+                            maxWidth: 800,
+                            maxHeight: 600
+                        });
+
+                        if (screenshotResult.success) {
+                            noteData.screenshot = ScreenshotHelper.prepareScreenshotForStorage(screenshotResult, noteData);
+                            console.log('✅ Screenshot successfully attached to note');
+
+                            // Screenshot-Vorschau anzeigen
+                            ScreenshotHelper.showScreenshotPreview(screenshotResult);
+                        } else {
+                            console.warn('Screenshot creation failed:', screenshotResult.error);
+                            showNotification('Screenshot konnte nicht erstellt werden: ' + screenshotResult.error, 'warning');
+                        }
+                    } else {
+                        console.warn('Screenshot requested but no target element available or ScreenshotHelper not loaded');
+                        showNotification('Screenshot konnte nicht erstellt werden - Element nicht verfügbar', 'warning');
+                    }
+                } catch (screenshotError) {
+                    console.error('Screenshot error:', screenshotError);
+                    showNotification('Fehler beim Screenshot erstellen: ' + screenshotError.message, 'warning');
+                }
+            }
 
             // Save to persistent storage for overview with enhanced structure
             noteData.fileName = fileName;

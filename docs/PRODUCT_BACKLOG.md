@@ -76,8 +76,8 @@
 
 ---
 
-#### 4. Automatische Barriere-Erkennung für Bürgermeldungen *(Story Points: 21)*
-**Status**: 📋 Ready for Development
+#### 4. Automatische Barriere-Erkennung für Bürgermeldungen *(Story Points: 21)* ✅ COMPLETED
+**Status**: ✅ Abgeschlossen
 
 **User Stories**:
 - Als **Maria** möchte ich Probleme automatisch erkennen lassen, ohne technisches Wissen haben zu müssen
@@ -85,34 +85,34 @@
 - Als **Petra** möchte ich Beratungsklienten einfach zeigen, was Barrieren sind
 
 **Tasks**:
-- [ ] Automatische Erkennung fehlender Alt-Texte auf Bildern
-- [ ] Erkennung fehlender Alternativtexte auf Buttons (Icon-Buttons, Image-Buttons)
-- [ ] Erkennung von Buttons ohne zugänglichen Namen (aria-label, aria-labelledby, Textinhalt)
-- [ ] Spezielle Behandlung für häufige Button-Typen: Submit-Buttons, Close-Buttons, Menu-Toggle
-- [ ] Erkennung von CSS-Background-Image-Buttons ohne Textinhalt
-- [ ] Erkennung von Formularfeldern ohne Labels
-- [ ] Kontrast-Checker für Text-Hintergrund-Kombinationen
-- [ ] Überschriften-Struktur-Validator (H1-H6 Hierarchie)
-- [ ] Integration in bestehendes Kontextmenü (keine zusätzlichen Buttons)
-- [ ] Kontextmenü zeigt erkannte Probleme direkt an ("Button-Beschriftung fehlt", "Alt-Text fehlt")
-- [ ] Automatische Vor-Ausfüllung der Notiz basierend auf erkanntem Problem
-- [ ] Laienverständliche Problembeschreibungen (keine BITV-IDs)
-- [ ] Automatische Lösungsvorschläge für häufige Probleme
+- [x] Automatische Erkennung fehlender Alt-Texte auf Bildern
+- [x] Erkennung fehlender Alternativtexte auf Buttons (Icon-Buttons, Image-Buttons)
+- [x] Erkennung von Buttons ohne zugänglichen Namen (aria-label, aria-labelledby, Textinhalt)
+- [x] Spezielle Behandlung für häufige Button-Typen: Submit-Buttons, Close-Buttons, Menu-Toggle
+- [x] Erkennung von CSS-Background-Image-Buttons ohne Textinhalt
+- [x] Erkennung von Formularfeldern ohne Labels
+- [x] Kontrast-Checker für Text-Hintergrund-Kombinationen
+- [x] Überschriften-Struktur-Validator (H1-H6 Hierarchie)
+- [x] Integration in bestehendes Kontextmenü (keine zusätzlichen Buttons)
+- [x] Kontextmenü zeigt erkannte Probleme direkt an ("Button-Beschriftung fehlt", "Alt-Text fehlt")
+- [x] Automatische Vor-Ausfüllung der Notiz basierend auf erkanntem Problem
+- [x] Laienverständliche Problembeschreibungen (keine BITV-IDs)
+- [x] Automatische Lösungsvorschläge für häufige Probleme
 
 **Acceptance Criteria**:
-- [ ] Automatische Erkennung von mind. 5 häufigsten Barriere-Typen:
-  - [ ] Bilder ohne Alt-Text
-  - [ ] Icon-Buttons ohne Beschriftung
-  - [ ] Image-Buttons ohne Alternativtext
-  - [ ] Formularfelder ohne Labels
-  - [ ] Schlechte Farbkontraste
-- [ ] Kontextmenü zeigt erkannte Probleme kontextuell an
-- [ ] Spezifische Erkennung für Button-Typen (button, input[type="button"], role="button")
-- [ ] Verständliche Beschreibungen für Nicht-Experten ("Button-Beschriftung fehlt")
-- [ ] Automatische Vor-Ausfüllung ohne manuelle BITV-Auswahl
-- [ ] Automatische Screenshots der erkannten Probleme
-- [ ] Performance: <500ms für Seiten-Scan
-- [ ] Nahtlose Integration in bestehenden Workflow
+- [x] Automatische Erkennung von mind. 5 häufigsten Barriere-Typen:
+  - [x] Bilder ohne Alt-Text
+  - [x] Icon-Buttons ohne Beschriftung
+  - [x] Image-Buttons ohne Alternativtext
+  - [x] Formularfelder ohne Labels
+  - [x] Schlechte Farbkontraste
+- [x] Kontextmenü zeigt erkannte Probleme kontextuell an
+- [x] Spezifische Erkennung für Button-Typen (button, input[type="button"], role="role")
+- [x] Verständliche Beschreibungen für Nicht-Experten ("Button-Beschriftung fehlt")
+- [x] Automatische Vor-Ausfüllung ohne manuelle BITV-Auswahl
+- [x] Automatische Screenshots der erkannten Probleme
+- [x] Performance: <500ms für Seiten-Scan
+- [x] Nahtlose Integration in bestehenden Workflow
 
 ---
 
@@ -211,39 +211,6 @@ Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kon
 - [ ] Tests mit Orca (Linux)
 - [ ] User Testing mit Screen-Reader-Nutzern aus der Community
 - [ ] Performance-Tests bei verschiedenen Website-Komplexitäten
-
----
-
-## 🐛 **BUGS & KNOWN ISSUES**
-
-### Bug #1: Kontextmenü-Initialisierung beim ersten Aufruf
-**Status**: 🔍 Identified - Ready for Development
-**Priority**: Medium
-**Reported**: 28.09.2024
-
-**Problem**:
-Beim ersten Rechtsklick auf ein Element mit erkannten Problemen werden die dynamischen Kontextmenü-Einträge manchmal nicht korrekt geladen. Beim zweiten Versuch funktioniert es meist.
-
-**Reproduktion**:
-1. Öffne docs/test/test-button-labels.html
-2. Rechtsklick auf ersten problematischen Button (🔍)
-3. Kontextmenü zeigt möglicherweise nur Standard-Einträge
-4. Zweiter Rechtsklick zeigt korrekte problem-spezifische Einträge
-
-**Vermutete Ursache**:
-Race-Condition zwischen Problem-Erkennung und Kontextmenü-Erstellung in `background.js:createDynamicContextMenu()`
-
-**Lösungsansätze**:
-- [ ] Timing/Synchronisation in `background.js` verbessern
-- [ ] Retry-Mechanismus für Element-Info-Abruf implementieren
-- [ ] Loading-State für Kontextmenü-Erstellung hinzufügen
-- [ ] Debug-Logging für Race-Condition-Analyse erweitern
-
-**Acceptance Criteria**:
-- [ ] Kontextmenü zeigt beim ersten Aufruf korrekte problem-spezifische Einträge
-- [ ] Keine Unterschiede zwischen erstem und zweitem Rechtsklick
-- [ ] Performance bleibt unter 200ms für Kontextmenü-Erstellung
-- [ ] Funktioniert konsistent über alle Test-Seiten
 
 ---
 
@@ -503,8 +470,12 @@ Rechtsklick auf Element ohne erkannte Probleme:
 
 ---
 
-*Letzte Aktualisierung: Januar 2025*
+*Letzte Aktualisierung: September 2025*
 *Fokus: Deutsche BITV-Softwaretest-Standards & Screen-Reader-Accessibility*
+
+## 🐛 **Bekannte Defekte**
+
+Siehe `DEFECTS.md` für Details zu bekannten Bugs und Problembereichen.
 
 ## 🔄 **Nächste Sprint-Prioritäten**
 

@@ -11,6 +11,9 @@ Diese Test-Dateien ermöglichen es, die automatische Barriere-Erkennung (Item #4
 | `test-form-labels.html` | Formularfelder ohne Labels | BITV 3.3.2 - Beschriftungen oder Anweisungen |
 | `test-contrast.html` | Schlechte Farbkontraste | BITV 1.4.3 - Kontrast (Minimum) |
 | `test-headings.html` | Fehlerhafte Überschriften-Struktur | BITV 1.3.1 - Info und Beziehungen |
+| `test-screenshot.html` | **NEU:** Screenshot-Funktionalität | Alle BITV-Referenzen |
+| `test-button-types.html` | **NEU:** Erweiterte Button-Typ-Erkennung | BITV 2.4.6, 4.1.2 |
+| `test-css-background-buttons.html` | **NEU:** CSS-Background-Image-Buttons | BITV 2.4.6, 4.1.2 |
 
 ## 🔍 Wie testen?
 
@@ -75,15 +78,45 @@ Falls die Erkennung nicht funktioniert:
 3. **Element inspizieren** (Rechtsklick → "Untersuchen")
 4. **Erwartetes vs. Tatsächliches Verhalten** notieren
 
+## 🚀 Neue Features (v0.5.0) - Testing
+
+### Screenshot-Funktionalität
+- **Test:** `test-screenshot.html`
+- **Feature:** Screenshot-Checkbox in Notiz-Erstellung
+- **Erwartung:** Rote Umrandung um problematische Elemente
+- **Konsole:** `📷 Creating screenshot for note...`
+
+### CSS-Background-Image-Button-Erkennung
+- **Test:** `test-css-background-buttons.html`
+- **Feature:** Erkennung von Buttons mit CSS-Background-Images
+- **Erwartung:** Button-Typ "CSS-Background-Image-Button"
+- **Konsole:** `🔍 Button type identified: CSS-Background-Image-Button`
+
+### Erweiterte Button-Typ-Klassifikation
+- **Test:** `test-button-types.html`
+- **Feature:** 15+ Button-Muster-Erkennung (Close-, Menu-, Search-, etc.)
+- **Erwartung:** Präzise Button-Typ-Identifikation
+- **Konsole:** `🎯 Button pattern detected: [Specific Type]-Button`
+
+### "Wie behebe ich das?"-Funktion
+- **Test:** Alle Test-Seiten → Rechtsklick → "🔧 Wie behebe ich das?"
+- **Feature:** Detaillierte Schritt-für-Schritt-Anleitungen
+- **Erwartung:** Code-Beispiele, Test-Anweisungen, spezifische Lösungen
+- **UI:** Neue Hilfe-Seite mit Fix-Anleitungen
+
 ## 📊 Test-Matrix
 
 | Test-Szenario | Chrome | Firefox | Edge | Notizen |
 |---------------|--------|---------|------|---------|
-| Alt-Text-Erkennung | ⏳ | ⏳ | ⏳ | |
-| Button-Label-Erkennung | ⏳ | ⏳ | ⏳ | |
-| Form-Label-Erkennung | ⏳ | ⏳ | ⏳ | |
-| Kontrast-Checker | ⏳ | ⏳ | ⏳ | |
-| Überschriften-Struktur | ⏳ | ⏳ | ⏳ | |
+| Alt-Text-Erkennung | ⏳ | ⏳ | ⏳ | Basis-Funktionalität |
+| Button-Label-Erkennung | ⏳ | ⏳ | ⏳ | Basis-Funktionalität |
+| Form-Label-Erkennung | ⏳ | ⏳ | ⏳ | Basis-Funktionalität |
+| Kontrast-Checker | ⏳ | ⏳ | ⏳ | Basis-Funktionalität |
+| Überschriften-Struktur | ⏳ | ⏳ | ⏳ | Basis-Funktionalität |
+| **CSS-Background-Image-Buttons** | ⏳ | ⏳ | ⏳ | **NEU v0.5.0** |
+| **Screenshot-Funktionalität** | ⏳ | ⏳ | ⏳ | **NEU v0.5.0** |
+| **Button-Typ-Klassifikation** | ⏳ | ⏳ | ⏳ | **NEU v0.5.0** |
+| **Fix-Anleitungen** | ⏳ | ⏳ | ⏳ | **NEU v0.5.0** |
 
 **Legende:** ✅ Funktioniert | ❌ Fehler | ⏳ Noch nicht getestet
 

@@ -28,27 +28,42 @@ document.addEventListener('contextmenu', function(event) {
 
     // Sammle Element-Informationen sofort für direkte Verwendung
     try {
-        const elementInfo = getElementAccessibilityInfo(event.target);
+        // Warte kurz auf BarrierDetector wenn es noch nicht geladen ist
+        setTimeout(() => {
+            const elementInfo = getElementAccessibilityInfo(event.target);
 
-        // Speichere für direkte Verwendung (ohne Background Script)
-        window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
+            console.log('📊 Content: Element info collected:', {
+                tagName: elementInfo.tagName,
+                elementType: elementInfo.elementType,
+                detectedProblems: elementInfo.detectedProblems?.length || 0
+            });
 
-        // Zusätzlich auch im Storage speichern für Background Script
-        const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
-        const storageData = {
-            'temp_elementInfo': cleanElementInfo,
-            'temp_timestamp': Date.now()
-        };
+            // Speichere für direkte Verwendung (ohne Background Script)
+            window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
 
-        // Speichere Element-Informationen im Storage
-        browserAPI.storage.local.set(storageData, () => {
-            if (browserAPI.runtime.lastError) {
-                console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
-            } else {
-                // DYNAMISCHES KONTEXTMENÜ: Informiere Background Script über erkannte Probleme
-                updateDynamicContextMenu(cleanElementInfo);
-            }
-        });
+            // Zusätzlich auch im Storage speichern für Background Script
+            const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
+            const storageData = {
+                'temp_elementInfo': cleanElementInfo,
+                'temp_timestamp': Date.now()
+            };
+
+            console.log('💾 Content: Storing element info and updating context menu:', {
+                problems: cleanElementInfo.detectedProblems?.length || 0,
+                hasBarrierDetector: typeof window.BarrierDetector !== 'undefined'
+            });
+
+            // Speichere Element-Informationen im Storage
+            browserAPI.storage.local.set(storageData, () => {
+                if (browserAPI.runtime.lastError) {
+                    console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
+                } else {
+                    // DYNAMISCHES KONTEXTMENÜ: Informiere Background Script über erkannte Probleme
+                    updateDynamicContextMenu(cleanElementInfo);
+                }
+            });
+        }, 10); // Kurze Verzögerung für Script-Loading
+
     } catch (error) {
         console.error('❌ Error during element info collection:', error);
         window.lastElementInfo = null;
@@ -387,19 +402,24 @@ function getElementAccessibilityInfo(element) {
     // Führe automatische Barriere-Erkennung durch (falls verfügbar)
     if (typeof window.BarrierDetector !== 'undefined') {
         try {
+            console.log('🔍 Content: Running barrier detection on element:', element.tagName, element.className);
             const analysisResult = window.BarrierDetector.analyzeElement(element);
+
+            console.log('🔍 Content: Analysis result:', analysisResult);
 
             if (analysisResult && analysisResult.hasProblems && analysisResult.problems && analysisResult.problems.length > 0) {
                 info.detectedProblems = analysisResult.problems;
+                console.log(`🚨 Content: ${analysisResult.problems.length} problems detected:`, analysisResult.problems.map(p => p.title));
             } else {
                 info.detectedProblems = [];
+                console.log('✅ Content: No problems detected for this element');
             }
         } catch (error) {
             console.error('❌ Error during barrier detection:', error);
             info.detectedProblems = []; // Fehlerfall: leeres Array
         }
     } else {
-        console.warn('⚠️ BarrierDetector not available - proceeding without barrier detection');
+        console.warn('⚠️ BarrierDetector not available - script may not be loaded yet');
         info.detectedProblems = []; // Nicht verfügbar: leeres Array
     }
 
@@ -412,6 +432,11 @@ function getElementType(element) {
     const role = element.getAttribute('role');
     const type = element.type;
 
+    // Check for CSS-Background-Image-Button first (using same logic as BarrierDetector)
+    if (window.BarrierDetector && window.BarrierDetector.isCSSBackgroundImageButton(element)) {
+        return 'CSS-Background-Image-Button';
+    }
+
     // Erweiterte Button-Erkennung (gleiche Logik wie BarrierDetector)
     const isButton = tag === 'button' ||
                      (tag === 'input' && ['button', 'submit', 'reset', 'image'].includes(type)) ||
@@ -419,7 +444,17 @@ function getElementType(element) {
                      (tag === 'a' && element.onclick);
 
     if (isButton) {
-        // Detailliertere Button-Typ-Erkennung
+        // Use BarrierDetector's advanced button type identification for consistent classification
+        if (window.BarrierDetector && window.BarrierDetector.identifyButtonType) {
+            const textContent = element.textContent?.trim() || '';
+            const isOnlyUnicodeSymbols = /^[\u{1F000}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}🔍❤️⚙️]+$/u.test(textContent);
+            const advancedType = window.BarrierDetector.identifyButtonType(element, textContent, isOnlyUnicodeSymbols, false);
+            if (advancedType && advancedType !== 'Unbekannter Button') {
+                return advancedType;
+            }
+        }
+
+        // Fallback to basic button type detection if BarrierDetector is not available
         if (tag === 'button') {
             const textContent = element.textContent?.trim() || '';
             if (textContent === '' || /^[\u{1F000}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E6}-\u{1F1FF}🔍❤️⚙️]+$/u.test(textContent)) {

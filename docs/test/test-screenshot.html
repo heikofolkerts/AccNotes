@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot-Funktionalität Testseite - AccNotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .test-section {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .problem-button {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .problem-image {
+            width: 200px;
+            height: 150px;
+            background-color: #ddd;
+            border: 1px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .problem-input {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .low-contrast-text {
+            color: #aaa;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .good-element {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AccNotes Screenshot-Funktionalität Testseite</h1>
+
+    <p>Diese Seite enthält verschiedene Elemente mit Accessibility-Problemen zum Testen der Screenshot-Funktionalität:</p>
+
+    <div class="test-section">
+        <h2>1. Button ohne zugänglichen Namen (Screenshot-Test)</h2>
+        <button class="problem-button" onclick="alert('Button geklickt!')">
+            <!-- Kein Text oder aria-label - Problem! -->
+            🔍
+        </button>
+        <p><strong>Problem:</strong> Dieser Button hat nur ein Unicode-Symbol, keinen zugänglichen Namen.</p>
+        <p><strong>Test:</strong> Rechtsklick → Screenshot-Checkbox aktivieren → Notiz speichern</p>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Bild ohne Alt-Text (Screenshot-Test)</h2>
+        <div class="problem-image">
+            <!-- Simuliertes Bild ohne alt-Text -->
+            Wichtige Grafik ohne Alt-Text
+        </div>
+        <p><strong>Problem:</strong> Wichtige visuelle Information ohne Alternativtext.</p>
+        <p><strong>Test:</strong> Rechtsklick auf Bild-Bereich → Screenshot erstellen</p>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Eingabefeld ohne Label (Screenshot-Test)</h2>
+        <input type="text" class="problem-input" placeholder="E-Mail eingeben...">
+        <p><strong>Problem:</strong> Eingabefeld hat nur Placeholder, kein Label-Element.</p>
+        <p><strong>Test:</strong> Rechtsklick auf Eingabefeld → Screenshot dokumentieren</p>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Schlechter Kontrast (Screenshot-Test)</h2>
+        <div class="low-contrast-text">
+            Dieser Text hat schlechten Kontrast und ist schwer zu lesen, besonders für Menschen mit Sehbehinderungen.
+        </div>
+        <p><strong>Problem:</strong> Text-Hintergrund-Kontrast unter WCAG-Standard.</p>
+        <p><strong>Test:</strong> Rechtsklick auf grauen Text → Screenshot zur Kontrast-Dokumentation</p>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Korrekte Implementierung (Referenz)</h2>
+        <button class="good-element" aria-label="Suche starten">🔍</button>
+        <label for="correct-email">E-Mail-Adresse:</label>
+        <input type="email" id="correct-email" class="problem-input" placeholder="beispiel@domain.de">
+        <p><strong>Kein Problem:</strong> Korrekte ARIA-Labels und Label-Verknüpfungen.</p>
+        <p><strong>Test:</strong> Sollte keine Barrieren erkennen</p>
+    </div>
+
+    <div class="test-section">
+        <h2>📷 Screenshot-Test Anleitung</h2>
+        <ol>
+            <li><strong>AccNotes-Extension</strong> muss installiert und aktiv sein</li>
+            <li><strong>Rechtsklick</strong> auf ein problematisches Element</li>
+            <li><strong>Kontextmenü</strong> öffnet sich mit erkannten Problemen</li>
+            <li><strong>"Problem melden"</strong> oder "Detaillierte BITV-Notiz" wählen</li>
+            <li>In der Notiz-Seite: <strong>Screenshot-Checkbox aktivieren</strong> ✅</li>
+            <li><strong>Notiz speichern</strong> - Screenshot wird automatisch erstellt</li>
+            <li><strong>Screenshot-Vorschau</strong> sollte das Element mit rotem Rahmen zeigen</li>
+        </ol>
+
+        <h3>Erwartetes Verhalten:</h3>
+        <ul>
+            <li>📷 Screenshot-Checkbox erscheint in der Notiz-Erstellungsseite</li>
+            <li>🎯 Element wird automatisch mit rotem Rahmen hervorgehoben</li>
+            <li>🖼️ Screenshot-Vorschau wird nach dem Speichern angezeigt</li>
+            <li>💾 Screenshot wird mit der Notiz in localStorage gespeichert</li>
+            <li>📄 In der Notizen-Übersicht sollte ein Screenshot-Indikator zu sehen sein</li>
+        </ul>
+
+        <h3>Browser-Entwicklertools:</h3>
+        <p>Öffnen Sie die <strong>Browser-Konsole</strong> (F12) zum Debugging:</p>
+        <ul>
+            <li><code>📷 Screenshot option enabled</code> - Checkbox aktiviert</li>
+            <li><code>📷 Creating screenshot for note...</code> - Screenshot-Erstellung startet</li>
+            <li><code>✅ Screenshot successfully attached to note</code> - Erfolgreich</li>
+            <li><code>❌ Screenshot creation failed</code> - Bei Fehlern</li>
+        </ul>
+    </div>
+</body>
+</html>

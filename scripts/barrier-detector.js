@@ -179,11 +179,15 @@ if (typeof window.BarrierDetector === 'undefined') {
     checkButtonLabels(element) {
         if (!element) return null;
 
-        // Alle Button-ähnlichen Elemente
+        // Check if it's a CSS-Background-Image-Button first (store result to avoid double-checking)
+        const isCSSBackgroundButton = this.isCSSBackgroundImageButton(element);
+
+        // Alle Button-ähnlichen Elemente inklusive CSS-Background-Image-Buttons
         const isButton = element.tagName === 'BUTTON' ||
                          (element.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes(element.type)) ||
                          element.getAttribute('role') === 'button' ||
-                         (element.tagName === 'A' && element.onclick);
+                         (element.tagName === 'A' && element.onclick) ||
+                         isCSSBackgroundButton;
 
         if (!isButton) return null;
 
@@ -209,13 +213,8 @@ if (typeof window.BarrierDetector === 'undefined') {
         const hasProperAccessibleName = (textContent && !isOnlyUnicodeSymbols) || ariaLabel || labelledByText || title || altText;
 
         if (!hasProperAccessibleName) {
-            // Spezielle Erkennung für häufige Button-Typen
-            let buttonType = 'Unbekannt';
-            if (element.className.toLowerCase().includes('close')) buttonType = 'Schließen-Button';
-            else if (element.className.toLowerCase().includes('menu')) buttonType = 'Menü-Button';
-            else if (element.type === 'submit') buttonType = 'Submit-Button';
-            else if (textContent === '' && element.innerHTML.includes('<')) buttonType = 'Icon-Button';
-            else if (isOnlyUnicodeSymbols) buttonType = 'Unicode-Symbol-Button';
+            // Erweiterte Erkennung für häufige Button-Typen und Muster
+            let buttonType = this.identifyButtonType(element, textContent, isOnlyUnicodeSymbols, isCSSBackgroundButton);
 
             return {
                 type: 'MISSING_BUTTON_LABEL',
@@ -549,6 +548,184 @@ if (typeof window.BarrierDetector === 'undefined') {
         })[0];
 
         return `🚨 ${primaryProblem.title}`;
+    },
+
+    // Neue Hilfsfunktion: CSS-Background-Image-Button Erkennung
+    isCSSBackgroundImageButton(element) {
+        if (!element) return false;
+
+        try {
+            console.log('🎨 BarrierDetector: Checking CSS-Background-Image-Button for:', element.tagName, element.className);
+
+            // Prüfe typische Button-artige Elemente mit CSS-Background-Images
+            const hasOnClick = !!element.onclick;
+            const hasStyleCursor = element.style.cursor === 'pointer';
+            const computedStyle = window.getComputedStyle(element);
+            const hasComputedCursor = computedStyle.cursor === 'pointer';
+            const hasTabIndex = element.tabIndex >= 0;
+
+            const isClickable = hasOnClick || hasStyleCursor || hasComputedCursor || hasTabIndex;
+
+            console.log('🎨 BarrierDetector: Clickability check:', {
+                hasOnClick,
+                hasStyleCursor,
+                hasComputedCursor,
+                hasTabIndex,
+                isClickable
+            });
+
+            if (!isClickable) {
+                console.log('🎨 BarrierDetector: Element not clickable, skipping');
+                return false;
+            }
+
+            // Prüfe CSS-Background-Image
+            const hasBackgroundImage = computedStyle.backgroundImage &&
+                                      computedStyle.backgroundImage !== 'none';
+
+            console.log('🎨 BarrierDetector: Background image check:', {
+                backgroundImage: computedStyle.backgroundImage,
+                hasBackgroundImage
+            });
+
+            if (!hasBackgroundImage) {
+                console.log('🎨 BarrierDetector: No background image found');
+                return false;
+            }
+
+            // Zusätzliche Indikatoren für Button-ähnliches Verhalten
+            const hasButtonClass = element.className &&
+                                   /btn|button|icon|action|control|search|menu|close/i.test(element.className);
+
+            const hasButtonStyles = (computedStyle.padding && computedStyle.padding !== '0px') ||
+                                   (computedStyle.border && computedStyle.border !== '0px none') ||
+                                   (computedStyle.borderRadius && computedStyle.borderRadius !== '0px');
+
+            console.log('🎨 BarrierDetector: Button-like indicators:', {
+                className: element.className,
+                hasButtonClass,
+                padding: computedStyle.padding,
+                border: computedStyle.border,
+                borderRadius: computedStyle.borderRadius,
+                hasButtonStyles
+            });
+
+            // Element ist wahrscheinlich ein CSS-Background-Image-Button wenn:
+            // 1. Es clickbar ist UND
+            // 2. Es ein Background-Image hat UND
+            // 3. Es Button-ähnliche CSS-Klassen oder Styles hat
+            const result = hasBackgroundImage && (hasButtonClass || hasButtonStyles);
+
+            console.log('🎨 BarrierDetector: Final CSS-Background-Image-Button result:', result);
+            return result;
+
+        } catch (error) {
+            console.error('❌ CSS-Background-Image-Button detection failed:', error);
+            return false;
+        }
+    },
+
+    // Neue Hilfsfunktion: Erweiterte Button-Typ-Identifikation
+    identifyButtonType(element, textContent, isOnlyUnicodeSymbols, isCSSBackgroundButton = false) {
+        // CSS-Background-Image-Button (highest priority, passed from caller to avoid double-checking)
+        if (isCSSBackgroundButton) {
+            console.log('🎯 Button type identified: CSS-Background-Image-Button');
+            return 'CSS-Background-Image-Button';
+        }
+
+        // Basis-Klassifikation für spezifische Input-Typen
+        if (element.tagName === 'INPUT' && element.type === 'submit') return 'Submit-Button';
+        if (isOnlyUnicodeSymbols) return 'Unicode-Symbol-Button';
+        if (textContent === '' && element.innerHTML.includes('<')) return 'Icon-Button';
+
+        // Erweiterte Muster-Erkennung basierend auf CSS-Klassen
+        const className = element.className.toLowerCase();
+        const buttonPatterns = {
+            'close': /close|dismiss|cancel|exit|×|✕/i,
+            'menu': /menu|hamburger|nav|toggle|☰/i,
+            'search': /search|find|suche|magnify|🔍/i,
+            'cart': /cart|basket|warenkorb|shopping|🛒/i,
+            'login': /login|signin|anmeld|auth|👤/i,
+            'share': /share|social|teil|facebook|twitter|📤/i,
+            'edit': /edit|modify|change|bearbeit|✏️|📝/i,
+            'delete': /delete|remove|trash|lösch|🗑️|❌/i,
+            'save': /save|speich|disk|💾/i,
+            'download': /download|load|herunterlad|💾|⬇️/i,
+            'upload': /upload|hochlad|⬆️|📁/i,
+            'play': /play|start|abspielen|▶️/i,
+            'pause': /pause|stop|⏸️|⏹️/i,
+            'settings': /settings|config|einstellung|⚙️|🔧/i,
+            'help': /help|info|hilfe|support|❓|ℹ️/i,
+            'notification': /notification|alert|benachrich|🔔/i
+        };
+
+        // Prüfe CSS-Klassen gegen Muster
+        for (const [type, pattern] of Object.entries(buttonPatterns)) {
+            if (pattern.test(className)) {
+                return `${type.charAt(0).toUpperCase()}${type.slice(1)}-Button`;
+            }
+        }
+
+        // Prüfe Element-Inhalt gegen Muster (für Unicode-Symbole)
+        const contentText = textContent + element.innerHTML;
+        for (const [type, pattern] of Object.entries(buttonPatterns)) {
+            if (pattern.test(contentText)) {
+                return `${type.charAt(0).toUpperCase()}${type.slice(1)}-Button`;
+            }
+        }
+
+        // Prüfe Parent-Element-Kontext (PRIORITÄT vor Submit-Button)
+        const parentClass = element.parentElement?.className?.toLowerCase() || '';
+        if (parentClass.includes('header')) return 'Header-Navigation-Button';
+        if (parentClass.includes('footer')) return 'Footer-Button';
+        if (parentClass.includes('sidebar')) return 'Sidebar-Button';
+        if (parentClass.includes('modal')) return 'Modal-Button';
+        if (parentClass.includes('dropdown')) return 'Dropdown-Button';
+
+        // Submit-Button-Erkennung für <button> Elemente (nur wenn in Formular-Kontext)
+        if (element.tagName === 'BUTTON' && element.type === 'submit') {
+            // Prüfe, ob es in einem Formular steht oder Submit-Text hat
+            const isInForm = element.closest('form') !== null;
+            const hasSubmitText = /submit|send|senden|absenden|save|speichern/i.test(textContent);
+            if (isInForm || hasSubmitText) {
+                return 'Submit-Button';
+            }
+        }
+
+        // Fallback
+        if (className) return 'CSS-Klassen-Button';
+        return 'Unbekannter Button';
+    },
+
+    // Erweiterte Lösungsvorschläge basierend auf Button-Typ
+    generateFixSuggestion(problemType, buttonType, element) {
+        const baseSuggestions = {
+            'MISSING_BUTTON_LABEL': 'Fügen Sie eine Beschriftung hinzu (aria-label oder sichtbaren Text).',
+            'MISSING_ALT_TEXT': 'Fügen Sie eine Bildbeschreibung hinzu (alt-Attribut).',
+            'MISSING_FORM_LABEL': 'Verknüpfen Sie das Feld mit einem Label-Element.',
+            'POOR_CONTRAST': 'Verwenden Sie dunklere Schrift oder helleren Hintergrund.',
+            'HEADING_STRUCTURE_ISSUE': 'Verwenden Sie Überschriften in der richtigen Reihenfolge (H1, H2, H3...).'
+        };
+
+        let suggestion = baseSuggestions[problemType] || 'Überprüfen Sie die Barrierefreiheit dieses Elements.';
+
+        // Spezifische Vorschläge für Button-Typen
+        if (problemType === 'MISSING_BUTTON_LABEL' && buttonType) {
+            const specificSuggestions = {
+                'Close-Button': 'Beispiel: <button aria-label="Dialog schließen">×</button>',
+                'Menu-Button': 'Beispiel: <button aria-label="Hauptmenü öffnen">☰</button>',
+                'Search-Button': 'Beispiel: <button aria-label="Suche starten">🔍</button>',
+                'CSS-Background-Image-Button': 'Beispiel: <div role="button" aria-label="Aktion ausführen" style="background-image: url(icon.png)">',
+                'Submit-Button': 'Beispiel: <button type="submit">Formular absenden</button>',
+                'Unicode-Symbol-Button': 'Ersetzen Sie Unicode-Symbole durch beschreibenden Text oder aria-label.'
+            };
+
+            if (specificSuggestions[buttonType]) {
+                suggestion += `\n\n💡 Für ${buttonType}:\n${specificSuggestions[buttonType]}`;
+            }
+        }
+
+        return suggestion;
     }
     }; // Ende der BarrierDetector Definition
 

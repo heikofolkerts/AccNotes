@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS-Background-Image-Button Test - AccNotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .test-section {
+            border: 2px solid #ff5722;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #fff3e0;
+        }
+
+        .button-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .button-example {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            text-align: center;
+        }
+
+        .button-example h4 {
+            margin: 0 0 15px 0;
+            color: #d84315;
+        }
+
+        .description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .result {
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .should-detect {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+
+        .should-not-detect {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        /* CSS-Background-Image-Buttons - Verschiedene Implementierungen */
+
+        /* 1. Klassische Icon-Buttons mit Background-Image */
+        .search-icon {
+            width: 40px;
+            height: 40px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>');
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #f5f5f5;
+        }
+
+        .menu-hamburger {
+            width: 45px;
+            height: 45px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>');
+            background-size: 24px;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #2196F3;
+        }
+
+        .close-x {
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
+            background-size: 16px;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background-color: #f44336;
+        }
+
+        /* 2. Card-Action-Buttons mit Background-Images */
+        .card-action {
+            width: 35px;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+            background-size: 18px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .edit-icon {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>');
+            background-color: #4CAF50;
+        }
+
+        .delete-icon {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><polyline points="3,6 5,6 21,6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>');
+            background-color: #f44336;
+        }
+
+        .download-icon {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>');
+            background-color: #2196F3;
+        }
+
+        /* 3. Social Media Buttons mit Background-Images */
+        .social-bg {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            margin: 0 5px;
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .facebook-bg {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>');
+            background-color: #3b5998;
+        }
+
+        .twitter-bg {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>');
+            background-color: #1da1f2;
+        }
+
+        /* 4. Komplexe Layout-Integration */
+        .toolbar {
+            background-color: #37474f;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 8px;
+            background-size: 16px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: transparent;
+        }
+
+        .toolbar-btn:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .save-btn {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>');
+        }
+
+        .settings-btn {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>');
+        }
+
+        /* 5. Negative Tests - Diese SOLLEN NICHT als CSS-Background-Image-Buttons erkannt werden */
+        .normal-button {
+            padding: 10px 20px;
+            border: 1px solid #ccc;
+            background-color: #f5f5f5;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .text-only {
+            background: none;
+            border: none;
+            cursor: pointer;
+            text-decoration: underline;
+            color: #2196F3;
+        }
+
+        .no-background {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #666;
+            background: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .not-clickable-bg {
+            width: 40px;
+            height: 40px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23666"><circle cx="11" cy="11" r="8"/></svg>');
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 1px solid #ccc;
+            /* KEIN cursor: pointer - soll nicht als Button erkannt werden */
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 CSS-Background-Image-Button Detection Test</h1>
+
+    <div style="background: linear-gradient(135deg, #ff5722, #ff7043); color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+        <h2>🔍 Spezieller Test für CSS-Background-Image-Button-Erkennung</h2>
+        <p>Diese Seite testet die neue Funktionalität zur Erkennung von Buttons, die CSS-Background-Images verwenden.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Positive Tests - Diese SOLLEN als CSS-Background-Image-Buttons erkannt werden</h2>
+
+        <div class="button-showcase">
+            <div class="button-example">
+                <h4>1. Klassischer Icon-Button</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klasse: search-icon ✓<br>
+                    • onclick-Handler ✓
+                </div>
+                <div class="search-icon btn icon-button search" tabindex="0" onclick="alert('Search clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <div class="result should-detect">
+                    ❌ SOLL erkannt werden als "CSS-Background-Image-Button"
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>2. Hamburger-Menü</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klasse: menu-hamburger ✓<br>
+                    • Button-Padding ✓
+                </div>
+                <div class="menu-hamburger btn menu-toggle hamburger" tabindex="0" onclick="alert('Menu clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <div class="result should-detect">
+                    ❌ SOLL erkannt werden als "CSS-Background-Image-Button"
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>3. Close-X-Button</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klasse: close-x ✓<br>
+                    • Runder Button-Style ✓
+                </div>
+                <div class="close-x btn close-button dismiss" tabindex="0" onclick="alert('Close clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <div class="result should-detect">
+                    ❌ SOLL erkannt werden als "CSS-Background-Image-Button"
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>4. Card-Action-Buttons</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klassen: edit-icon, delete-icon ✓<br>
+                    • Button-ähnliche Styles ✓
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <div class="card-action edit-icon btn edit-button" tabindex="0" onclick="alert('Edit clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                    <div class="card-action delete-icon btn delete-button trash" tabindex="0" onclick="alert('Delete clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                    <div class="card-action download-icon btn download-button" tabindex="0" onclick="alert('Download clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                </div>
+                <div class="result should-detect">
+                    ❌ SOLLEN alle als "CSS-Background-Image-Button" erkannt werden
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>5. Social Media Buttons</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klassen: facebook-bg, twitter-bg ✓<br>
+                    • Social-Button-Styles ✓
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <div class="social-bg facebook-bg btn share-facebook social" tabindex="0" onclick="alert('Facebook clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                    <div class="social-bg twitter-bg btn share-twitter social" tabindex="0" onclick="alert('Twitter clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                </div>
+                <div class="result should-detect">
+                    ❌ SOLLEN als "CSS-Background-Image-Button" erkannt werden
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>6. Toolbar-Buttons</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • cursor: pointer ✓<br>
+                    • CSS-Klassen: save-btn, settings-btn ✓<br>
+                    • Toolbar-Kontext ✓
+                </div>
+                <div class="toolbar">
+                    <div class="toolbar-btn save-btn btn save-button" tabindex="0" onclick="alert('Save clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                    <div class="toolbar-btn settings-btn btn config-button settings" tabindex="0" onclick="alert('Settings clicked!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                </div>
+                <div class="result should-detect">
+                    ❌ SOLLEN als "CSS-Background-Image-Button" erkannt werden
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>❌ Negative Tests - Diese sollen NICHT als CSS-Background-Image-Buttons erkannt werden</h2>
+
+        <div class="button-showcase">
+            <div class="button-example">
+                <h4>1. Normaler Text-Button</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • Kein background-image ❌<br>
+                    • cursor: pointer ✓<br>
+                    • Sichtbarer Text ✓
+                </div>
+                <button class="normal-button" onclick="alert('Normal button!')">Klick mich</button>
+                <div class="result should-not-detect">
+                    ✅ Soll NICHT als CSS-Background-Image-Button erkannt werden
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>2. Text-Link</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • Kein background-image ❌<br>
+                    • cursor: pointer ✓<br>
+                    • Nur Text, kein Button-Style ❌
+                </div>
+                <span class="text-only" onclick="alert('Link clicked!')">Klickbarer Link</span>
+                <div class="result should-not-detect">
+                    ✅ Soll NICHT als CSS-Background-Image-Button erkannt werden
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>3. Border-Only Button</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • Kein background-image ❌<br>
+                    • cursor: pointer ✓<br>
+                    • Border aber kein Background-Image ❌
+                </div>
+                <div class="no-background" onclick="alert('Border button!')"></div>
+                <div class="result should-not-detect">
+                    ✅ Soll NICHT als CSS-Background-Image-Button erkannt werden
+                </div>
+            </div>
+
+            <div class="button-example">
+                <h4>4. Nicht-Klickbares Element</h4>
+                <div class="description">
+                    <strong>Eigenschaften:</strong><br>
+                    • background-image ✓<br>
+                    • Kein cursor: pointer ❌<br>
+                    • Keine Click-Handler ❌<br>
+                    • Rein dekorativ ❌
+                </div>
+                <div class="not-clickable-bg"></div>
+                <div class="result should-not-detect">
+                    ✅ Soll NICHT als CSS-Background-Image-Button erkannt werden
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test-Anweisungen</h2>
+
+        <h3>📋 Schritt-für-Schritt Test:</h3>
+        <ol>
+            <li><strong>AccNotes-Extension</strong> muss installiert und aktiv sein</li>
+            <li><strong>Browser-Konsole öffnen</strong> (F12) für Debugging-Informationen</li>
+            <li><strong>Rechtsklick</strong> auf jeden Button in den "Positive Tests"</li>
+            <li><strong>Kontextmenü prüfen</strong>: Sollte "🚨 Problem melden: Button-Beschriftung fehlt" zeigen</li>
+            <li><strong>Konsole prüfen</strong>: Sollte "CSS-Background-Image-Button" als Button-Typ anzeigen</li>
+            <li><strong>"🔧 Wie behebe ich das?"</strong> klicken - sollte spezifische CSS-Background-Image-Button-Lösung zeigen</li>
+            <li><strong>Negative Tests prüfen</strong>: Diese Buttons sollten KEINE CSS-Background-Image-Button-Probleme zeigen</li>
+        </ol>
+
+        <h3>🔍 Erwartete Konsolen-Ausgaben:</h3>
+        <ul>
+            <li><code>🎯 Right-clicked element: DIV, Tag: DIV</code></li>
+            <li><code>🔍 Button type identified: CSS-Background-Image-Button</code></li>
+            <li><code>🚨 [1] problems detected, creating problem-specific menu</code></li>
+            <li><code>✅ Background: Dynamic context menu updated</code></li>
+        </ul>
+
+        <h3>🎯 Erwartetes Verhalten der neuen Erkennung:</h3>
+        <ul>
+            <li>✅ Elemente mit <code>background-image</code> + <code>cursor: pointer</code> werden erkannt</li>
+            <li>✅ CSS-Klassen wie <code>btn</code>, <code>button</code>, <code>icon</code> erhöhen Erkennungswahrscheinlichkeit</li>
+            <li>✅ Button-ähnliche Styles (padding, border-radius) werden berücksichtigt</li>
+            <li>✅ Click-Handler und Event-Listener werden als Indikator gewertet</li>
+            <li>❌ Rein dekorative Elemente ohne Interaktivität werden ignoriert</li>
+        </ul>
+
+        <h3>🔧 Spezifische Fix-Anweisungen für CSS-Background-Image-Buttons:</h3>
+        <p>Die neue "🔧 Wie behebe ich das?"-Funktion sollte für CSS-Background-Image-Buttons folgende Lösung zeigen:</p>
+        <pre style="background: #f5f5f5; padding: 15px; border-radius: 4px; font-size: 14px;">
+&lt;div role="button" aria-label="Aktion ausführen" tabindex="0"
+     style="background-image: url(icon.png); cursor: pointer;"&gt;
+    &lt;!-- Zugänglicher Name via aria-label --&gt;
+&lt;/div&gt;</pre>
+
+        <div style="background-color: #e8f5e8; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <h4>✅ Erfolgs-Kriterien:</h4>
+            <ul>
+                <li>Alle "Positive Tests"-Buttons werden als CSS-Background-Image-Buttons erkannt</li>
+                <li>Alle "Negative Tests"-Buttons werden NICHT als CSS-Background-Image-Buttons erkannt</li>
+                <li>Spezifische Behebungsanleitung wird für CSS-Background-Image-Buttons angezeigt</li>
+                <li>Button-Typ wird korrekt in der Konsole geloggt</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        console.log('🎨 CSS-Background-Image-Button Test Page loaded');
+        console.log('🧪 Test die neue CSS-Background-Image-Button-Erkennung mit Rechtsklick');
+        console.log('📊 Positive Tests: 6 verschiedene CSS-Background-Image-Button-Typen');
+        console.log('📊 Negative Tests: 4 verschiedene Nicht-CSS-Background-Image-Button-Elemente');
+
+        // Debugging-Hilfsfunktion
+        function analyzeElement(element) {
+            const computedStyle = window.getComputedStyle(element);
+            console.log('🔍 Element-Analyse:', {
+                tagName: element.tagName,
+                className: element.className,
+                hasBackgroundImage: computedStyle.backgroundImage !== 'none',
+                backgroundImage: computedStyle.backgroundImage,
+                cursor: computedStyle.cursor,
+                hasOnClick: !!element.onclick,
+                hasClickListener: element.addEventListener ? 'möglich' : 'nein'
+            });
+        }
+
+        // Event-Listener für Debugging
+        document.addEventListener('contextmenu', function(event) {
+            console.log('🎯 Rechtsklick auf Element:', event.target);
+            analyzeElement(event.target);
+        });
+    </script>
+</body>
+</html>

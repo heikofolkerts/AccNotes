@@ -100,7 +100,13 @@ function createDynamicContextMenu(elementInfo) {
                     contexts: ["all"]
                 });
 
-                currentMenuItems.push("separator-1", "quick-report", "detailed-note", "manual-problem-report", "separator-help", "explain-problem");
+                browserAPI.contextMenus.create({
+                    id: "fix-instructions",
+                    title: "🔧 Wie behebe ich das?",
+                    contexts: ["all"]
+                });
+
+                currentMenuItems.push("separator-1", "quick-report", "detailed-note", "manual-problem-report", "separator-help", "explain-problem", "fix-instructions");
 
             } else {
                 console.log('✅ Background: No problems detected, creating standard menu');
@@ -218,6 +224,12 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
     if (info.menuItemId === "explain-problem") {
         console.log('❓ Background: Explain problem requested');
         await handleExplainProblem(tab, info);
+        return;
+    }
+
+    if (info.menuItemId === "fix-instructions") {
+        console.log('🔧 Background: Fix instructions requested');
+        await handleFixInstructions(tab, info);
         return;
     }
 
@@ -432,6 +444,42 @@ async function handleExplainProblem(tab, info) {
         }
     } catch (error) {
         console.error('❌ Background: Error explaining problem:', error);
+    }
+}
+
+async function handleFixInstructions(tab, info) {
+    console.log('🔧 Background: Handling fix instructions');
+
+    try {
+        const elementInfo = await getElementInfo(tab);
+
+        if (elementInfo?.detectedProblems?.length > 0) {
+            // Erstelle Hilfe-Seite mit Behebungs-Anleitungen
+            const params = new URLSearchParams();
+            params.set('mode', 'fix');
+            params.set('problems', JSON.stringify(elementInfo.detectedProblems));
+            params.set('elementInfo', JSON.stringify({
+                tagName: elementInfo.tagName,
+                elementType: elementInfo.elementType,
+                text: elementInfo.text,
+                className: elementInfo.className
+            }));
+
+            const helpUrl = browserAPI.runtime.getURL('help.html') + '?' + params.toString();
+            browserAPI.tabs.create({ url: helpUrl });
+
+            console.log('✅ Background: Fix instructions opened');
+        } else {
+            // Allgemeine Accessibility-Hilfe
+            const params = new URLSearchParams();
+            params.set('mode', 'fix');
+            params.set('general', 'true');
+
+            const helpUrl = browserAPI.runtime.getURL('help.html') + '?' + params.toString();
+            browserAPI.tabs.create({ url: helpUrl });
+        }
+    } catch (error) {
+        console.error('❌ Background: Error showing fix instructions:', error);
     }
 }
 

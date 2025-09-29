@@ -7,6 +7,49 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+---
+
+## [0.5.1] - 2025-09-29
+
+### ✅ **PRODUCT BACKLOG ITEM #4 VOLLSTÄNDIG ABGESCHLOSSEN**
+
+#### 🎯 **Erweiterte CSS-Background-Image-Button-Erkennung**
+- **CSS-Background-Image-Button-Erkennung**: Vollständige Implementierung der Erkennung von Buttons mit CSS-Background-Images
+- **Button-Typ-Klassifikation**: Erweiterte Klassifikation mit 15+ Button-Mustern (Close, Menu, Search, Cart, etc.)
+- **Kontextuelle Button-Erkennung**: Header-Navigation-Button, Modal-Button, Footer-Button basierend auf Parent-Element-Kontext
+- **Prioritäts-basierte Klassifikation**: CSS-Background-Image-Buttons und kontextuelle Klassifikation vor generischer Submit-Button-Erkennung
+
+#### 🔧 **"Wie behebe ich das?"-Funktionalität**
+- **Hilfe-System**: Detaillierte Schritt-für-Schritt-Anleitungen für jedes erkannte Problem
+- **Code-Beispiele**: HTML-Code-Beispiele für Lösungsvorschläge
+- **Test-Anweisungen**: Konkrete Anweisungen zum Testen der implementierten Lösungen
+- **Button-Typ-spezifische Lösungen**: Maßgeschneiderte Lösungsvorschläge basierend auf identifiziertem Button-Typ
+
+#### 📋 **Test-Infrastruktur**
+- **test-css-background-buttons.html**: Spezialisierte Testseite für CSS-Background-Image-Button-Erkennung
+- **test-button-types.html**: Erweiterte Testseite mit 40+ verschiedenen Button-Typen
+- **Accessibility-optimierte Tests**: Alle Test-Buttons in Tab-Reihenfolge mit Keyboard-Support
+
+### 🐛 **Defekt-Management**
+- **DEFECTS.md**: Neue zentrale Defekt-Dokumentation erstellt
+- **DEF-001**: Button-Typ-Erkennung instabil in test-button-types.html dokumentiert
+- **DEF-002**: Kontextmenü-Initialisierung beim ersten Aufruf (konsolidiert aus ursprünglichem Bug #1)
+- **Backlog-Bereinigung**: Bug-Tracking aus Product Backlog in separate Defekt-Dokumentation verschoben
+
+### 📚 **Dokumentation**
+- **CLAUDE.md**: Vollständige Dokumentation für zukünftige Claude Code Instanzen
+- **Product Backlog**: Item #4 als abgeschlossen markiert (alle Tasks und Acceptance Criteria erfüllt)
+- **Implementierungs-Status**: Vollständige Übersicht über abgeschlossene Features
+
+### 🔧 **Bug Fixes**
+- **Button-Klassifikation**: Submit-Button-Erkennung nur für echte Form-Submit-Buttons oder entsprechenden Text-Content
+- **Element-Type-Detection**: getElementType() nutzt jetzt BarrierDetector's erweiterte Button-Klassifikation
+- **CSS-Background-Image-Detection**: Race-Condition zwischen doppelten Aufrufen behoben
+
+---
+
+## [0.5.0] - 2024-09-28
+
 ### 🐛 Bug Fixes
 - **Kontextmenü**: Behebung der Race-Condition bei dynamischen Kontextmenü-Einträgen
 - **Help-System**: "Was bedeutet das?" zeigt jetzt vollständige Problemerklärungen

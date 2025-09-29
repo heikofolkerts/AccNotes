@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button-Typ-Erkennung Testseite - AccNotes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .test-section {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .button-example {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            text-align: center;
+        }
+
+        .button-example h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* CSS-Background-Image-Buttons */
+        .css-bg-search {
+            width: 40px;
+            height: 40px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>');
+            background-size: 24px;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            /* PROBLEM: Kein aria-label! */
+        }
+
+        .css-bg-menu {
+            width: 40px;
+            height: 40px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>');
+            background-size: 20px;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            border: none;
+            background-color: #2196F3;
+            border-radius: 4px;
+        }
+
+        .css-bg-close {
+            width: 30px;
+            height: 30px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>');
+            background-size: 16px;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: pointer;
+            border: none;
+            background-color: #f44336;
+            border-radius: 50%;
+            float: right;
+        }
+
+        /* Icon-Font-Buttons */
+        .icon-button {
+            padding: 10px 15px;
+            border: 1px solid #ccc;
+            background-color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 18px;
+        }
+
+        /* Unicode-Symbol-Buttons */
+        .unicode-button {
+            padding: 10px;
+            border: 1px solid #666;
+            background-color: #fff;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 20px;
+        }
+
+        /* Kontextuelle Buttons */
+        .header { background-color: #1976d2; padding: 10px; margin-bottom: 20px; }
+        .header button { color: white; border: none; background: transparent; cursor: pointer; padding: 5px 10px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; }
+        .modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; }
+
+        .sidebar { position: fixed; right: 0; top: 0; height: 100vh; width: 200px; background: #f5f5f5; padding: 20px; display: none; }
+
+        .dropdown { position: relative; }
+        .dropdown-content { display: none; position: absolute; background: white; border: 1px solid #ccc; border-radius: 4px; padding: 10px; }
+        .dropdown:hover .dropdown-content { display: block; }
+
+        .social-share { margin: 10px 0; }
+        .social-button { margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; }
+        .social-facebook { background-color: #3b5998; color: white; }
+        .social-twitter { background-color: #1da1f2; color: white; }
+
+        .card-actions { margin-top: 15px; }
+        .card-actions button { margin-right: 10px; padding: 8px 12px; border: 1px solid #ddd; background: white; cursor: pointer; border-radius: 4px; }
+
+        .result-good { color: #4caf50; font-weight: bold; }
+        .result-bad { color: #f44336; font-weight: bold; }
+
+        .test-instructions {
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 AccNotes Button-Typ-Erkennung Testseite</h1>
+
+    <div class="test-instructions">
+        <h2>📋 Test-Anleitung</h2>
+        <ol>
+            <li><strong>AccNotes-Extension</strong> muss installiert und aktiv sein</li>
+            <li><strong>Rechtsklick</strong> auf die verschiedenen Buttons unten</li>
+            <li><strong>Erwartung:</strong> Kontextmenü sollte erkannte Probleme mit spezifischen Button-Typen anzeigen</li>
+            <li><strong>Konsole öffnen</strong> (F12) für Debugging-Informationen</li>
+            <li><strong>"🔧 Wie behebe ich das?"</strong> sollte spezifische Lösungen für jeden Button-Typ zeigen</li>
+        </ol>
+    </div>
+
+    <!-- Header mit Navigation -->
+    <div class="header">
+        <button tabindex="0" onclick="alert('Navigation')">Navigation</button>
+        <button tabindex="0" onclick="toggleSidebar()">☰</button>
+        <button tabindex="0" onclick="openSearch()">🔍</button>
+    </div>
+
+    <div class="test-section">
+        <h2>1. 🎨 CSS-Background-Image-Buttons (NEUE ERKENNUNG)</h2>
+        <p><strong>Erwartung:</strong> Sollten als "CSS-Background-Image-Button" erkannt werden</p>
+
+        <div class="button-grid">
+            <div class="button-example">
+                <h4>Suche-Button</h4>
+                <div class="css-bg-search btn search-button" tabindex="0" onclick="alert('Suche!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <p class="result-bad">❌ Kein aria-label</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Menü-Button</h4>
+                <div class="css-bg-menu btn menu-toggle hamburger" tabindex="0" onclick="alert('Menü!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <p class="result-bad">❌ Kein zugänglicher Name</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Schließen-Button</h4>
+                <div class="css-bg-close btn close-button dismiss" tabindex="0" onclick="alert('Schließen!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <p class="result-bad">❌ Kein aria-label</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Korrekt (Referenz)</h4>
+                <div class="css-bg-search btn" tabindex="0" aria-label="Suche starten" onclick="alert('Suche!')" onkeydown="if(event.key==='Enter') this.click()"></div>
+                <p class="result-good">✅ Mit aria-label</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 📱 Unicode-Symbol-Buttons (ERWEITERTE ERKENNUNG)</h2>
+        <p><strong>Erwartung:</strong> Präzise Erkennung der Symbol-Typen</p>
+
+        <div class="button-grid">
+            <div class="button-example">
+                <h4>Suche-Symbol</h4>
+                <button class="unicode-button search-btn" tabindex="0" onclick="alert('Suche!')">🔍</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Warenkorb-Symbol</h4>
+                <button class="unicode-button cart-button shopping" tabindex="0" onclick="alert('Warenkorb!')">🛒</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Login-Symbol</h4>
+                <button class="unicode-button login-btn auth" tabindex="0" onclick="alert('Login!')">👤</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Teilen-Symbol</h4>
+                <button class="unicode-button share-button social" tabindex="0" onclick="alert('Teilen!')">📤</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Einstellungen-Symbol</h4>
+                <button class="unicode-button settings-btn config" tabindex="0" onclick="alert('Einstellungen!')">⚙️</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Hilfe-Symbol</h4>
+                <button class="unicode-button help-button support" tabindex="0" onclick="alert('Hilfe!')">❓</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Löschen-Symbol</h4>
+                <button class="unicode-button delete-btn remove trash" tabindex="0" onclick="alert('Löschen!')">🗑️</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Speichern-Symbol</h4>
+                <button class="unicode-button save-button disk" tabindex="0" onclick="alert('Speichern!')">💾</button>
+                <p class="result-bad">❌ Nur Unicode-Symbol</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. 🏗️ Kontextuelle Button-Erkennung (NEUE FEATURE)</h2>
+        <p><strong>Erwartung:</strong> Buttons sollten basierend auf Parent-Element-Kontext klassifiziert werden</p>
+
+        <div class="button-grid">
+            <div class="button-example">
+                <h4>Header-Button</h4>
+                <div class="header">
+                    <button tabindex="0" onclick="alert('Header-Navigation!')">Nav</button>
+                </div>
+                <p><strong>Erwartet:</strong> Header-Navigation-Button</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Modal-Button</h4>
+                <div class="modal">
+                    <button class="close" tabindex="0" onclick="alert('Modal schließen!')">×</button>
+                </div>
+                <p><strong>Erwartet:</strong> Modal-Button</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Dropdown-Button</h4>
+                <div class="dropdown">
+                    <button tabindex="0" onclick="alert('Dropdown!')">Optionen ▼</button>
+                    <div class="dropdown-content">
+                        <button tabindex="0" onclick="alert('Option 1')">Option 1</button>
+                    </div>
+                </div>
+                <p><strong>Erwartet:</strong> Dropdown-Button</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 🎭 Erweiterte Muster-Erkennung (NEUE ALGORITHMEN)</h2>
+        <p><strong>Erwartung:</strong> Intelligente Erkennung basierend auf CSS-Klassen und Kontext</p>
+
+        <div class="button-grid">
+            <div class="button-example">
+                <h4>Social Share Buttons</h4>
+                <div class="social-share">
+                    <button class="social-button social-facebook share-facebook" tabindex="0" onclick="alert('Facebook!')">f</button>
+                    <button class="social-button social-twitter share-twitter" tabindex="0" onclick="alert('Twitter!')">t</button>
+                </div>
+                <p><strong>Erwartet:</strong> Share-Button</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Card Action Buttons</h4>
+                <div class="card-actions">
+                    <button class="edit-btn modify" tabindex="0" onclick="alert('Bearbeiten!')">Edit</button>
+                    <button class="delete-btn remove trash" tabindex="0" onclick="alert('Löschen!')">Delete</button>
+                    <button class="download-btn load" tabindex="0" onclick="alert('Download!')">Download</button>
+                </div>
+                <p><strong>Erwartet:</strong> Edit-, Delete-, Download-Button</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Media Control Buttons</h4>
+                <div class="media-controls">
+                    <button class="play-btn start" tabindex="0" onclick="alert('Abspielen!')">▶️</button>
+                    <button class="pause-btn stop" tabindex="0" onclick="alert('Pausieren!')">⏸️</button>
+                </div>
+                <p><strong>Erwartet:</strong> Play-, Pause-Button</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Notification Button</h4>
+                <button class="notification-btn alert bell" tabindex="0" onclick="alert('Benachrichtigungen!')">🔔</button>
+                <p><strong>Erwartet:</strong> Notification-Button</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. ✅ Korrekte Implementierungen (Referenz)</h2>
+        <p>Diese Buttons sollten <strong>keine Probleme</strong> zeigen:</p>
+
+        <div class="button-grid">
+            <div class="button-example">
+                <h4>Korrekte Aria-Label</h4>
+                <button tabindex="0" aria-label="Suche starten">🔍</button>
+                <p class="result-good">✅ Aria-Label vorhanden</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Sichtbarer Text</h4>
+                <button tabindex="0">Suche starten</button>
+                <p class="result-good">✅ Beschreibender Text</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Aria-Labelledby</h4>
+                <span id="search-label">Suche:</span>
+                <button tabindex="0" aria-labelledby="search-label">🔍</button>
+                <p class="result-good">✅ Label-Referenz</p>
+            </div>
+
+            <div class="button-example">
+                <h4>Title-Attribut</h4>
+                <button tabindex="0" title="Suche in der Website">🔍</button>
+                <p class="result-good">✅ Title-Attribut</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Debugging-Informationen</h2>
+        <p>Öffnen Sie die <strong>Browser-Konsole</strong> (F12) für detaillierte Informationen:</p>
+        <ul>
+            <li><code>🎯 Right-clicked element: [Element], Tag: [BUTTON]</code></li>
+            <li><code>🔍 Button type identified: [CSS-Background-Image-Button]</code></li>
+            <li><code>🚨 [1] problems detected</code></li>
+            <li><code>🔧 Enhanced solution generated for: [Button-Typ]</code></li>
+        </ul>
+
+        <h3>📋 Erwartete Kontextmenü-Einträge:</h3>
+        <ul>
+            <li><strong>"🚨 Problem melden: Button-Beschriftung fehlt"</strong> - Für problematische Buttons</li>
+            <li><strong>"❓ Was bedeutet das?"</strong> - Allgemeine Erklärung</li>
+            <li><strong>"🔧 Wie behebe ich das?"</strong> - <em>NEU!</em> Spezifische Lösungsanleitungen</li>
+        </ul>
+
+        <h3>🎯 Test-Fokus für neue Features:</h3>
+        <ol>
+            <li><strong>CSS-Background-Image-Buttons</strong> werden erkannt</li>
+            <li><strong>Button-Typ-Klassifikation</strong> ist präzise (Close-, Menu-, Search-Button, etc.)</li>
+            <li><strong>Parent-Kontext</strong> wird berücksichtigt (Header-, Modal-, Dropdown-Button)</li>
+            <li><strong>"🔧 Wie behebe ich das?"</strong> öffnet detaillierte Behebungsanleitung</li>
+            <li><strong>Code-Beispiele</strong> sind button-typ-spezifisch</li>
+        </ol>
+    </div>
+
+    <!-- Modal für Tests -->
+    <div class="modal-overlay" id="modal">
+        <div class="modal">
+            <button class="css-bg-close" tabindex="0" onclick="closeModal()" onkeydown="if(event.key==='Enter') this.click()"></button>
+            <h3>Test-Modal</h3>
+            <p>Dieser Button sollte als "Modal-Button" erkannt werden.</p>
+        </div>
+    </div>
+
+    <!-- Sidebar für Tests -->
+    <div class="sidebar" id="sidebar">
+        <button class="css-bg-close" tabindex="0" onclick="closeSidebar()" onkeydown="if(event.key==='Enter') this.click()"></button>
+        <h3>Sidebar</h3>
+        <button tabindex="0" onclick="alert('Sidebar-Action!')">Action</button>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.style.display = sidebar.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').style.display = 'none';
+        }
+
+        function openModal() {
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function openSearch() {
+            alert('Suche geöffnet - dieser Button sollte als Header-Navigation-Button erkannt werden');
+        }
+
+        console.log('🧪 Button-Type-Test page loaded - ready for AccNotes testing');
+        console.log('📝 Test verschiedene Button-Typen mit Rechtsklick');
+        console.log('🔍 Neue Features: CSS-Background-Image-Erkennung, erweiterte Button-Klassifikation, Fix-Anleitungen');
+    </script>
+</body>
+</html>
