@@ -9,6 +9,14 @@ try {
     console.error('Fehler beim Parsen der Kontextdaten:', e);
 }
 
+// Modus-Verwaltung: Simplified vs. Detailed
+let currentMode = 'detailed'; // default
+
+// Prüfe reportType aus contextData
+if (contextData.reportType === 'quick-citizen' || contextData.reportType === 'quick-problem') {
+    currentMode = 'simplified';
+}
+
 // Funktion zum sicheren Setzen von Werten
 function setValue(elementId, value, defaultValue = '-') {
     const element = document.getElementById(elementId);
@@ -19,7 +27,7 @@ function setValue(elementId, value, defaultValue = '-') {
 
 // Seiten-Informationen
 setValue('page-url', contextData.url);
-setValue('page-title', contextData.title);
+setValue('page-title', contextData.pageTitle);
 setValue('selected-text', contextData.selectedText);
 
 // Element-Informationen
@@ -67,7 +75,7 @@ const noteContent = document.getElementById('note-content');
 let prefillText = `Barrierefreiheits-Notiz vom ${new Date().toLocaleDateString('de-DE')} um ${new Date().toLocaleTimeString('de-DE')}\n\n`;
 
 prefillText += `=== ELEMENT-INFORMATIONEN ===\n`;
-prefillText += `Seite: ${contextData.title || 'Unbekannt'}\n`;
+prefillText += `Seite: ${contextData.pageTitle || 'Unbekannt'}\n`;
 prefillText += `URL: ${contextData.url || 'Unbekannt'}\n`;
 prefillText += `Element: ${contextData.elementType || 'Unbekannt'} (${contextData.tagName || 'unbekannt'})\n`;
 
@@ -128,13 +136,110 @@ if (contextData.detectedProblems && contextData.detectedProblems.length > 0) {
     prefillText += `WCAG-Kriterium:\n\n`;
 }
 
-noteContent.value = prefillText;
-noteContent.focus();
-noteContent.setSelectionRange(prefillText.length, prefillText.length);
+// Setze Inhalt basierend auf Modus
+if (currentMode === 'simplified') {
+    // Vereinfachter Modus: Kürze die Vor-Ausfüllung
+    prefillSimplifiedMode();
+} else {
+    // Detaillierter Modus: Vollständige Vor-Ausfüllung
+    noteContent.value = prefillText;
+    noteContent.focus();
+    noteContent.setSelectionRange(prefillText.length, prefillText.length);
+}
 
 // BITV integration
 let currentBitvStep = null;
 let currentEvaluation = null;
+
+// Funktion für vereinfachten Modus
+function prefillSimplifiedMode() {
+    console.log('🚀 Activating simplified citizen report mode...');
+
+    // Zeige vereinfachte Sektion, verstecke BITV-Sektion
+    document.getElementById('simplified-mode-section').style.display = 'block';
+    document.getElementById('bitv-mode-section').style.display = 'none';
+
+    // Fülle Problem-Informationen aus
+    // WICHTIG: Manuelle Berichte sollen NICHT vorausgefüllt werden
+    if (contextData.manualReport) {
+        // Manueller Bericht: Zeige nur Platzhalter, keine Vor-Ausfüllung
+        document.getElementById('detected-problem-title').textContent = 'Anderes Problem melden';
+        document.getElementById('detected-problem-description').textContent =
+            'Beschreiben Sie bitte das Problem, das Sie gefunden haben, in Ihren eigenen Worten.';
+
+        document.getElementById('note-title').value = '';  // LEER für manuelle Eingabe
+        noteContent.value = '';  // LEER für manuelle Eingabe
+
+    } else if (contextData.detectedProblems && contextData.detectedProblems.length > 0) {
+        const firstProblem = contextData.detectedProblems[0];
+
+        document.getElementById('detected-problem-title').textContent = firstProblem.title || 'Barrierefreiheits-Problem';
+        document.getElementById('detected-problem-description').textContent =
+            firstProblem.description || 'Es wurde ein Problem mit der Barrierefreiheit erkannt.';
+
+        // Setze einfachen Titel
+        document.getElementById('note-title').value = firstProblem.title || 'Problem gemeldet';
+
+        // Setze einfache Beschreibung
+        const simpleContent = `Problem: ${firstProblem.title}\n\n` +
+                             `Beschreibung:\n${firstProblem.description}\n\n` +
+                             `Empfehlung:\n${firstProblem.solution || 'Bitte beheben Sie dieses Problem.'}\n`;
+        noteContent.value = simpleContent;
+
+    } else if (contextData.primaryProblem) {
+        // Verwende primaryProblem wenn vorhanden (von quick-problem-report)
+        const problem = contextData.primaryProblem;
+
+        document.getElementById('detected-problem-title').textContent = problem.title || 'Barrierefreiheits-Problem';
+        document.getElementById('detected-problem-description').textContent =
+            problem.description || 'Es wurde ein Problem mit der Barrierefreiheit erkannt.';
+
+        document.getElementById('note-title').value = problem.title || 'Problem gemeldet';
+
+        const simpleContent = `Problem: ${problem.title}\n\n` +
+                             `Beschreibung:\n${problem.description}\n\n` +
+                             `Empfehlung:\n${problem.recommendation || problem.solution || 'Bitte beheben Sie dieses Problem.'}\n`;
+        noteContent.value = simpleContent;
+    } else {
+        // Kein Problem erkannt - generische Meldung
+        document.getElementById('detected-problem-title').textContent = 'Barrierefreiheits-Problem';
+        document.getElementById('detected-problem-description').textContent =
+            'Beschreiben Sie bitte das Problem in Ihren eigenen Worten im Textfeld unten.';
+
+        document.getElementById('note-title').value = 'Barrierefreiheits-Problem gemeldet';
+        noteContent.value = 'Problem:\n\n\nWas sollte verbessert werden:\n\n';
+    }
+
+    // Fülle Standort-Informationen aus
+    document.getElementById('simple-page-url').textContent = contextData.url || 'Unbekannt';
+    document.getElementById('simple-page-title').textContent = contextData.pageTitle || 'Unbekannt';
+    document.getElementById('simple-element-type').textContent = contextData.elementType || 'Unbekannt';
+
+    // Fokussiere Textarea
+    noteContent.focus();
+}
+
+// Funktion zum Wechsel zwischen Modi
+function switchToDetailedMode() {
+    console.log('📋 Switching to detailed BITV mode...');
+    currentMode = 'detailed';
+
+    document.getElementById('simplified-mode-section').style.display = 'none';
+    document.getElementById('bitv-mode-section').style.display = 'block';
+
+    // Initialisiere BITV UI falls noch nicht geschehen
+    if (!currentBitvStep) {
+        initializeBitvUI();
+    }
+}
+
+function switchToSimplifiedMode() {
+    console.log('🚀 Switching to simplified citizen mode...');
+    currentMode = 'simplified';
+
+    document.getElementById('simplified-mode-section').style.display = 'block';
+    document.getElementById('bitv-mode-section').style.display = 'none';
+}
 
 // Initialize BITV UI
 function initializeBitvUI() {
@@ -628,7 +733,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 content: note,
                 recommendation: recommendation,
                 url: contextData.url || '',
-                pageTitle: contextData.title || '',
+                pageTitle: contextData.pageTitle || '',
+                reportMode: currentMode, // 'simplified' or 'detailed'
                 element: {
                     type: contextData.elementType || '',
                     tagName: contextData.tagName || '',
@@ -646,6 +752,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     stepDescription: currentBitvStep.description,
                     level: currentBitvStep.level,
                     evaluation: currentEvaluation || 'needs_review'
+                } : null,
+                // Für vereinfachte Meldungen
+                citizenReport: currentMode === 'simplified' ? {
+                    simplifiedDescription: note,
+                    userFriendlyRecommendation: recommendation,
+                    detectedProblem: contextData.detectedProblems?.[0] || contextData.primaryProblem || null
                 } : null
             };
 
@@ -671,7 +783,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             outputText += `=== KONTEXT ===\n`;
-            outputText += `Seite: ${contextData.title || 'Unbekannt'}\n`;
+            outputText += `Seite: ${contextData.pageTitle || 'Unbekannt'}\n`;
             outputText += `URL: ${contextData.url || 'Unbekannt'}\n`;
             outputText += `Element: ${contextData.elementType || 'Unbekannt'} (${contextData.tagName || 'unbekannt'})\n`;
 
@@ -860,4 +972,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load draft on page load
     loadDraft();
+
+    // Event Listener für Modus-Wechsel
+    const switchToDetailedBtn = document.getElementById('switch-to-detailed-mode');
+    if (switchToDetailedBtn) {
+        switchToDetailedBtn.addEventListener('click', switchToDetailedMode);
+    }
 });

@@ -1,6 +1,8 @@
 // Content Script zur Extraktion von Element-Informationen für Barrierefreiheitstests
 let lastClickedElement = null;
 let contentScriptReady = false;
+let lastAnalyzedElement = null;
+let lastAnalysisResult = null;
 
 // Vereinfachte Initialisierung
 function initializeContentScript() {
@@ -21,6 +23,51 @@ if (document.readyState === 'loading') {
     initializeContentScript();
 }
 
+// Proaktive Menü-Vorbereitung: Analysiere interaktive Elemente schon bei Hover/Focus
+function prepareContextMenuForElement(element) {
+    if (!element || !contentScriptReady) return;
+
+    // Nur für interaktive Elemente vorbereiten
+    if (!isInteractiveElement(element)) return;
+
+    // Prüfe ob dieses Element bereits analysiert wurde
+    if (lastAnalyzedElement === element && lastAnalysisResult) {
+        // Bereits analysiert - verwende Cache
+        return;
+    }
+
+    try {
+        // Führe Analyse durch
+        const elementInfo = getElementAccessibilityInfo(element);
+        const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
+
+        // Cache das Ergebnis
+        lastAnalyzedElement = element;
+        lastAnalysisResult = cleanElementInfo;
+
+        // Update Kontextmenü im Hintergrund (proaktiv)
+        console.log('🔮 Content: Proactive menu preparation for:', element.tagName, element.className);
+        updateDynamicContextMenu(cleanElementInfo);
+
+    } catch (error) {
+        console.error('❌ Error in proactive menu preparation:', error);
+    }
+}
+
+// Event-Listener für proaktive Vorbereitung
+document.addEventListener('mouseover', function(event) {
+    // Throttle: Nur alle 300ms vorbereiten
+    if (!this.lastPrepareTime || Date.now() - this.lastPrepareTime > 300) {
+        prepareContextMenuForElement(event.target);
+        this.lastPrepareTime = Date.now();
+    }
+}, true);
+
+document.addEventListener('focusin', function(event) {
+    // Bei Fokus sofort vorbereiten (wichtig für Tastatur-Navigation)
+    prepareContextMenuForElement(event.target);
+}, true);
+
 // Speichere das zuletzt geklickte Element und Element-Informationen
 document.addEventListener('contextmenu', function(event) {
     lastClickedElement = event.target;
@@ -28,41 +75,53 @@ document.addEventListener('contextmenu', function(event) {
 
     // Sammle Element-Informationen sofort für direkte Verwendung
     try {
-        // Warte kurz auf BarrierDetector wenn es noch nicht geladen ist
-        setTimeout(() => {
+        let cleanElementInfo;
+
+        // Prüfe ob wir bereits gecachte Daten für dieses Element haben
+        if (lastAnalyzedElement === event.target && lastAnalysisResult) {
+            console.log('⚡ Content: Using cached analysis for element');
+            cleanElementInfo = lastAnalysisResult;
+        } else {
+            // Neue Analyse durchführen
             const elementInfo = getElementAccessibilityInfo(event.target);
+            cleanElementInfo = cleanElementInfoForStorage(elementInfo);
 
-            console.log('📊 Content: Element info collected:', {
-                tagName: elementInfo.tagName,
-                elementType: elementInfo.elementType,
-                detectedProblems: elementInfo.detectedProblems?.length || 0
-            });
+            // Cache aktualisieren
+            lastAnalyzedElement = event.target;
+            lastAnalysisResult = cleanElementInfo;
+        }
 
-            // Speichere für direkte Verwendung (ohne Background Script)
-            window.lastElementInfo = cleanElementInfoForStorage(elementInfo);
+        console.log('📊 Content: Element info collected:', {
+            tagName: cleanElementInfo.tagName,
+            elementType: cleanElementInfo.elementType,
+            detectedProblems: cleanElementInfo.detectedProblems?.length || 0,
+            fromCache: lastAnalyzedElement === event.target
+        });
 
-            // Zusätzlich auch im Storage speichern für Background Script
-            const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
-            const storageData = {
-                'temp_elementInfo': cleanElementInfo,
-                'temp_timestamp': Date.now()
-            };
+        // Speichere für direkte Verwendung (ohne Background Script)
+        window.lastElementInfo = cleanElementInfo;
 
-            console.log('💾 Content: Storing element info and updating context menu:', {
-                problems: cleanElementInfo.detectedProblems?.length || 0,
-                hasBarrierDetector: typeof window.BarrierDetector !== 'undefined'
-            });
+        // Zusätzlich auch im Storage speichern für Background Script
+        const storageData = {
+            'temp_elementInfo': cleanElementInfo,
+            'temp_timestamp': Date.now()
+        };
 
-            // Speichere Element-Informationen im Storage
-            browserAPI.storage.local.set(storageData, () => {
-                if (browserAPI.runtime.lastError) {
-                    console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
-                } else {
-                    // DYNAMISCHES KONTEXTMENÜ: Informiere Background Script über erkannte Probleme
-                    updateDynamicContextMenu(cleanElementInfo);
-                }
-            });
-        }, 10); // Kurze Verzögerung für Script-Loading
+        console.log('💾 Content: Storing element info and updating context menu:', {
+            problems: cleanElementInfo.detectedProblems?.length || 0,
+            hasBarrierDetector: typeof window.BarrierDetector !== 'undefined'
+        });
+
+        // Speichere Element-Informationen im Storage
+        browserAPI.storage.local.set(storageData, () => {
+            if (browserAPI.runtime.lastError) {
+                console.error('❌ Failed to store element info:', browserAPI.runtime.lastError);
+            } else {
+                // DYNAMISCHES KONTEXTMENÜ: Informiere Background Script über erkannte Probleme
+                // Nur updaten wenn es sich geändert hat
+                updateDynamicContextMenu(cleanElementInfo);
+            }
+        });
 
     } catch (error) {
         console.error('❌ Error during element info collection:', error);

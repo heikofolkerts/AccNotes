@@ -116,31 +116,41 @@
 
 ---
 
-#### 5. Vereinfachter Melde-Workflow über Kontextmenü *(Story Points: 13)*
-**Status**: 📋 Ready for Development
+#### 5. Vereinfachter Melde-Workflow über Kontextmenü *(Story Points: 8)*
+**Status**: 🔄 Teilweise implementiert (Kontextmenü ✅, Workflow-Features offen)
 
 **User Stories**:
 - Als **Maria** möchte ich über das gewohnte Kontextmenü einfach "Problem melden" auswählen können
 - Als **Thomas** möchte ich im Kontextmenü zwischen "Schnelle Meldung" und "Detaillierte Dokumentation" wählen
 - Als **Petra** möchte ich Klienten das Kontextmenü als einzigen Einstiegspunkt zeigen
 
-**Tasks**:
-- [ ] Kontextmenü um "Problem melden (einfach)" erweitern
-- [ ] Vereinfachter Notiz-Modus ohne BITV-Prüfschritt-Auswahl
-- [ ] Automatische Auswahl des wahrscheinlichsten Problems
+**Implementierter Stand (v0.5.1)**:
+- ✅ Kontextmenü mit dynamischen Problem-spezifischen Einträgen
+- ✅ "🚨 Problem melden: [Problemtitel]" für erkannte Probleme
+- ✅ "🚀 Schnelle Bürgermeldung" Option
+- ✅ "📋 Detaillierte BITV-Notiz erstellen" Option
+- ✅ "⚠️ Problem manuell melden" für nicht-erkannte Probleme
+- ✅ "❓ Was bedeutet das?" und "🔧 Wie behebe ich das?" Hilfe-Optionen
+- ✅ Automatische Problem-Erkennung und Kontextmenü-Anpassung
+- ✅ Proaktive Menü-Vorbereitung (DEF-002 Fix)
+
+**Verbleibende Tasks** (Workflow nach Kontextmenü-Auswahl):
+- [ ] Vereinfachter Notiz-Modus ohne BITV-Prüfschritt-Auswahl implementieren
+- [ ] Automatische Vor-Ausfüllung basierend auf erkanntem Problem optimieren
 - [ ] Vorausgefüllte E-Mail-Templates für Behördenmeldungen
 - [ ] PDF-Export im Meldungs-Format (kein technischer Report)
 - [ ] Nachverfolgungsmodus für gemeldete Probleme
 - [ ] Status-Tracking: Gemeldet → In Bearbeitung → Behoben
-- [ ] Kontextmenü-Option "Detaillierte BITV-Notiz" für Profis
 
 **Acceptance Criteria**:
-- [ ] Kontextmenü bietet sowohl einfache als auch detaillierte Optionen
-- [ ] Ein-Klick-Meldung ohne BITV-Kenntnisse nötig
-- [ ] Automatische Problem-Erkennung schlägt passenden Modus vor
+- ✅ Kontextmenü bietet sowohl einfache als auch detaillierte Optionen
+- ✅ Automatische Problem-Erkennung schlägt passenden Modus vor
+- ✅ Nahtloser Workflow ohne zusätzliche UI-Elemente
+- [ ] Ein-Klick-Meldung ohne BITV-Kenntnisse nötig (Notiz-Formular noch zu vereinfachen)
 - [ ] Verständliche Meldungs-PDFs für Behörden
 - [ ] E-Mail-Template mit korrekten rechtlichen Verweisen
-- [ ] Nahtloser Workflow ohne zusätzliche UI-Elemente
+
+**Hinweis**: Das Kontextmenü ist vollständig implementiert und wird nicht mehr geändert. Diese Story fokussiert sich nun auf die Workflow-Features nach der Kontextmenü-Auswahl.
 
 ---
 
@@ -187,12 +197,14 @@ Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kon
 - [ ] Keyboard-basierte Element-Auswahl ohne Maus-Interaktion
 - [ ] Integration mit gängigen Screen-Reader-APIs (NVDA, JAWS, VoiceOver)
 - [ ] Fallback-Mechanismen für verschiedene Assistive Technologies
+- [ ] **Proaktive Kontextmenü-Vorbereitung**: Addon-Mechanismus zur Simulation von Maus-Events bei Screen-Reader-Navigation, um das dynamische Kontextmenü korrekt zu befüllen
 
 **Tasks**:
 - [ ] Screen-Reader-Fokus-Tracking implementieren
 - [ ] Alternative zu Rechtsklick-basierter Element-Auswahl entwickeln
 - [ ] Keyboard-Shortcuts für direkte Element-Erfassung (z.B. Ctrl+Shift+E)
 - [ ] Screen-Reader-spezifische Element-Identifikation über Aria-Eigenschaften
+- [ ] **Screen-Reader-Addon für proaktive Menü-Vorbereitung**: Implementiere Mechanismus zur Simulation von `focusin` Events bei Screen-Reader-Navigation, damit das Kontextmenü bereits beim Fokussieren eines Elements vorbereitet wird (siehe DEF-002)
 - [ ] Testing mit NVDA, JAWS und VoiceOver
 - [ ] Dokumentation für Screen-Reader-Nutzer erstellen
 
@@ -200,6 +212,7 @@ Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kon
 - [ ] Screen-Reader-Nutzer können Elemente erfassen, ohne Maus zu verwenden
 - [ ] Element-Erkennung funktioniert in allen gängigen Screen-Reader-Modi
 - [ ] Keyboard-Shortcuts sind mit Screen-Reader-Shortcuts kompatibel
+- [ ] **Dynamisches Kontextmenü wird bereits beim Fokussieren vorbereitet**, nicht erst beim Öffnen (wichtig für Screen-Reader-Workflow)
 - [ ] Performance: <500ms Element-Identifikation auch bei komplexen DOM-Strukturen
 - [ ] Umfassende Tests mit echten Screen-Reader-Nutzern
 - [ ] Dokumentierte Workflows für verschiedene Assistive Technologies
@@ -211,6 +224,13 @@ Bei der Verwendung von Screen-Readern im Lesemodus (Browse-Mode) erkennt das Kon
 - [ ] Tests mit Orca (Linux)
 - [ ] User Testing mit Screen-Reader-Nutzern aus der Community
 - [ ] Performance-Tests bei verschiedenen Website-Komplexitäten
+- [ ] **Spezifische Tests für Kontextmenü-Timing**: Prüfen ob dynamische Menü-Items beim ersten Aufruf korrekt angezeigt werden
+
+**Technische Notizen**:
+- Die proaktive Kontextmenü-Vorbereitung (implementiert in DEF-002 Fix) verwendet `focusin` Events zur Menü-Vorbereitung
+- Screen-Reader im Lesemodus triggern nicht immer `focusin`, daher ist ein Addon/Mechanismus nötig, der bei Screen-Reader-Navigation künstlich `focusin` Events simuliert
+- Alternative: Screen-Reader-spezifische Event-Hooks (NVDA: `sayAllLineChanged`, JAWS: Script-Integration)
+- Fallback: Keyboard-Shortcut (Ctrl+Shift+E) ist bereits implementiert für manuelle Element-Erfassung
 
 ---
 

@@ -7,6 +7,7 @@ console.log('📡 Background: Using API:', browserAPI === chrome ? 'chrome' : 'b
 
 // Dynamisches Kontextmenü-System
 let currentMenuItems = [];
+let lastMenuState = null; // Cache für den letzten Menü-Zustand
 
 // Erstelle Standard-Kontextmenü-Einträge (initial)
 console.log('🎯 Background: Creating initial context menu items...');
@@ -37,12 +38,29 @@ function createDynamicContextMenu(elementInfo) {
     console.log('🔄 Background: Creating dynamic context menu for element:', elementInfo?.tagName);
 
     try {
+        const hasProblems = elementInfo?.detectedProblems?.length > 0;
+        const problems = elementInfo?.detectedProblems || [];
+
+        // Berechne einen Hash für den aktuellen Menü-Zustand
+        const menuStateHash = JSON.stringify({
+            hasProblems,
+            problemCount: problems.length,
+            problemTitles: problems.map(p => p.title),
+            elementType: elementInfo?.elementType
+        });
+
+        // Prüfe ob sich der Menü-Zustand geändert hat
+        if (lastMenuState === menuStateHash) {
+            console.log('⚡ Background: Menu state unchanged, skipping update');
+            return;
+        }
+
+        console.log('🔄 Background: Menu state changed, updating menu');
+        lastMenuState = menuStateHash;
+
         // Lösche alle bestehenden Menü-Items
         browserAPI.contextMenus.removeAll(() => {
             currentMenuItems = [];
-
-            const hasProblems = elementInfo?.detectedProblems?.length > 0;
-            const problems = elementInfo?.detectedProblems || [];
 
             if (hasProblems) {
                 console.log(`🚨 Background: ${problems.length} problems detected, creating problem-specific menu`);
@@ -300,7 +318,7 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
             // Sammle Kontext-Informationen
             const contextData = {
                 url: tab.url || 'Unbekannt',
-                title: tab.title || 'Unbekannt',
+                pageTitle: tab.title || 'Unbekannt', // Seitentitel (nicht Element-title!)
                 selectedText: info.selectionText || '',
                 // Element-Informationen aus Content Script (falls verfügbar)
                 ...(elementInfo || {})
@@ -335,7 +353,7 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
             // Fallback: Minimale Kontextdaten
             const contextData = {
                 url: tab.url || 'Unbekannt',
-                title: tab.title || 'Unbekannt',
+                pageTitle: tab.title || 'Unbekannt', // Seitentitel
                 selectedText: info.selectionText || '',
                 elementType: info.linkUrl ? 'Link' : (info.srcUrl ? 'Bild' : 'Allgemein'),
                 tagName: 'UNKNOWN',
@@ -375,7 +393,7 @@ async function handleQuickProblemReport(problemIndex, tab, info) {
             // Erstelle kontextuelle Daten mit spezifischem Problem
             const contextData = {
                 url: tab.url || 'Unbekannt',
-                title: tab.title || 'Unbekannt',
+                pageTitle: tab.title || 'Unbekannt',
                 selectedText: info.selectionText || '',
                 ...elementInfo,
                 // Markiere das spezifische Problem als primär
@@ -408,7 +426,7 @@ async function handleDetailedNote(tab, info) {
 
         const contextData = {
             url: tab.url || 'Unbekannt',
-            title: tab.title || 'Unbekannt',
+            pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
             ...elementInfo,
             reportType: 'detailed-bitv'
@@ -491,7 +509,7 @@ async function handleQuickReport(tab, info) {
 
         const contextData = {
             url: tab.url || 'Unbekannt',
-            title: tab.title || 'Unbekannt',
+            pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
             ...elementInfo,
             reportType: 'quick-citizen'
@@ -512,7 +530,7 @@ async function handleManualProblemReport(tab, info) {
 
         const contextData = {
             url: tab.url || 'Unbekannt',
-            title: tab.title || 'Unbekannt',
+            pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
             ...elementInfo,
             reportType: 'quick-problem',

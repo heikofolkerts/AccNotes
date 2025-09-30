@@ -154,8 +154,56 @@
             </div>
         </section>
 
-        <!-- BITV Test Selection -->
-        <section class="info-panel" aria-labelledby="bitv-section-title">
+        <!-- Simplified Citizen Report Mode -->
+        <section class="info-panel" id="simplified-mode-section" style="display: none;" aria-labelledby="simplified-mode-title">
+            <h2 id="simplified-mode-title" class="info-panel__title">🚀 Schnelle Bürgermeldung</h2>
+
+            <div class="alert alert--info" role="status">
+                <span aria-hidden="true">ℹ️</span>
+                <div>
+                    <strong>Vereinfachter Modus aktiv:</strong> Sie müssen keine technischen BITV-Kenntnisse haben.
+                    Beschreiben Sie einfach das Problem in Ihren eigenen Worten.
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <span aria-hidden="true">🚨</span> Erkanntes Problem:
+                </label>
+                <div id="detected-problem-display" class="info-box info-box--warning">
+                    <strong id="detected-problem-title">Problem wird geladen...</strong>
+                    <p id="detected-problem-description">Beschreibung wird geladen...</p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <span aria-hidden="true">📍</span> Wo befindet sich das Problem?
+                </label>
+                <div id="problem-location-display" class="info-box">
+                    <dl class="compact-dl">
+                        <dt>Website:</dt>
+                        <dd id="simple-page-url" class="font-mono">-</dd>
+                        <dt>Seite:</dt>
+                        <dd id="simple-page-title">-</dd>
+                        <dt>Element:</dt>
+                        <dd id="simple-element-type">-</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <button type="button" id="switch-to-detailed-mode" class="button-secondary">
+                    📋 Zu detailliertem Modus wechseln
+                </button>
+                <div class="form-help">
+                    <small>Für BITV-Experten: Wechseln Sie zum detaillierten Modus mit vollständiger BITV-Prüfschritt-Auswahl.</small>
+                </div>
+            </div>
+        </section>
+
+        <!-- BITV Test Selection (Detailed Mode) -->
+        <section class="info-panel" id="bitv-mode-section" aria-labelledby="bitv-section-title">
             <h2 id="bitv-section-title" class="info-panel__title">✅ BITV-Prüfschritt</h2>
 
             <div class="form-group">
@@ -264,7 +312,7 @@
 
                 <div class="form-group">
                     <label for="recommendation" class="form-label">
-                        Empfehlung zur Behebung:
+                        Empfehlung:
                     </label>
                     <textarea
                         id="recommendation"
