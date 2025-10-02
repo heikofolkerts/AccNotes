@@ -3,6 +3,7 @@ let allNotes = [];
 let bitvCategories = [];
 let filteredNotesCache = null;
 let lastFilterHash = '';
+let selectedNotes = new Set(); // IDs der ausgewählten Notizen
 
 // Performance tracking
 const PERFORMANCE_THRESHOLD = 200; // ms
@@ -15,6 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
         initializeBitvFilters();
     }
     loadNotes();
+    initializeBulkSelection();
+    initializeEventListeners();
 });
 
 async function loadNotes() {
@@ -116,6 +119,7 @@ function displayNotes() {
 
     if (allNotes.length === 0) {
         container.innerHTML = '<div class="no-notes">Keine Notizen gefunden. Erstellen Sie Ihre erste Notiz über das Kontextmenü!</div>';
+        updateBulkActionButton();
         return;
     }
 
@@ -124,6 +128,7 @@ function displayNotes() {
 
     if (filteredNotes.length === 0) {
         container.innerHTML = '<div class="no-notes">Keine Notizen entsprechen den Suchkriterien.</div>';
+        updateBulkActionButton();
         return;
     }
 
@@ -133,6 +138,10 @@ function displayNotes() {
     } else {
         container.innerHTML = filteredNotes.map(note => createNoteHTML(note)).join('');
     }
+
+    // Update bulk selection UI
+    updateSelectAllCheckbox();
+    updateBulkActionButton();
 
     const endTime = performance.now();
     if (endTime - startTime > PERFORMANCE_THRESHOLD) {
@@ -169,21 +178,47 @@ function createNoteHTML(note) {
         `;
     }
 
+    // Status-Badge
+    const statusTexts = {
+        draft: '📝 Entwurf',
+        reported: '📧 Gemeldet',
+        resolved: '✅ Behoben'
+    };
+    const statusBadge = note.status ? `<span class="status-badge status-badge--${note.status}">${statusTexts[note.status] || statusTexts.draft}</span>` : '';
+
+    // Checkbox für Bulk-Selection
+    const isSelected = selectedNotes.has(note.id);
+    const checkboxHtml = `
+        <div class="note-checkbox">
+            <label class="checkbox-label">
+                <input type="checkbox"
+                       class="checkbox-input note-checkbox-input"
+                       data-note-id="${note.id}"
+                       ${isSelected ? 'checked' : ''}
+                       aria-label="Notiz auswählen: ${note.title || note.pageTitle || 'Unbekannte Seite'}">
+                <span class="checkbox-indicator" aria-hidden="true"></span>
+            </label>
+        </div>
+    `;
+
     return `
-        <div class="note-item ${bitvClass}">
-            <div class="note-header">
-                <div class="note-info">
-                    <div class="note-title">${note.title || note.pageTitle || 'Unbekannte Seite'}</div>
-                    <div class="note-url">${note.url || 'Keine URL'}</div>
-                    <div class="note-meta">📅 ${formattedDate} | 🎯 ${note.element?.type || note.elementType || 'Element'}</div>
-                    ${bitvInfo}
+        <div class="note-item ${bitvClass}" data-note-id="${note.id}">
+            ${checkboxHtml}
+            <div class="note-item-content">
+                <div class="note-header">
+                    <div class="note-info">
+                        <div class="note-title">${note.title || note.pageTitle || 'Unbekannte Seite'} ${statusBadge}</div>
+                        <div class="note-url">${note.url || 'Keine URL'}</div>
+                        <div class="note-meta">📅 ${formattedDate} | 🎯 ${note.element?.type || note.elementType || 'Element'}</div>
+                        ${bitvInfo}
+                    </div>
+                    <div class="note-actions">
+                        <button onclick="downloadNote('${note.id}')">📥 Download</button>
+                        <button onclick="deleteNote('${note.id}')" class="delete">🗑️ Löschen</button>
+                    </div>
                 </div>
-                <div class="note-actions">
-                    <button onclick="downloadNote('${note.id}')">📥 Download</button>
-                    <button onclick="deleteNote('${note.id}')" class="delete">🗑️ Löschen</button>
-                </div>
+                <div class="note-content">${escapeHtml(note.content || 'Kein Inhalt')}</div>
             </div>
-            <div class="note-content">${escapeHtml(note.content || 'Kein Inhalt')}</div>
         </div>
     `;
 }
@@ -238,9 +273,10 @@ function generateFilterHash() {
     const evaluationFilter = document.getElementById('bitv-evaluation-filter')?.value || '';
     const typeFilter = document.getElementById('notes-type-filter')?.value || '';
     const websiteFilter = document.getElementById('website-filter')?.value || '';
+    const statusFilter = document.getElementById('status-filter')?.value || '';
     const sortBy = document.getElementById('sort-select').value;
 
-    return `${searchTerm}|${categoryFilter}|${evaluationFilter}|${typeFilter}|${websiteFilter}|${sortBy}`;
+    return `${searchTerm}|${categoryFilter}|${evaluationFilter}|${typeFilter}|${websiteFilter}|${statusFilter}|${sortBy}`;
 }
 
 function invalidateCache() {
@@ -325,6 +361,22 @@ function getFilteredNotes(notes) {
                 return note.url === websiteFilter;
             }
         });
+    }
+
+    // Status filter
+    const statusFilter = document.getElementById('status-filter')?.value;
+    if (statusFilter) {
+        if (statusFilter === 'unreported') {
+            // "Nicht gemeldete" = Entwürfe + Behobene (alles außer "reported")
+            filtered = filtered.filter(note =>
+                note.status !== 'reported'
+            );
+        } else {
+            // Spezifischer Status (draft, reported, resolved)
+            filtered = filtered.filter(note =>
+                note.status === statusFilter
+            );
+        }
     }
 
     return filtered;
@@ -553,7 +605,9 @@ function clearFilters() {
     document.getElementById('bitv-evaluation-filter').value = '';
     document.getElementById('notes-type-filter').value = '';
     document.getElementById('website-filter').value = '';
+    document.getElementById('status-filter').value = '';
     document.getElementById('sort-select').value = 'newest';
+    invalidateCache();
     displayNotes();
 }
 
@@ -882,6 +936,17 @@ function getActiveFilters() {
         filters.push(`Typ: ${typeTexts[typeFilter] || typeFilter}`);
     }
 
+    const statusFilter = document.getElementById('status-filter')?.value;
+    if (statusFilter) {
+        const statusTexts = {
+            draft: 'Entwürfe',
+            reported: 'Gemeldete',
+            resolved: 'Behobene',
+            unreported: 'Nicht gemeldete (Entwurf + Behoben)'
+        };
+        filters.push(`Status: ${statusTexts[statusFilter] || statusFilter}`);
+    }
+
     const sortBy = document.getElementById('sort-select').value;
     if (sortBy !== 'newest') {
         const sortTexts = {
@@ -932,4 +997,162 @@ async function bulkDeleteFiltered() {
             alert('Fehler beim Löschen einiger Notizen. Bitte versuchen Sie es erneut.');
         }
     }
+}
+
+// ============================================
+// Bulk Selection Functions
+// ============================================
+
+function initializeBulkSelection() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    const bulkActionButton = document.getElementById('bulk-action-button');
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', handleSelectAllChange);
+    }
+
+    if (bulkActionButton) {
+        bulkActionButton.addEventListener('click', handleBulkExportPDF);
+    }
+
+    // Event-Delegation für individuelle Checkboxen
+    const notesContainer = document.getElementById('notes-container');
+    if (notesContainer) {
+        notesContainer.addEventListener('change', function(event) {
+            if (event.target.classList.contains('note-checkbox-input')) {
+                handleNoteCheckboxChange(event.target);
+            }
+        });
+    }
+}
+
+function handleSelectAllChange(event) {
+    const isChecked = event.target.checked;
+    const sortedNotes = getSortedNotes();
+    const filteredNotes = getFilteredNotesWithCache(sortedNotes);
+
+    if (isChecked) {
+        // Alle sichtbaren Notizen auswählen
+        filteredNotes.forEach(note => selectedNotes.add(note.id));
+    } else {
+        // Alle sichtbaren Notizen abwählen
+        filteredNotes.forEach(note => selectedNotes.delete(note.id));
+    }
+
+    // UI aktualisieren
+    updateCheckboxStates();
+    updateBulkActionButton();
+}
+
+function handleNoteCheckboxChange(checkbox) {
+    const noteId = checkbox.dataset.noteId;
+
+    if (checkbox.checked) {
+        selectedNotes.add(noteId);
+    } else {
+        selectedNotes.delete(noteId);
+    }
+
+    updateSelectAllCheckbox();
+    updateBulkActionButton();
+}
+
+function updateCheckboxStates() {
+    // Alle Checkboxen im DOM aktualisieren
+    const checkboxes = document.querySelectorAll('.note-checkbox-input');
+    checkboxes.forEach(checkbox => {
+        const noteId = checkbox.dataset.noteId;
+        checkbox.checked = selectedNotes.has(noteId);
+    });
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('select-all-checkbox');
+    if (!selectAllCheckbox) return;
+
+    const sortedNotes = getSortedNotes();
+    const filteredNotes = getFilteredNotesWithCache(sortedNotes);
+    const visibleNoteIds = filteredNotes.map(note => note.id);
+    const visibleSelectedCount = visibleNoteIds.filter(id => selectedNotes.has(id)).length;
+
+    if (visibleSelectedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (visibleSelectedCount === visibleNoteIds.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+function updateBulkActionButton() {
+    const bulkActionButton = document.getElementById('bulk-action-button');
+    const bulkActionText = document.getElementById('bulk-action-text');
+    const bulkSelectionSection = document.getElementById('bulk-selection-section');
+
+    if (!bulkActionButton || !bulkActionText || !bulkSelectionSection) return;
+
+    const selectionCount = selectedNotes.size;
+
+    // Sektion nur anzeigen, wenn Notizen vorhanden sind
+    if (allNotes.length > 0) {
+        bulkSelectionSection.style.display = 'block';
+    } else {
+        bulkSelectionSection.style.display = 'none';
+    }
+
+    // Button aktivieren/deaktivieren
+    if (selectionCount > 0) {
+        bulkActionButton.disabled = false;
+        bulkActionText.textContent = `Auswahl als PDF exportieren (${selectionCount})`;
+    } else {
+        bulkActionButton.disabled = true;
+        bulkActionText.textContent = 'Auswahl als PDF exportieren (0)';
+    }
+}
+
+function handleBulkExportPDF() {
+    if (selectedNotes.size === 0) {
+        alert('Bitte wählen Sie mindestens eine Notiz aus.');
+        return;
+    }
+
+    // Placeholder für PDF-Export-Funktion
+    alert(`PDF-Export wird implementiert.\n\nAusgewählte Notizen: ${selectedNotes.size}\n\nDies wird in Schritt 3 implementiert.`);
+}
+
+function clearSelection() {
+    selectedNotes.clear();
+    updateCheckboxStates();
+    updateSelectAllCheckbox();
+    updateBulkActionButton();
+}
+
+// ============================================
+// Event Listeners Setup (CSP-compliant)
+// ============================================
+
+function initializeEventListeners() {
+    // Filter Event-Listeners
+    const searchInput = document.getElementById('search-input');
+    const bitvCategoryFilter = document.getElementById('bitv-category-filter');
+    const bitvEvaluationFilter = document.getElementById('bitv-evaluation-filter');
+    const notesTypeFilter = document.getElementById('notes-type-filter');
+    const websiteFilter = document.getElementById('website-filter');
+    const statusFilter = document.getElementById('status-filter');
+    const clearFiltersBtn = document.getElementById('clear-filters-btn');
+    const sortSelect = document.getElementById('sort-select');
+    const refreshBtn = document.getElementById('refresh-notes-btn');
+
+    if (searchInput) searchInput.addEventListener('keyup', filterNotes);
+    if (bitvCategoryFilter) bitvCategoryFilter.addEventListener('change', filterNotes);
+    if (bitvEvaluationFilter) bitvEvaluationFilter.addEventListener('change', filterNotes);
+    if (notesTypeFilter) notesTypeFilter.addEventListener('change', filterNotes);
+    if (websiteFilter) websiteFilter.addEventListener('change', filterNotes);
+    if (statusFilter) statusFilter.addEventListener('change', filterNotes);
+    if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFilters);
+    if (sortSelect) sortSelect.addEventListener('change', sortNotes);
+    if (refreshBtn) refreshBtn.addEventListener('click', refreshNotes);
 }

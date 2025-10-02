@@ -115,13 +115,13 @@
             <h2 id="filter-title" class="sr-only">Filter und Sortierung</h2>
             <div class="controls">
                 <div class="controls__group">
-                    <button type="button" onclick="refreshNotes()" class="btn btn--secondary">
+                    <button type="button" id="refresh-notes-btn" class="btn btn--secondary">
                         <span aria-hidden="true">🔄</span>
                         Aktualisieren
                     </button>
 
                     <label for="sort-select" class="form-label">Sortierung:</label>
-                    <select id="sort-select" onchange="sortNotes()" class="form-select" style="width: auto;">
+                    <select id="sort-select" class="form-select" style="width: auto;">
                         <option value="newest">Neueste zuerst</option>
                         <option value="oldest">Älteste zuerst</option>
                         <option value="page">Nach Seite</option>
@@ -137,7 +137,6 @@
                            class="form-input"
                            style="width: 250px;"
                            placeholder="Notizen durchsuchen..."
-                           onkeyup="filterNotes()"
                            aria-describedby="search-help">
                     <div id="search-help" class="sr-only">Durchsucht Titel, URL, Inhalt und BITV-Prüfschritte</div>
                 </div>
@@ -147,14 +146,14 @@
             <div class="controls bitv-filters">
                 <div class="controls__group">
                     <label for="bitv-category-filter" class="form-label">BITV-Kategorie:</label>
-                    <select id="bitv-category-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                    <select id="bitv-category-filter" class="form-select" style="width: auto;">
                         <option value="">Alle Kategorien</option>
                     </select>
                 </div>
 
                 <div class="controls__group">
                     <label for="bitv-evaluation-filter" class="form-label">Bewertung:</label>
-                    <select id="bitv-evaluation-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                    <select id="bitv-evaluation-filter" class="form-select" style="width: auto;">
                         <option value="">Alle Bewertungen</option>
                         <option value="passed">✅ Bestanden</option>
                         <option value="failed">❌ Nicht bestanden</option>
@@ -165,7 +164,7 @@
 
                 <div class="controls__group">
                     <label for="notes-type-filter" class="form-label">Typ:</label>
-                    <select id="notes-type-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                    <select id="notes-type-filter" class="form-select" style="width: auto;">
                         <option value="">Alle Notizen</option>
                         <option value="bitv">Nur BITV-Tests</option>
                         <option value="general">Nur allgemeine Notizen</option>
@@ -174,16 +173,48 @@
 
                 <div class="controls__group">
                     <label for="website-filter" class="form-label">Website:</label>
-                    <select id="website-filter" onchange="filterNotes()" class="form-select" style="width: auto;">
+                    <select id="website-filter" class="form-select" style="width: auto;">
                         <option value="">Alle Websites</option>
                     </select>
                 </div>
 
                 <div class="controls__group">
-                    <button type="button" onclick="clearFilters()" class="btn btn--secondary btn--small">
+                    <label for="status-filter" class="form-label">Status:</label>
+                    <select id="status-filter" class="form-select" style="width: auto;">
+                        <option value="">Alle Status</option>
+                        <option value="draft">📝 Entwürfe</option>
+                        <option value="reported">📧 Gemeldete</option>
+                        <option value="resolved">✅ Behobene</option>
+                        <option value="unreported">🔄 Nicht gemeldete (Entwurf + Behoben)</option>
+                    </select>
+                </div>
+
+                <div class="controls__group">
+                    <button type="button" id="clear-filters-btn" class="btn btn--secondary btn--small">
                         <span aria-hidden="true">🗑️</span>
                         Filter zurücksetzen
                     </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bulk Selection Controls -->
+        <section class="info-panel" aria-labelledby="bulk-selection-title" id="bulk-selection-section" style="display: none;">
+            <h2 id="bulk-selection-title" class="info-panel__title">✅ Mehrfachauswahl</h2>
+            <div class="controls">
+                <div class="controls__group">
+                    <label class="checkbox-label checkbox-label--prominent">
+                        <input type="checkbox" id="select-all-checkbox" class="checkbox-input" aria-describedby="select-all-help">
+                        <span class="checkbox-text">Alle auswählen</span>
+                    </label>
+                    <div id="select-all-help" class="sr-only">Wählt alle sichtbaren Notizen aus oder hebt die Auswahl auf</div>
+                </div>
+                <div class="controls__group">
+                    <button type="button" id="bulk-action-button" class="btn btn--primary" disabled aria-describedby="bulk-action-help">
+                        <span aria-hidden="true">📧</span>
+                        <span id="bulk-action-text">Auswahl als PDF exportieren (0)</span>
+                    </button>
+                    <div id="bulk-action-help" class="sr-only">Exportiert die ausgewählten Notizen als barrierefreies PDF-Dokument</div>
                 </div>
             </div>
         </section>

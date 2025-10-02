@@ -1,322 +1,520 @@
-# AccNotes Implementation Status - Item #4: Automatische Barriere-Erkennung
+# AccNotes Implementation Status
 
-**Stand:** 28. September 2024
-**Version:** 0.5.0 (vollständig implementiert)
-**Aktueller Status:** Phase 1-3 vollständig abgeschlossen, End-to-End Workflow funktional
+**Stand:** 2. Oktober 2025
+**Version:** 0.5.2 (in Entwicklung)
+**Aktueller Status:** Item #5 - Vereinfachter Melde-Workflow (Schritte 1-5 abgeschlossen)
 
-## ✅ Phase 1: Barriere-Erkennung Engine (ABGESCHLOSSEN)
+---
 
-### Implementierte Dateien:
-- **`scripts/barrier-detector.js`** - Neue Datei mit 5 Erkennungsalgorithmen
-- **`content.js`** - Erweitert um Barriere-Erkennung Integration
-- **`note.js`** - Automatische Problemvorbefüllung hinzugefügt
-- **`manifest.json`** - `barrier-detector.js` als web_accessible_resource hinzugefügt
+## 📋 Aktuelle Implementierung: Item #5 - Vereinfachter Melde-Workflow
 
-### Erkennungsalgorithmen:
-1. **Alt-Text-Erkennung** für Bilder und Image-Buttons
-   - Erkennt `<img>` ohne `alt`-Attribut oder mit leerem `alt`
-   - Erkennt Image-Buttons ohne zugänglichen Namen
+### Überblick
 
-2. **Button-Label-Erkennung** für Icon/Image-Buttons
-   - Erkennt `<button>` ohne Text und ohne ARIA-Labels
-   - Erkennt Image-Buttons ohne Alternative
+Item #5 fokussiert sich auf einen vereinfachten Workflow für Bürger und BITV-Tester zur effizienten Meldung von Barrierefreiheitsproblemen. Der Workflow besteht aus mehreren Schritten, von denen einige bereits vollständig implementiert sind.
 
-3. **Formularfeld-Label-Erkennung**
-   - Erkennt Input-Felder ohne `<label>`-Zuordnung
-   - Prüft `for`-Attribut und parent-label-Struktur
+### ✅ Abgeschlossene Schritte
 
-4. **Kontrast-Checker** für Text-Hintergrund
-   - Berechnet Farbkontrast nach WCAG-Standards
-   - Minimum 4.5:1 für normalen Text, 3:1 für großen Text
+#### 1. Kontextmenü mit dynamischen Einträgen ✅ (v0.5.1)
 
-5. **Überschriften-Struktur-Validierung**
-   - Prüft H1-H6 Hierarchie-Reihenfolge
-   - Erkennt übersprungene Heading-Level
+**Status:** Vollständig implementiert und getestet
+**Implementiert am:** 30. September 2024
 
-### Funktionsweise:
-- **Automatische Analyse** beim Rechtsklick auf Elemente
-- **Laienverständliche Beschreibungen** statt technischer Begriffe
-- **BITV-Referenzen** und konkrete Empfehlungen
-- **Schweregrad-Bewertung** (critical, major, minor, cosmetic)
-- **Performance-optimiert** mit <500ms Zielzeit
+**Features:**
+- ✅ Dynamisches Kontextmenü mit problemspezifischen Einträgen
+- ✅ Proaktive Menü-Vorbereitung (DEF-002 Fix)
+  - `mouseover` Event-Listener (300ms throttled)
+  - `focusin` Event-Listener für Tastatur-Navigation
+  - Element-Analyse-Cache (`lastAnalyzedElement`, `lastAnalysisResult`)
+  - Menü-State-Cache in background.js
+- ✅ Integration mit automatischer Barriere-Erkennung
+- ✅ Verschiedene Workflow-Pfade (Quick Report, Citizen Report, Detailed BITV)
 
-### Beispiel erkannter Probleme:
+**Technische Details:**
+- `content.js`: Proaktive Element-Analyse mit Caching
+- `background.js`: Menü-State-Hashing zur Vermeidung unnötiger Updates
+- Race-Condition zwischen Problem-Erkennung und Menü-Erstellung gelöst
+
+#### 2. Vereinfachter Notiz-Modus ✅
+
+**Status:** Vollständig implementiert
+**Implementiert am:** 30. September 2024
+
+**Features:**
+- ✅ Zwei Modi: "Vereinfacht" und "Detailliert"
+- ✅ Automatische Mode-Erkennung basierend auf `reportType`
+  - `quick-citizen` oder `quick-problem` → Vereinfachter Modus
+  - `detailed-bitv` oder keine reportType → Detaillierter Modus
+- ✅ Simplified Mode UI-Sektion in `note.html`
+  - Alert-Box mit Hinweis für Bürger
+  - Erkanntes Problem-Display
+  - Problem-Lokalisierung (Website, Seite, Element)
+  - Button zum Wechsel in detaillierten Modus
+- ✅ BITV-Sektion ausblenden im vereinfachten Modus
+- ✅ Auto-Befüllung basierend auf erkannten Problemen
+- ✅ Manuelle Reports lassen Felder leer (`contextData.manualReport`)
+
+**Implementierte Dateien:**
+- `note.html`: Zeilen 157-203 (Simplified Mode Section)
+- `note.js`: Zeilen 13-18, 30, 78, 139-232 (Mode-Detection & Prefill)
+- `styles/modern-theme.css`: Zeilen 845-952 (Alert/Info Boxes)
+
+**Bug Fixes:**
+- ✅ DEF-003: `pageTitle` vs. `title` Konflikt behoben (element.title überschrieb Seitentitel)
+- ✅ Doppeltes "Empfehlung"-Label entfernt
+- ✅ Manuelle Reports (`anderes Problem melden`) bleiben leer
+
+#### 3. Status-Tracking ✅
+
+**Status:** Vollständig implementiert
+**Implementiert am:** 30. September 2024
+
+**Features:**
+- ✅ Status-Dropdown mit 3 Optionen:
+  - 📝 Entwurf (noch nicht gemeldet)
+  - 📧 Gemeldet
+  - ✅ Behoben
+- ✅ Automatische Timestamps:
+  - `reportedDate`: Gesetzt wenn Status = "reported"
+  - `resolvedDate`: Gesetzt wenn Status = "resolved"
+- ✅ Status-Badge-Anzeige in Notizen-Übersicht
+- ✅ Dark-Mode-Unterstützung für Badges
+
+**Implementierte Dateien:**
+- `note.html`: Zeilen 328-340 (Status-Dropdown)
+- `note.js`: Zeilen 714, 738-742 (Status-Logik)
+- `notes-overview.js`: Zeilen 172-178, 184 (Badge-Display)
+- `styles/modern-theme.css`: Status-Badge-Styles
+
+**Datenstruktur:**
 ```javascript
-{
-  type: "missing_alt_text",
-  title: "Bild ohne Alternativtext",
-  description: "Dieses Bild hat keinen Alternativtext für Screenreader",
-  recommendation: "Fügen Sie ein aussagekräftiges alt-Attribut hinzu",
-  bitvReference: "BITV 1.1.1 - Nicht-Text-Inhalte",
-  severity: "major"
+noteData = {
+  // ... existing fields
+  status: 'draft' | 'reported' | 'resolved',
+  reportedDate: '2024-09-30T...' | null,
+  resolvedDate: '2024-09-30T...' | null
 }
 ```
 
-## ✅ Phase 2: Dynamisches Kontextmenü (ABGESCHLOSSEN)
+#### 4. Checkbox-Auswahl in Notizenübersicht ✅
 
-### Implementierte Features:
-- ✅ **Erkannte Probleme** direkt im Kontextmenü anzeigen
-- ✅ **Schnell-Meldungen** für häufige Barrieren
-- ✅ **Kontextuelle Menüpunkte** basierend auf Element-Typ
-- ✅ **Problem-spezifische Menü-Items** für jedes erkannte Problem
-- ✅ **Dynamische Menü-Erstellung** je nach Kontext
+**Status:** Vollständig implementiert
+**Implementiert am:** 30. September 2024
 
-### Implementierte Menüpunkte:
+**Features:**
+- ✅ Bulk-Selection-Sektion (nur sichtbar wenn Notizen vorhanden)
+  - "Alle auswählen" Checkbox mit indeterminate-State
+  - Button "Auswahl als PDF exportieren" mit Zähler
+- ✅ Individuelle Checkboxen bei jeder Notiz
+- ✅ Selection-State-Tracking mit `Set<noteId>`
+- ✅ Event-Delegation für Performance
+- ✅ Automatische UI-Updates beim Filtern/Sortieren
+- ✅ Button aktiviert/deaktiviert basierend auf Auswahl
+- ✅ ARIA-Labels für vollständige Barrierefreiheit
+- ✅ Dark-Mode-Unterstützung
 
-**Bei automatisch erkannten Problemen:**
-- `🚨 Problem melden: [Erkanntes Problem]` - Schnellmeldung für das erkannte Problem
-- `🚀 Schnelle Bürgermeldung` - Citizen Report für das Element
-- `📋 Detaillierte BITV-Notiz erstellen` - Vollständige technische Dokumentation
-- `⚠️ Anderes Problem manuell melden` - Zusätzliche Probleme melden
-- `❓ Was bedeutet das?` - Problemerklärungen und Hilfe
+**Implementierte Dateien:**
+- `notes-overview.html`: Zeilen 191-210 (Bulk-Selection Section)
+- `notes-overview.js`:
+  - Zeile 6: `selectedNotes = new Set()`
+  - Zeilen 19: `initializeBulkSelection()` Call
+  - Zeilen 182-222: Checkbox in `createNoteHTML()`
+  - Zeilen 967-1090: Bulk-Selection-Funktionen
+  - Zeilen 121, 130, 142-143: UI-Updates in `displayNotes()`
+- `styles/modern-theme.css`:
+  - Zeilen 652-654: Flexbox-Layout für `.note-item`
+  - Zeilen 1237-1316: Checkbox-Styles & Dark-Mode
 
-**Bei nicht erkannten Problemen:**
-- `📝 Notiz zu diesem Element` - Allgemeine Notiz
-- `🚀 Schnelle Bürgermeldung` - Citizen Report
-- `📋 Detaillierte BITV-Notiz erstellen` - Technische Dokumentation
-- `⚠️ Problem manuell melden` - Manueller Problem-Report
-- `🔍 Barrierefreiheit prüfen` - Vollständige Seitenanalyse
-
-**Immer verfügbar:**
-- `📄 Notizen-Übersicht` - Verwaltung aller Notizen
-
-### Technische Implementation:
-- **`createDynamicContextMenu()`** - Dynamische Menü-Erstellung (`background.js:36-136`)
-- **Problem-spezifische Handler** - Für jeden erkannten Fehler (`background.js:303-339`)
-- **Report-Type-basierte Weiterleitung** - Automatische Template-Auswahl
-- **Cross-Browser-Kompatibilität** - Chrome/Firefox APIs
-- **Performance-optimiert** - Menü-Updates in <200ms
-
-## ✅ Phase 3: Vereinfachte Notiz-Erstellung (ABGESCHLOSSEN)
-
-### Ziele:
-- ✅ **Auto-Population** aller relevanten Felder
-- ✅ **BITV-Prüfschritt** automatisch vorschlagen
-- ✅ **Template-basierte** Notizen für häufige Probleme
-
-### Implementierte Features:
-
-#### 1. **Automatische BITV-Prüfschritt-Vorschläge** 🤖
-- **Problem-zu-BITV-Mapping** für 5 häufigste Probleme:
-  - Alt-Text fehlt → BITV 1.1.1 (Nicht-Text-Inhalte)
-  - Button-Label fehlt → BITV 2.4.4 (Linkzweck im Kontext)
-  - Form-Label fehlt → BITV 3.3.2 (Beschriftungen)
-  - Schlechter Kontrast → BITV 1.4.3 (Kontrast Minimum)
-  - Überschriften-Struktur → BITV 1.3.1 (Info und Beziehungen)
-- **Automatische Kategorie- und Prüfschritt-Auswahl**
-- **Visueller Indikator** für automatische Vorschläge
-- **Confidence-Level** System (high/medium)
-
-#### 2. **Template-basierte Report-Type-Auswahl** 📝
-**Drei vollständig implementierte Report-Types mit Kontextmenü-Integration:**
-
-**a) Quick Problem Report (`quick-problem`)** ✅
-- ✅ Template implementiert (`generateQuickProblemTemplate`)
-- ✅ Über problem-spezifische Kontextmenü-Einträge erreichbar
-- ✅ Automatische Bewertung: "Nicht bestanden"
-- ✅ Checkliste für Meldeprozess und rechtliche Grundlagen
-- ✅ Workflow: `🚨 Problem melden: [Problem]` → Quick Problem Template
-
-**b) Citizen Report (`quick-citizen`)** ✅
-- ✅ Template implementiert (`generateCitizenReportTemplate`)
-- ✅ Über `🚀 Schnelle Meldung` im Kontextmenü erreichbar
-- ✅ Bürgermeldung-Format in verständlicher Sprache
-- ✅ Erklärung der Wichtigkeit und Kontakt-Informationen
-- ✅ Workflow: `🚀 Schnelle Meldung` → Citizen Report Template
-
-**c) Detailed BITV Report (`detailed-bitv`)** ✅
-- ✅ Template implementiert (`generateDetailedBitvTemplate`)
-- ✅ Über `📋 Detaillierte BITV-Notiz erstellen` erreichbar
-- ✅ Vollständiger BITV-Prüfbericht mit technischen Details
-- ✅ Selector, CSS-Klassen, Prioritäts-Einstufung, Test-Metadaten
-- ✅ Workflow: `📋 Detaillierte BITV-Notiz` → Detailed BITV Template
-
-#### 3. **Intelligente Auto-Population** 📊
-- **Report-Type-abhängige Befüllung**
-- **Automatische Titel-Generierung**
-- **Kontextuelle Notiz-Templates**
-- **Bewertungs-Automatik** (Problem erkannt = nicht bestanden)
-
-### Vollständige Workflow-Integration:
-
-```
-✅ Rechtsklick → Problem-Erkennung → Dynamisches Kontextmenü → Report-Type-Auswahl → Auto-BITV-Mapping → Template-Generation → Pre-filled Notiz
+**Funktionen:**
+```javascript
+// Hauptfunktionen
+initializeBulkSelection()        // Event-Listener Setup
+handleSelectAllChange()          // "Alle auswählen" Toggle
+handleNoteCheckboxChange()       // Individuelle Checkbox
+updateCheckboxStates()           // DOM-Sync
+updateSelectAllCheckbox()        // Indeterminate-State
+updateBulkActionButton()         // Button-Aktivierung
+handleBulkExportPDF()            // Placeholder für PDF-Export
+clearSelection()                 // Reset
 ```
 
-**Verfügbare Workflow-Pfade:**
+**Indeterminate-State-Logik:**
+- Keine Auswahl: `checked=false, indeterminate=false`
+- Teilweise Auswahl: `checked=false, indeterminate=true`
+- Vollständige Auswahl: `checked=true, indeterminate=false`
 
-**Für automatisch erkannte Probleme:**
-1. **Schnelle Problemmeldung** → `🚨 Problem melden: [Problem]` → Quick Problem Report (automatisch)
-2. **Bürgermeldung für erkanntes Problem** → `🚀 Schnelle Bürgermeldung` → Citizen Report Template
-3. **Technische Dokumentation** → `📋 Detaillierte BITV-Notiz erstellen` → Detailed BITV Report
-4. **Zusätzliches Problem** → `⚠️ Anderes Problem manuell melden` → Manual Problem Report
-5. **Problemerklärung** → `❓ Was bedeutet das?` → Problemerklärung
+#### 5. Status-Filter ✅
 
-**Für Elemente ohne erkannte Probleme:**
-6. **Allgemeine Notiz** → `📝 Notiz zu diesem Element` → Standard-Notiz
-7. **Bürgermeldung** → `🚀 Schnelle Bürgermeldung` → Citizen Report Template
-8. **Technische Dokumentation** → `📋 Detaillierte BITV-Notiz erstellen` → Detailed BITV Report
-9. **Manueller Problem-Report** → `⚠️ Problem manuell melden` → Manual Problem Report
-10. **Vollständige Seitenprüfung** → `🔍 Barrierefreiheit prüfen` → Seitenanalyse
+**Status:** Vollständig implementiert
+**Implementiert am:** 2. Oktober 2025
 
-**Beispiel-Ablauf:**
-1. Rechtsklick auf Bild ohne Alt-Text
-2. "🚨 Problem melden: Alt-Text fehlt" auswählen
-3. **Automatisch:** BITV 1.1.1 ausgewählt
-4. **Automatisch:** Quick-Problem-Template geladen
-5. **Automatisch:** Bewertung "Nicht bestanden" gesetzt
-6. Benutzer kann sofort speichern oder anpassen
+**Features:**
+- ✅ Status-Filter-Dropdown mit 5 Optionen:
+  - Alle Status
+  - 📝 Nur Entwürfe
+  - 📧 Nur Gemeldete
+  - ✅ Nur Behobene
+  - 🔄 Nicht gemeldete (Entwurf + Behoben)
+- ✅ Integration in bestehende Filter-Logik
+- ✅ Filter-State im `generateFilterHash()` für Caching
+- ✅ CSP-konforme Event-Listener (alle Inline-Handler entfernt)
 
-### Technische Implementation:
-- **`autoSuggestBitvStep()`** - Hauptlogik für BITV-Vorschläge
-- **`autoPopulateFieldsBasedOnReportType()`** - Template-basierte Befüllung
-- **Template-Generatoren** für alle Report-Types:
-  - `generateQuickProblemTemplate()` - Automatische Problem-Reports
-  - `generateManualProblemTemplate()` - Manuelle Problem-Reports mit Vorlage
-  - `generateCitizenReportTemplate()` - Bürgermeldung-Format
-  - `generateDetailedBitvTemplate()` - Vollständige BITV-Dokumentation
-- **Intelligente Report-Type-Erkennung** - Automatisch vs. manuell
-- **Visual Indicators** für Benutzer-Feedback
-- **Kontextmenü-Handler** für alle Report-Types (`background.js:303-461`)
+**Technische Details:**
+- `notes-overview.html`: Status-Filter Dropdown (Zeilen 182-191)
+- `notes-overview.js`:
+  - Status-Filter-Logik in `getFilteredNotes()` (Zeilen 366-380)
+  - Status-Filter in `generateFilterHash()` (Zeile 275)
+  - Status-Filter in `clearFilters()` (Zeile 607)
+  - Status-Filter in `getActiveFilters()` (Zeilen 938-947)
+  - Event-Listener-Setup in `initializeEventListeners()` (Zeilen 1147-1158)
 
-## 🧪 Phase 4: Testing & Validierung (GEPLANT)
+**Bug Fixes:**
+- ✅ DEF-004: CSP-Violation durch Inline-Event-Handler
+  - Problem: `onchange="filterNotes()"` blockiert durch Content Security Policy
+  - Lösung: Alle Inline-Handler entfernt, Event-Listeners in JavaScript registriert
+  - Betroffene Filter: search, bitv-category, bitv-evaluation, notes-type, website, status, sort, refresh, clear
+- ✅ DEF-005: `getFilteredNotes()` ohne Parameter aufgerufen
+  - Problem: `handleSelectAllChange()` und `updateSelectAllCheckbox()` riefen `getFilteredNotes()` ohne Parameter auf
+  - Lösung: Korrekter Aufruf mit `getSortedNotes()` als Parameter
 
-### Test-Szenarien:
-- Cross-Browser Testing (Chrome, Firefox, Edge)
-- Performance-Tests mit großen Websites
-- Validierung der BITV-Referenzen
-- Benutzerfreundlichkeits-Tests
-
-## 📊 Aktueller Test-Status
-
-**BENUTZER TESTET GERADE:**
-- Sucht geeignete Beispiel-Websites mit erkennbaren Barrieren
-- Prüft Funktionalität der 5 Erkennungsalgorithmen
-- Validiert Qualität der automatischen Problemerkennung
-
-**Test-Empfehlungen:**
-1. **Bilder ohne Alt-Text** testen (z.B. News-Websites)
-2. **Icon-Buttons** ohne Labels (Social Media, Navigation)
-3. **Formulare** ohne Labels (Anmelde-/Suchformulare)
-4. **Schlechte Kontraste** (dunkle/helle Text-Hintergrund-Kombinationen)
-5. **Fehlerhafte Überschriften-Struktur** (H1→H3 ohne H2)
-
-## 🔄 Nächste Schritte (Nach Testing)
-
-1. **Bugfixes** basierend auf Test-Ergebnissen
-2. **Performance-Optimierungen** falls nötig
-3. **Phase 2** Implementation: Dynamisches Kontextmenü
-4. **Erweiterte Erkennungsalgorithmen** (falls gewünscht)
-
-## 💾 Technische Details
-
-### Datenfluss:
+**Filter-Logik:**
+```javascript
+// "Nicht gemeldete" = Alle außer "reported"
+if (statusFilter === 'unreported') {
+    filtered = filtered.filter(note =>
+        note.status !== 'reported'
+    );
+}
+// Spezifischer Status (draft, reported, resolved)
+else {
+    filtered = filtered.filter(note =>
+        note.status === statusFilter
+    );
+}
 ```
-1. Rechtsklick → content.js erfasst Element
-2. BarrierDetector.analyzeElement(element)
-3. Probleme in elementInfo.detectedProblems gespeichert
-4. note.js zeigt Probleme in "AUTOMATISCH ERKANNTE PROBLEME" Sektion
-5. Erste Problem automatisch in Notiz-Felder vorbefüllt
-```
-
-### Integration:
-- **Cross-Browser kompatibel** (Chrome/Firefox APIs)
-- **Web Accessible Resources** korrekt konfiguriert
-- **Async/Await Pattern** für Storage-Integration
-- **Performance-Caching** für wiederholte Analysen
 
 ---
 
-## 🚫 Item #7: Screen-Reader Element-Erkennung (ANALYSE ABGESCHLOSSEN)
+### 🔄 Aktuell in Arbeit
 
-**Stand:** 28. September 2024
-**Status:** Technisch nicht realisierbar mit Standard-Browser-APIs
-**Fazit:** Vorerst nicht weiter verfolgen
+*Kein aktives Feature in Arbeit*
 
-### Untersuchte Ansätze:
+---
 
-#### 1. **Standard DOM-APIs** ❌ NICHT FUNKTIONAL
-- `document.activeElement` - Bleibt auf `body` im Lesemodus
-- `:focus` CSS-Selector - Erkennt nur fokussierbare Elemente
-- `aria-current` Attribute - Nicht standardmäßig gesetzt
+### 📅 Nächste Schritte
 
-#### 2. **Text-Selection basierte Erkennung** ❌ NICHT FUNKTIONAL
-- `window.getSelection()` - Screen-Reader Lesemodus erstellt keine Browser-Selection
-- Browser-APIs erkennen Screen-Reader-interne Textauswahl nicht
-- Virtueller Cursor nicht über Web-APIs zugänglich
+#### 6. Barrierefreier PDF-Export mit Screenshots 📅
 
-#### 3. **Keyboard-Navigation Simulation** ⚠️ ZU KOMPLEX
-- Würde eigenen virtuellen Cursor erfordern
-- Für unerfahrene Benutzer zu kompliziert
-- Konflikt mit Screen-Reader-Shortcuts möglich
+**Status:** PENDING
+**Story Points:** 3
 
-### Technische Barrieren:
+**Geplante Features:**
+- PDF/UA-konforme PDF-Generation mit `pdf-lib`
+- Eingebettete Screenshots aus gespeicherten Notizen
+- Strukturierte PDF-Dokumentation:
+  - Inhaltsverzeichnis mit Lesezeichen
+  - Strukturierte Überschriften (H1-H3)
+  - Tabellen für Notizen-Übersicht
+  - Alt-Texte für eingebettete Screenshots
+- Export-Optionen:
+  - Nur ausgewählte Notizen
+  - Nur nicht gemeldete Notizen
+  - Alle Notizen einer Website
 
-**Screen-Reader Architektur:**
-- Arbeiten mit **virtualisierter DOM-Repräsentation**
-- **Lesemodus-Cursor** ist Browser-intern nicht sichtbar
-- **Accessibility Tree** APIs experimentell/instabil
+**Technische Planung:**
+- Library: `pdf-lib` (PDF-Erstellung) + `jsPDF` Alternative prüfen
+- Screenshot-Quelle: `note.screenshotDataUrl` (bereits gespeichert)
+- Struktur:
+  - Deckblatt mit Zusammenfassung
+  - Notizen-Liste mit Screenshots
+  - Anhang mit technischen Details
 
-**Browser-Limitierungen:**
-- Keine Standard-APIs für Screen-Reader-Position
-- `chrome.automation` API erfordert zusätzliche Permissions
-- Cross-Browser-Kompatibilität problematisch
+**Barrierefreiheits-Anforderungen:**
+- PDF/UA-1 Standard
+- Tagged PDF (Strukturbaum)
+- Alt-Texte für alle Bilder
+- Semantische Überschriften
+- Lesezeichen-Navigation
 
-### Implementierte Testfunktion:
+#### 7. E-Mail-Template mit PDF-Anhang 📅
 
-**Datei:** `content.js` - Funktion `captureCurrentFocusedElement()`
-**Hotkey:** `Ctrl+Shift+E`
-**Status:** Funktioniert nur für fokussierbare Elemente
+**Status:** PENDING
+**Story Points:** 2
+
+**Geplante Features:**
+- E-Mail-Template-Generator für Meldungen
+- Anleitung zum Anhängen des generierten PDFs
+- Vorgefertigte Textbausteine:
+  - Anrede und Einleitung
+  - Verweis auf BITV/BGG
+  - Problembeschreibung (Zusammenfassung)
+  - Verweis auf angehängtes PDF
+  - Kontaktinformationen und rechtliche Grundlagen
+- Optionen:
+  - Formell vs. informell
+  - Mit/ohne rechtliche Grundlagen
+  - Für Privatperson vs. Organisation
+
+**Workflow:**
+1. Benutzer wählt Notizen aus
+2. Klick auf "Auswahl als PDF exportieren"
+3. PDF wird generiert und heruntergeladen
+4. E-Mail-Vorlage wird angezeigt (Copy & Paste)
+5. Hinweis: "PDF manuell an E-Mail anhängen"
+6. Optional: Status automatisch auf "gemeldet" setzen
+
+---
+
+## 🏗️ Bisherige Implementierungen (Abgeschlossen)
+
+### Item #4: Automatische Barriere-Erkennung ✅ (v0.5.0)
+
+**Status:** Vollständig abgeschlossen
+**Abgeschlossen am:** 28. September 2024
+
+#### Phase 1: Barriere-Erkennung Engine ✅
+
+**Implementierte Dateien:**
+- `scripts/barrier-detector.js` - 5 Erkennungsalgorithmen
+- `content.js` - Integration
+- `note.js` - Auto-Population
+- `manifest.json` - Web-Accessible-Resource
+
+**Erkennungsalgorithmen:**
+1. Alt-Text-Erkennung (Bilder, Image-Buttons)
+2. Button-Label-Erkennung (Icon-Buttons)
+3. Formularfeld-Label-Erkennung
+4. Kontrast-Checker (WCAG 2.1 Standards)
+5. Überschriften-Struktur-Validierung
+
+**Performance:** <500ms Element-Analyse
+
+#### Phase 2: Dynamisches Kontextmenü ✅
+
+**Implementiert:**
+- Problem-spezifische Menü-Einträge
+- 7 verschiedene Workflow-Pfade
+- Kontextuelle Menüpunkte je nach Element-Typ
+- Cross-Browser-Kompatibilität
+
+#### Phase 3: Vereinfachte Notiz-Erstellung ✅
+
+**Implementiert:**
+- Automatische BITV-Prüfschritt-Vorschläge
+- 4 Report-Type-Templates:
+  - Quick Problem Report (automatisch)
+  - Quick Problem Report (manuell)
+  - Citizen Report
+  - Detailed BITV Report
+- Intelligente Auto-Population
+
+**End-to-End Workflow:** Rechtsklick → Problem-Erkennung → Kontextmenü → Template-Auswahl → BITV-Mapping → Pre-filled Notiz (unter 30 Sekunden!)
+
+---
+
+## 🚫 Zurückgestellte Items
+
+### Item #7: Screen-Reader Element-Erkennung ❌
+
+**Status:** Technisch nicht realisierbar
+**Grund:** Browser-APIs unterstützen keinen Zugriff auf Screen-Reader-Lesemodus-Cursor
+
+**Untersuchte Ansätze:**
+- Standard DOM-APIs (`document.activeElement`) - Funktioniert nicht im Lesemodus
+- Text-Selection-basierte Erkennung (`window.getSelection()`) - Screen-Reader-Cursor nicht sichtbar
+- Keyboard-Navigation-Simulation - Zu komplex für Zielgruppe
+
+**Empfehlung:** Vorerst zurückstellen, Fokus auf Rechtsklick-basierte Workflows
+
+---
+
+## 🗂️ Technische Architektur
+
+### Datenstruktur: Note Object
 
 ```javascript
-// Getestete Methoden (alle erfolglos für Lesemodus):
-- document.activeElement
-- window.getSelection()
-- aria-current Elemente
-- CSS :focus Selector
-- Custom focus Attribute
+{
+  id: "note_1234567890123",
+  timestamp: "2024-09-30T12:00:00Z",
+  url: "https://example.com/page",
+  pageTitle: "Page Title",              // Wichtig: pageTitle, nicht title!
+  title: "User-provided Note Title",
+  content: "Detailed description",
+  elementType: "button",
+
+  element: {
+    type: "button",
+    text: "Click me",
+    ariaLabel: "Navigation Button",
+    role: "button",
+    // ... weitere Element-Details
+  },
+
+  // Automatische Barriere-Erkennung
+  detectedProblems: [{
+    type: "missing_alt_text",
+    title: "Bild ohne Alternativtext",
+    description: "...",
+    recommendation: "...",
+    bitvReference: "BITV 1.1.1",
+    severity: "major"
+  }],
+
+  // Report-Mode
+  reportMode: 'simplified' | 'detailed',
+  reportType: 'quick-problem' | 'quick-citizen' | 'detailed-bitv' | 'manual',
+  manualReport: boolean,
+
+  citizenReport: {
+    simpleDescription: "...",
+    userImpact: "..."
+  },
+
+  // BITV-Prüfung (optional)
+  bitvTest: {
+    stepId: "1.1.1",
+    stepTitle: "Nicht-Text-Inhalte",
+    category: "wahrnehmbarkeit",
+    evaluation: "failed" | "passed" | "partial" | "needs_review",
+    level: "A" | "AA" | "AAA",
+    description: "..."
+  },
+
+  recommendation: "Improvement suggestion",
+
+  // Status-Tracking
+  status: 'draft' | 'reported' | 'resolved',
+  reportedDate: "2024-09-30T14:00:00Z" | null,
+  resolvedDate: "2024-09-30T16:00:00Z" | null,
+
+  // Screenshot
+  includeScreenshot: boolean,
+  screenshotDataUrl: "data:image/png;base64,..."
+}
 ```
 
-### Empfehlung:
+### Wichtige Bugfixes
 
-**Item #7 vorerst zurückstellen** und stattdessen fokussieren auf:
+#### DEF-002: Kontextmenü-Initialisierung ✅
 
-1. **Item #5: Vereinfachter Melde-Workflow** - Funktioniert mit vorhandenem Rechtsklick
-2. **Item #6: Bürgerfreundliche BITV-Referenzen** - Unabhängig von Element-Erkennung
-3. **Verbesserung bestehender Barriere-Erkennung** - Für rechtsklick-erreichbare Elemente
+**Problem:** Race-Condition beim ersten Rechtsklick - Menü nicht korrekt gefüllt
 
-### Potentielle Zukunftslösungen:
+**Lösung:**
+- Proaktive Menü-Vorbereitung bei `mouseover` (300ms throttled)
+- Proaktive Menü-Vorbereitung bei `focusin` (Tastatur-Navigation)
+- Element-Analyse-Cache in `content.js`
+- Menü-State-Cache in `background.js`
 
-- **Native Browser-APIs** für Accessibility Tree
-- **Screen-Reader-spezifische Extensions** (NVDA Add-ons)
-- **Web Standards Evolution** (Future W3C APIs)
-- **Hybrid-Lösung** mit separater Accessibility-Toolbar
+**Status:** Behoben und getestet (30.09.2024)
+
+#### DEF-003: pageTitle Überschreibung ✅
+
+**Problem:** `contextData.title` wurde durch `element.title` Attribut überschrieben
+
+**Lösung:**
+- Umbenennung zu `contextData.pageTitle` in allen Dateien:
+  - `background.js`: 6 Stellen
+  - `note.js`: 5 Stellen
+
+**Status:** Behoben und getestet (30.09.2024)
 
 ---
 
-**Letztes Update:** 28.09.2024, 20:45 Uhr
-**Status:** Phase 1-3 vollständig implementiert und dokumentiert
-**Nächster Meilenstein:** Phase 4 Testing oder Item #5/6 (weitere Backlog-Items)
+## 📊 Entwicklungsstatus
 
-## 🏆 VOLLSTÄNDIGER WORKFLOW IMPLEMENTIERT
+### Version 0.5.2 (In Arbeit)
 
-### **End-to-End Automatisierung erreicht:**
-1. ✅ **Automatische Barriere-Erkennung** (Phase 1) - 5 Algorithmen, Performance <500ms
-2. ✅ **Dynamisches Kontextmenü** (Phase 2) - 7 Workflow-Pfade, problembezogene Menüs
-3. ✅ **Vereinfachte Notiz-Erstellung** (Phase 3) - 4 Report-Types, vollständige Template-Integration
+**Neue Features:**
+- ✅ Vereinfachter Notiz-Modus (Simplified/Detailed)
+- ✅ Status-Tracking (draft/reported/resolved)
+- ✅ Checkbox-Auswahl für Bulk-Operationen
+- ✅ Status-Filter (vollständig implementiert)
+- 📅 PDF-Export mit Screenshots (geplant)
+- 📅 E-Mail-Template (geplant)
 
-### **Implementierte Features:**
-- ✅ **5 Erkennungsalgorithmen** für häufigste BITV-Probleme
-- ✅ **Problem-spezifische Kontextmenü-Einträge**
-- ✅ **7 verschiedene Workflow-Pfade** je nach Nutzer-Bedarf
-- ✅ **4 Template-Generatoren** für verschiedene Report-Types
-- ✅ **Automatische BITV-Prüfschritt-Zuordnung**
-- ✅ **Cross-Browser-Kompatibilität** (Chrome/Firefox)
+**Bugfixes:**
+- ✅ DEF-002: Kontextmenü Race-Condition
+- ✅ DEF-003: pageTitle Überschreibung
+- ✅ DEF-004: CSP-Violation durch Inline-Event-Handler
+- ✅ DEF-005: getFilteredNotes() ohne Parameter aufgerufen
 
-**Resultat:** Von der Problem-Erkennung bis zur fertigen BITV-konformen Notiz in unter 30 Sekunden!
+### Commit History (Relevante Commits)
 
-### **Verfügbare Report-Types:**
-1. **Quick Problem (automatisch)** - Für automatisch erkannte Probleme
-2. **Quick Problem (manuell)** - Für manuell gemeldete Probleme mit Vorlage
-3. **Citizen Report** - Bürgermeldung in verständlicher Sprache
-4. **Detailed BITV Report** - Vollständige technische BITV-Dokumentation
+- (aktuell) - feat: Complete Item #5 Step 5 - Status-Filter & CSP-Fix (v0.5.2)
+- `6396d8e` - feat: Implement simplified citizen report mode & fix context menu race condition
+- `825241a` - feat: Complete PBI #4 - Advanced CSS-Background-Image-Button Detection & Fix System (v0.5.1)
+- `1c2ae47` - feat: Complete Help System & Extended Context Menu Integration
+- `f2005ea` - feat: Complete Phase 2 & 3 - Full End-to-End Automation Workflow (v0.5.0)
+
+---
+
+## 🎯 Nächste Schritte
+
+### Kurzfristig (Diese Woche)
+
+1. ✅ **Checkbox-Auswahl implementieren** - ERLEDIGT
+2. ✅ **Status-Filter hinzufügen** - ERLEDIGT
+   - Dropdown für Status-Filterung
+   - Integration mit bestehenden Filtern
+   - Filter-Caching für Performance
+   - CSP-konforme Event-Listener
+
+### Mittelfristig (Nächste 2 Wochen)
+
+3. 📅 **PDF-Export implementieren**
+   - `pdf-lib` Integration
+   - Screenshot-Einbettung
+   - PDF/UA-Konformität
+   - Strukturierte Dokumentation
+
+4. 📅 **E-Mail-Template erstellen**
+   - Textbausteine vorbereiten
+   - Template-Generator
+   - Copy & Paste Workflow
+   - Status-Update-Automatik
+
+### Langfristig
+
+5. **Item #10: Barrierefreie Tabellen-Ansicht** (5 SP)
+   - Notizen als `<table>` darstellen
+   - Screen-Reader-optimiert
+   - Sortierbare Spalten
+   - Filterbare Ansicht
+
+6. **Item #11: Bulk-Export als ZIP-Archiv** (3 SP)
+   - Mehrere Notizen als Textdateien
+   - ZIP-Komprimierung
+   - Strukturierte Ordner-Hierarchie
+
+---
+
+## 📝 Notizen für nächste Sitzung
+
+### Aktueller Kontext
+
+- Item #5 zu ~70% abgeschlossen
+- Schritte 1-5 vollständig implementiert
+- Schritte 6-7 noch offen
+
+### Code-Bereiche für Fortsetzung
+
+1. **PDF-Export vorbereiten:**
+   - Library-Evaluation: `pdf-lib` vs. `jsPDF`
+   - Screenshot-Daten aus `note.screenshotDataUrl` extrahieren
+   - PDF/UA-Standard-Recherche
+
+3. **E-Mail-Template vorbereiten:**
+   - Textbausteine sammeln
+   - Rechtliche Grundlagen (BGG, BITV) recherchieren
+   - Template-Varianten definieren
+
+### Offene Fragen
+
+- Welche PDF-Library? (`pdf-lib` scheint am besten für PDF/UA)
+- E-Mail-Versand: Nur Template oder Integration mit `mailto:`?
+- Status-Update: Automatisch oder manuell nach PDF-Export?
+
+---
+
+**Letztes Update:** 2. Oktober 2025, 14:30 Uhr
+**Bearbeiter:** Claude Code
+**Nächster Meilenstein:** PDF-Export & E-Mail-Template (Item #5, Schritte 6-7)
