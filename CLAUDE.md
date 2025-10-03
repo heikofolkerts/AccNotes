@@ -190,6 +190,70 @@ StorageHelper.exportNotes()        // Export to various formats
 4. **Use German terminology** - follow BITV/accessibility standards terminology
 5. **Update documentation** - especially context.md for architectural changes
 
+### When evaluating new libraries, frameworks, or dependencies:
+
+**IMPORTANT: Always evaluate accessibility impact before integration!**
+
+Every new library, framework, or third-party dependency must be evaluated for accessibility compliance BEFORE integration into the codebase. This is critical because AccNotes is an accessibility testing tool and must practice what it preaches.
+
+#### Mandatory Accessibility Evaluation Process:
+
+1. **Create Evaluation Document** in `docs/` folder:
+   - Template: `docs/[LIBRARY_NAME]_EVALUATION.md`
+   - Example: `docs/PDF_LIBRARY_EVALUATION.md`
+
+2. **Document Requirements**:
+   - Functional requirements (what it needs to do)
+   - Accessibility requirements in priority tiers:
+     - **Priorität 1 (Muss)**: WCAG 2.1 AA critical requirements
+     - **Priorität 2 (Sollte)**: Enhanced accessibility features
+     - **Priorität 3 (Nice-to-have)**: Advanced accessibility features
+
+3. **Evaluate Each Candidate**:
+   - List all considered alternatives (minimum 2-3 options)
+   - Rate each on:
+     - ✅ Functionality (does it meet requirements?)
+     - ✅ Accessibility (WCAG/BITV compliance)
+     - ✅ Integration complexity (Browser-Extension compatible?)
+     - ✅ Developer experience
+     - ✅ Community support (especially German accessibility community)
+   - Use star rating (⭐⭐⭐⭐⭐) for objective comparison
+
+4. **Accessibility-Specific Analysis**:
+   - What accessibility features DOES the library support?
+   - What accessibility features DOESN'T it support?
+   - Are there workarounds for missing features?
+   - Is the limitation acceptable for our use-case?
+
+5. **Document Decision**:
+   - Clear statement of chosen library with reasoning
+   - Explain why accessibility trade-offs (if any) are acceptable
+   - Include implementation guidelines for maintaining accessibility
+   - Reference WCAG/BITV standards where applicable
+
+6. **Implementation Best Practices**:
+   - Code examples showing accessible usage patterns
+   - Anti-patterns to avoid
+   - Quality assurance checklist
+
+#### Accessibility Evaluation Principles:
+
+- **Pragmatism over Perfection**: Perfect accessibility might not be technically achievable, but document WHY and what the acceptable baseline is
+- **Use-Case Driven**: Evaluate based on actual user needs, not theoretical perfection
+- **German Standards First**: Prioritize BITV compliance and German accessibility standards
+- **Document Alternatives**: If accessibility requirements can't be met, document fallback approaches for future
+
+#### Examples of Good Evaluation:
+- `docs/PDF_LIBRARY_EVALUATION.md` - Detailed comparison of jsPDF vs pdf-lib vs PDFKit with accessibility focus
+
+#### When Accessibility Can't Be Fully Met:
+If a library doesn't meet all accessibility requirements:
+1. ✅ Document the gap clearly
+2. ✅ Explain why it's acceptable for the use-case
+3. ✅ Propose mitigation strategies
+4. ✅ Add to technical debt with plan for future improvement
+5. ❌ **Never** silently ignore accessibility limitations!
+
 ### When modifying UI:
 1. **Follow design system** - use existing CSS custom properties
 2. **Test both themes** - light and dark mode
@@ -201,3 +265,4 @@ StorageHelper.exportNotes()        // Export to various formats
 2. **Maintain mapping accuracy** - problem detection to BITV test steps
 3. **Use correct German terminology** - official BITV language
 4. **Preserve evaluation structure** - 4-level assessment system
+- ja.

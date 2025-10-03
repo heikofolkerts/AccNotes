@@ -24,28 +24,28 @@
         <!-- Statistics Section -->
         <section aria-labelledby="stats-title">
             <h2 id="stats-title" class="sr-only">Statistiken</h2>
-            <div class="stats" role="region" aria-label="Notizen-Statistiken">
-                <div class="stat">
-                    <div class="stat__number" id="total-notes" aria-label="Anzahl Notizen gesamt">0</div>
-                    <div class="stat__label">Gesamt</div>
-                </div>
-                <div class="stat">
-                    <div class="stat__number" id="notes-today" aria-label="Anzahl Notizen heute">0</div>
-                    <div class="stat__label">Heute</div>
-                </div>
-                <div class="stat">
-                    <div class="stat__number" id="unique-pages" aria-label="Anzahl eindeutige Seiten">0</div>
-                    <div class="stat__label">Seiten</div>
-                </div>
-                <div class="stat">
-                    <div class="stat__number" id="bitv-notes" aria-label="Anzahl BITV-Notizen">0</div>
-                    <div class="stat__label">BITV-Tests</div>
-                </div>
-                <div class="stat">
-                    <div class="stat__number" id="failed-tests" aria-label="Anzahl nicht bestandene Tests">0</div>
-                    <div class="stat__label">Nicht bestanden</div>
-                </div>
-            </div>
+            <ul class="stats-list" aria-label="Notizen-Statistiken">
+                <li class="stats-list__item">
+                    <span class="stats-list__label">Notizen gesamt:</span>
+                    <span class="stats-list__value" id="total-notes">0</span>
+                </li>
+                <li class="stats-list__item">
+                    <span class="stats-list__label">Notizen heute:</span>
+                    <span class="stats-list__value" id="notes-today">0</span>
+                </li>
+                <li class="stats-list__item">
+                    <span class="stats-list__label">Eindeutige Seiten:</span>
+                    <span class="stats-list__value" id="unique-pages">0</span>
+                </li>
+                <li class="stats-list__item">
+                    <span class="stats-list__label">BITV-Tests:</span>
+                    <span class="stats-list__value" id="bitv-notes">0</span>
+                </li>
+                <li class="stats-list__item">
+                    <span class="stats-list__label">Nicht bestanden:</span>
+                    <span class="stats-list__value" id="failed-tests">0</span>
+                </li>
+            </ul>
         </section>
 
         <!-- BITV Progress Dashboard -->
@@ -211,10 +211,31 @@
                 </div>
                 <div class="controls__group">
                     <button type="button" id="bulk-action-button" class="btn btn--primary" disabled aria-describedby="bulk-action-help">
-                        <span aria-hidden="true">📧</span>
+                        <span aria-hidden="true">📄</span>
                         <span id="bulk-action-text">Auswahl als PDF exportieren (0)</span>
                     </button>
-                    <div id="bulk-action-help" class="sr-only">Exportiert die ausgewählten Notizen als barrierefreies PDF-Dokument</div>
+                    <button type="button" id="bulk-action-html-button" class="btn btn--secondary" disabled aria-describedby="bulk-action-html-help">
+                        <span aria-hidden="true">📄</span>
+                        <span id="bulk-action-html-text">Auswahl als HTML exportieren (0)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Email Template Section -->
+        <section class="info-panel" aria-labelledby="email-template-title">
+            <h2 id="email-template-title" class="info-panel__title">📧 E-Mail-Vorlage für Behördenmeldungen</h2>
+            <div class="controls">
+                <div class="controls__group">
+                    <button type="button" id="email-draft-button" class="btn btn--secondary">
+                        <span aria-hidden="true">📧</span>
+                        E-Mail-Entwurf öffnen
+                    </button>
+                    <button type="button" id="email-copy-button" class="btn btn--secondary">
+                        <span aria-hidden="true">📋</span>
+                        E-Mail-Text kopieren
+                    </button>
+                    <div id="email-help" class="sr-only">Öffnet eine E-Mail-Vorlage für die Meldung von Barrierefreiheitsproblemen gemäß BFSG. Fügen Sie den PDF- oder HTML-Export als Anhang hinzu.</div>
                 </div>
             </div>
         </section>
@@ -234,6 +255,7 @@
     <script src="scripts/theme-toggle.js"></script>
     <script src="scripts/bitv-catalog.js"></script>
     <script src="scripts/storage-helper.js"></script>
+    <script src="scripts/libs/jspdf.umd.min.js"></script>
     <script src="notes-overview.js"></script>
 </body>
 </html>

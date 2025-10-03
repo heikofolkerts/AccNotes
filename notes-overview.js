@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     loadNotes();
     initializeBulkSelection();
+    initializeEmailTemplate();
     initializeEventListeners();
 });
 
@@ -139,8 +140,9 @@ function displayNotes() {
         container.innerHTML = filteredNotes.map(note => createNoteHTML(note)).join('');
     }
 
-    // Update bulk selection UI
-    updateSelectAllCheckbox();
+    // Update bulk selection UI (NACH dem DOM-Update!)
+    updateCheckboxStates();  // Individuelle Checkboxen synchronisieren
+    updateSelectAllCheckbox();  // "Alle auswählen" Checkbox aktualisieren
     updateBulkActionButton();
 
     const endTime = performance.now();
@@ -207,9 +209,9 @@ function createNoteHTML(note) {
             <div class="note-item-content">
                 <div class="note-header">
                     <div class="note-info">
-                        <div class="note-title">${note.title || note.pageTitle || 'Unbekannte Seite'} ${statusBadge}</div>
+                        <div class="note-title">${note.title || note.pageTitle || 'Unbekannte Seite'} ${statusBadge} ${note.screenshotDataUrl ? '<span role="img" aria-label="Mit Screenshot">📷</span>' : ''}</div>
                         <div class="note-url">${note.url || 'Keine URL'}</div>
-                        <div class="note-meta">📅 ${formattedDate} | 🎯 ${note.element?.type || note.elementType || 'Element'}</div>
+                        <div class="note-meta">📅 ${formattedDate} | 🎯 ${note.element?.type || note.elementType || 'Element'} ${note.screenshotDataUrl ? '| 📷 Screenshot vorhanden' : ''}</div>
                         ${bitvInfo}
                     </div>
                     <div class="note-actions">
@@ -1006,6 +1008,7 @@ async function bulkDeleteFiltered() {
 function initializeBulkSelection() {
     const selectAllCheckbox = document.getElementById('select-all-checkbox');
     const bulkActionButton = document.getElementById('bulk-action-button');
+    const bulkActionHtmlButton = document.getElementById('bulk-action-html-button');
 
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', handleSelectAllChange);
@@ -1013,6 +1016,10 @@ function initializeBulkSelection() {
 
     if (bulkActionButton) {
         bulkActionButton.addEventListener('click', handleBulkExportPDF);
+    }
+
+    if (bulkActionHtmlButton) {
+        bulkActionHtmlButton.addEventListener('click', handleBulkExportHTML);
     }
 
     // Event-Delegation für individuelle Checkboxen
@@ -1023,6 +1030,19 @@ function initializeBulkSelection() {
                 handleNoteCheckboxChange(event.target);
             }
         });
+    }
+}
+
+function initializeEmailTemplate() {
+    const emailDraftButton = document.getElementById('email-draft-button');
+    const emailCopyButton = document.getElementById('email-copy-button');
+
+    if (emailDraftButton) {
+        emailDraftButton.addEventListener('click', handleEmailDraft);
+    }
+
+    if (emailCopyButton) {
+        emailCopyButton.addEventListener('click', handleCopyEmail);
     }
 }
 
@@ -1046,11 +1066,13 @@ function handleSelectAllChange(event) {
 
 function handleNoteCheckboxChange(checkbox) {
     const noteId = checkbox.dataset.noteId;
+    // WICHTIG: dataset.noteId ist ein String, aber wir brauchen Number!
+    const noteIdAsNumber = Number(noteId);
 
     if (checkbox.checked) {
-        selectedNotes.add(noteId);
+        selectedNotes.add(noteIdAsNumber);
     } else {
-        selectedNotes.delete(noteId);
+        selectedNotes.delete(noteIdAsNumber);
     }
 
     updateSelectAllCheckbox();
@@ -1060,9 +1082,12 @@ function handleNoteCheckboxChange(checkbox) {
 function updateCheckboxStates() {
     // Alle Checkboxen im DOM aktualisieren
     const checkboxes = document.querySelectorAll('.note-checkbox-input');
+
     checkboxes.forEach(checkbox => {
         const noteId = checkbox.dataset.noteId;
-        checkbox.checked = selectedNotes.has(noteId);
+        // WICHTIG: dataset.noteId ist ein String, aber selectedNotes enthält Numbers!
+        const noteIdAsNumber = Number(noteId);
+        checkbox.checked = selectedNotes.has(noteIdAsNumber);
     });
 }
 
@@ -1072,7 +1097,7 @@ function updateSelectAllCheckbox() {
 
     const sortedNotes = getSortedNotes();
     const filteredNotes = getFilteredNotesWithCache(sortedNotes);
-    const visibleNoteIds = filteredNotes.map(note => note.id);
+    const visibleNoteIds = filteredNotes.map(note => note.id);  // IDs sind Numbers
     const visibleSelectedCount = visibleNoteIds.filter(id => selectedNotes.has(id)).length;
 
     if (visibleSelectedCount === 0) {
@@ -1090,6 +1115,8 @@ function updateSelectAllCheckbox() {
 function updateBulkActionButton() {
     const bulkActionButton = document.getElementById('bulk-action-button');
     const bulkActionText = document.getElementById('bulk-action-text');
+    const bulkActionHtmlButton = document.getElementById('bulk-action-html-button');
+    const bulkActionHtmlText = document.getElementById('bulk-action-html-text');
     const bulkSelectionSection = document.getElementById('bulk-selection-section');
 
     if (!bulkActionButton || !bulkActionText || !bulkSelectionSection) return;
@@ -1103,24 +1130,144 @@ function updateBulkActionButton() {
         bulkSelectionSection.style.display = 'none';
     }
 
-    // Button aktivieren/deaktivieren
+    // Buttons aktivieren/deaktivieren
     if (selectionCount > 0) {
         bulkActionButton.disabled = false;
         bulkActionText.textContent = `Auswahl als PDF exportieren (${selectionCount})`;
+
+        if (bulkActionHtmlButton && bulkActionHtmlText) {
+            bulkActionHtmlButton.disabled = false;
+            bulkActionHtmlText.textContent = `Auswahl als HTML exportieren (${selectionCount})`;
+        }
     } else {
         bulkActionButton.disabled = true;
         bulkActionText.textContent = 'Auswahl als PDF exportieren (0)';
+
+        if (bulkActionHtmlButton && bulkActionHtmlText) {
+            bulkActionHtmlButton.disabled = true;
+            bulkActionHtmlText.textContent = 'Auswahl als HTML exportieren (0)';
+        }
     }
 }
 
-function handleBulkExportPDF() {
+async function handleBulkExportPDF() {
     if (selectedNotes.size === 0) {
         alert('Bitte wählen Sie mindestens eine Notiz aus.');
         return;
     }
 
-    // Placeholder für PDF-Export-Funktion
-    alert(`PDF-Export wird implementiert.\n\nAusgewählte Notizen: ${selectedNotes.size}\n\nDies wird in Schritt 3 implementiert.`);
+    try {
+        // Sammle ausgewählte Notizen
+        const selectedNotesArray = allNotes.filter(note => selectedNotes.has(note.id));
+
+        // Sortiere nach Datum
+        selectedNotesArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // Generiere PDF
+        await generateAccessibilityPDF(selectedNotesArray);
+
+        alert(`PDF erfolgreich erstellt!\n\n${selectedNotesArray.length} Notizen exportiert.`);
+    } catch (error) {
+        console.error('Fehler beim PDF-Export:', error);
+        alert(`Fehler beim PDF-Export: ${error.message}`);
+    }
+}
+
+async function handleBulkExportHTML() {
+    if (selectedNotes.size === 0) {
+        alert('Bitte wählen Sie mindestens eine Notiz aus.');
+        return;
+    }
+
+    try {
+        // Sammle ausgewählte Notizen
+        const selectedNotesArray = allNotes.filter(note => selectedNotes.has(note.id));
+
+        // Sortiere nach Datum
+        selectedNotesArray.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        // Generiere HTML
+        await generateAccessibilityHTML(selectedNotesArray);
+
+        alert(`HTML erfolgreich erstellt!\n\n${selectedNotesArray.length} Notizen exportiert.\n\nDie Datei kann direkt im Browser geöffnet und mit Screen Readern gelesen werden.`);
+    } catch (error) {
+        console.error('Fehler beim HTML-Export:', error);
+        alert(`Fehler beim HTML-Export: ${error.message}`);
+    }
+}
+
+// ============================================
+// Email Template Functions
+// ============================================
+
+function generateGenericEmailText() {
+    return `Sehr geehrte Damen und Herren,
+
+ich melde hiermit Barrierefreiheitsprobleme auf Ihrer Website gemäß dem Barrierefreiheitsstärkungsgesetz (BFSG), das seit dem 28. Juni 2025 in Deutschland gilt.
+
+Rechtliche Grundlagen:
+- Barrierefreiheitsstärkungsgesetz (BFSG)
+- Behindertengleichstellungsgesetz (BGG), insbesondere § 12a
+- EU-Richtlinie 2016/2102 über den barrierefreien Zugang zu Websites
+
+Die detaillierte Dokumentation der festgestellten Probleme finden Sie im beigefügten Bericht (PDF oder HTML).
+
+Ich bitte um Stellungnahme innerhalb von 2 Wochen und um Mitteilung, bis wann die Probleme behoben werden.
+
+Sollte keine zufriedenstellende Lösung gefunden werden, werde ich mich an die Schlichtungsstelle nach § 16 BGG wenden.
+
+Weitere Informationen:
+- Bundesfachstelle Barrierefreiheit: https://www.bundesfachstelle-barrierefreiheit.de/
+- Schlichtungsstelle BGG: https://www.schlichtungsstelle-bgg.de/
+
+Für Rückfragen stehe ich gerne zur Verfügung.
+
+Mit freundlichen Grüßen
+
+---
+Erstellt mit AccNotes - AI-Powered BITV Testing Assistant
+https://github.com/heikofolkerts/AccNotes`;
+}
+
+function handleEmailDraft() {
+    try {
+        const emailBody = generateGenericEmailText();
+        const emailSubject = `Meldung Barrierefreiheitsprobleme gemäß BFSG`;
+
+        // URL-encode für mailto:
+        const mailtoUrl = `mailto:?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+
+        // Öffne mailto: Link
+        window.location.href = mailtoUrl;
+
+        // Zeige Hinweis
+        setTimeout(() => {
+            alert(`E-Mail-Entwurf geöffnet!\n\n⚠️ WICHTIG - Nächste Schritte:\n\n1. Tragen Sie die korrekte Empfänger-Adresse ein\n2. Exportieren Sie Ihre Notizen als PDF oder HTML\n3. Fügen Sie die Datei als Anhang zur E-Mail hinzu\n4. Senden Sie die E-Mail ab`);
+        }, 500);
+
+    } catch (error) {
+        console.error('Fehler beim E-Mail-Entwurf:', error);
+        alert(`Fehler beim Öffnen des E-Mail-Programms: ${error.message}\n\nVerwenden Sie alternativ den Button "E-Mail-Text kopieren".`);
+    }
+}
+
+async function handleCopyEmail() {
+    try {
+        const emailBody = generateGenericEmailText();
+        const emailSubject = `Meldung Barrierefreiheitsprobleme gemäß BFSG`;
+
+        // Vollständiger Text mit Betreff
+        const fullEmailText = `Betreff: ${emailSubject}\n\n${emailBody}`;
+
+        // In Zwischenablage kopieren
+        await navigator.clipboard.writeText(fullEmailText);
+
+        alert(`✅ E-Mail-Text in Zwischenablage kopiert!\n\nNächste Schritte:\n1. Öffnen Sie Ihr E-Mail-Programm\n2. Fügen Sie den Text mit Strg+V ein\n3. Tragen Sie die Empfänger-Adresse ein\n4. Exportieren Sie Ihre Notizen als PDF oder HTML\n5. Fügen Sie den Export als Anhang hinzu\n6. Senden Sie die E-Mail ab`);
+
+    } catch (error) {
+        console.error('Fehler beim Kopieren:', error);
+        alert(`Fehler beim Kopieren in die Zwischenablage: ${error.message}`);
+    }
 }
 
 function clearSelection() {
@@ -1128,6 +1275,605 @@ function clearSelection() {
     updateCheckboxStates();
     updateSelectAllCheckbox();
     updateBulkActionButton();
+}
+
+// ============================================
+// PDF Export Functionality
+// ============================================
+
+async function generateAccessibilityPDF(notes) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - 2 * margin;
+    let yPos = margin;
+
+    // ========== Deckblatt ==========
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Barrierefreiheits-Bericht', margin, yPos);
+    yPos += 15;
+
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    })}`, margin, yPos);
+    yPos += 10;
+    doc.text(`Anzahl Notizen: ${notes.length}`, margin, yPos);
+    yPos += 15;
+
+    // Zusammenfassung
+    const statusCount = {
+        draft: notes.filter(n => n.status === 'draft' || !n.status).length,
+        reported: notes.filter(n => n.status === 'reported').length,
+        resolved: notes.filter(n => n.status === 'resolved').length
+    };
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Zusammenfassung', margin, yPos);
+    yPos += 10;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Entwürfe: ${statusCount.draft}`, margin, yPos);
+    yPos += 7;
+    doc.text(`Gemeldet: ${statusCount.reported}`, margin, yPos);
+    yPos += 7;
+    doc.text(`Behoben: ${statusCount.resolved}`, margin, yPos);
+    yPos += 20;
+
+    // Websites-Übersicht
+    const websites = [...new Set(notes.map(n => {
+        try {
+            return new URL(n.url).hostname;
+        } catch {
+            return n.url || 'Unbekannt';
+        }
+    }))];
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Betroffene Websites', margin, yPos);
+    yPos += 10;
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    websites.forEach(website => {
+        if (yPos > pageHeight - 30) {
+            doc.addPage();
+            yPos = margin;
+        }
+        doc.text(`• ${website}`, margin + 5, yPos);
+        yPos += 7;
+    });
+
+    // ========== Notizen-Details ==========
+    doc.addPage();
+    yPos = margin;
+
+    // H2: Gefundene Barrieren
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Gefundene Barrieren', margin, yPos);
+    yPos += 15;
+
+    for (let i = 0; i < notes.length; i++) {
+        const note = notes[i];
+
+        // Prüfe Seitenumbruch
+        if (yPos > pageHeight - 80) {
+            doc.addPage();
+            yPos = margin;
+        }
+
+        // H3: Einzelne Barriere (Notiz-Titel)
+        doc.setFontSize(12);  // H3-Größe (kleiner als H2)
+        doc.setFont('helvetica', 'bold');
+        const noteTitle = note.title || note.pageTitle || 'Unbekannte Seite';
+        doc.text(`${i + 1}. ${noteTitle}`, margin, yPos);
+        yPos += 8;  // Abstand nach H3-Überschrift
+
+        // Status-Badge
+        const statusTexts = {
+            draft: 'Status: Entwurf (noch nicht gemeldet)',
+            reported: 'Status: Gemeldet',
+            resolved: 'Status: Behoben'
+        };
+        const statusText = statusTexts[note.status] || statusTexts.draft;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'italic');
+        doc.text(statusText, margin, yPos);
+        yPos += 7;
+
+        // Metadaten
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        const date = new Date(note.timestamp).toLocaleDateString('de-DE');
+        doc.text(`Datum: ${date}`, margin, yPos);
+        yPos += 6;
+
+        const urlText = note.url || 'Keine URL';
+        const splitUrl = doc.splitTextToSize(urlText, contentWidth);
+        doc.text(`URL: ${splitUrl[0]}`, margin, yPos);
+        yPos += 6;
+
+        if (note.element?.type) {
+            doc.text(`Element: ${note.element.type}`, margin, yPos);
+            yPos += 6;
+        }
+
+        // BITV-Prüfschritt
+        if (note.bitvTest) {
+            doc.setFont('helvetica', 'bold');
+            doc.text(`BITV-Prüfschritt: ${note.bitvTest.stepId} - ${note.bitvTest.stepTitle}`, margin, yPos);
+            yPos += 6;
+            doc.setFont('helvetica', 'normal');
+
+            const evaluationTexts = {
+                passed: 'Bestanden',
+                failed: 'Nicht bestanden',
+                partial: 'Teilweise bestanden',
+                needs_review: 'Zu überprüfen'
+            };
+            doc.text(`Bewertung: ${evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review}`, margin, yPos);
+            yPos += 8;
+        } else {
+            yPos += 2;
+        }
+
+        // Beschreibung
+        doc.setFont('helvetica', 'bold');
+        doc.text('Beschreibung:', margin, yPos);
+        yPos += 6;
+        doc.setFont('helvetica', 'normal');
+
+        const contentLines = doc.splitTextToSize(note.content || 'Keine Beschreibung', contentWidth);
+        contentLines.forEach(line => {
+            if (yPos > pageHeight - 20) {
+                doc.addPage();
+                yPos = margin;
+            }
+            doc.text(line, margin, yPos);
+            yPos += 5;
+        });
+        yPos += 5;
+
+        // Empfehlung
+        if (note.recommendation) {
+            doc.setFont('helvetica', 'bold');
+            doc.text('Empfehlung:', margin, yPos);
+            yPos += 6;
+            doc.setFont('helvetica', 'normal');
+
+            const recommendationLines = doc.splitTextToSize(note.recommendation, contentWidth);
+            recommendationLines.forEach(line => {
+                if (yPos > pageHeight - 20) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+                doc.text(line, margin, yPos);
+                yPos += 5;
+            });
+            yPos += 5;
+        }
+
+        // Screenshot (wenn vorhanden)
+        if (note.screenshotDataUrl) {
+            try {
+                if (yPos > pageHeight - 100) {
+                    doc.addPage();
+                    yPos = margin;
+                }
+
+                doc.setFont('helvetica', 'bold');
+                doc.text('Screenshot:', margin, yPos);
+                yPos += 6;
+
+                const imgWidth = contentWidth;
+                const imgHeight = 80; // Feste Höhe für einheitliches Layout
+
+                doc.addImage(note.screenshotDataUrl, 'PNG', margin, yPos, imgWidth, imgHeight);
+                yPos += imgHeight + 10;
+            } catch (error) {
+                console.warn('Screenshot konnte nicht eingebettet werden:', error);
+            }
+        }
+
+        // Trennlinie
+        yPos += 5;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPos, pageWidth - margin, yPos);
+        yPos += 10;
+    }
+
+    // ========== Fußzeile auf allen Seiten ==========
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'italic');
+        doc.text(
+            `Seite ${i} von ${totalPages} • Erstellt mit AccNotes`,
+            pageWidth / 2,
+            pageHeight - 10,
+            { align: 'center' }
+        );
+    }
+
+    // Speichern
+    const filename = `barrierefreiheit-bericht-${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(filename);
+}
+
+// ============================================
+// HTML Export Functionality (Accessible Alternative)
+// ============================================
+
+async function generateAccessibilityHTML(notes) {
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('de-DE', {
+        year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    // Status-Zusammenfassung
+    const statusCount = {
+        draft: notes.filter(n => n.status === 'draft' || !n.status).length,
+        reported: notes.filter(n => n.status === 'reported').length,
+        resolved: notes.filter(n => n.status === 'resolved').length
+    };
+
+    // Websites-Übersicht
+    const websites = [...new Set(notes.map(n => {
+        try {
+            return new URL(n.url).hostname;
+        } catch {
+            return n.url || 'Unbekannt';
+        }
+    }))];
+
+    // HTML-Struktur aufbauen
+    let html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barrierefreiheits-Bericht - ${formattedDate}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #fff;
+            color: #333;
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            color: #1e40af;
+            border-bottom: 2px solid #dbeafe;
+            padding-bottom: 0.3rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+        h3 {
+            color: #1e3a8a;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .metadata {
+            background: #f3f4f6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .summary-item {
+            background: #fff;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+        }
+        .summary-item strong {
+            display: block;
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        .summary-item span {
+            font-size: 1.5rem;
+            color: #2563eb;
+            font-weight: bold;
+        }
+        .barrier {
+            background: #f9fafb;
+            border-left: 4px solid #2563eb;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.25rem;
+        }
+        .barrier--failed {
+            border-left-color: #dc2626;
+        }
+        .barrier--partial {
+            border-left-color: #f59e0b;
+        }
+        .barrier--passed {
+            border-left-color: #10b981;
+        }
+        .meta-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0.5rem 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin: 0.5rem 0;
+        }
+        .status-badge--draft {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .status-badge--reported {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status-badge--resolved {
+            background: #f3e8ff;
+            color: #6b21a8;
+        }
+        .bitv-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin: 0.75rem 0;
+        }
+        .bitv-evaluation {
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            display: inline-block;
+        }
+        .bitv-evaluation--passed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .bitv-evaluation--failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .bitv-evaluation--partial {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .bitv-evaluation--needs_review {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+        .screenshot {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        .description, .recommendation {
+            margin: 0.75rem 0;
+            line-height: 1.7;
+        }
+        .description strong, .recommendation strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #374151;
+        }
+        .website-list {
+            list-style: none;
+            padding: 0;
+        }
+        .website-list li {
+            padding: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        @media print {
+            body {
+                max-width: 100%;
+            }
+            .barrier {
+                page-break-inside: avoid;
+            }
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1f2937;
+                color: #e5e7eb;
+            }
+            .barrier {
+                background: #374151;
+            }
+            .bitv-info {
+                background: #1e3a8a;
+                border-color: #1e40af;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Barrierefreiheits-Bericht</h1>
+        <div class="metadata">
+            <p><strong>Erstellt am:</strong> ${formattedDate}</p>
+            <p><strong>Anzahl Notizen:</strong> ${notes.length}</p>
+        </div>
+    </header>
+
+    <section>
+        <h2>Zusammenfassung</h2>
+        <div class="summary">
+            <div class="summary-item">
+                <strong>Entwürfe</strong>
+                <span>${statusCount.draft}</span>
+            </div>
+            <div class="summary-item">
+                <strong>Gemeldet</strong>
+                <span>${statusCount.reported}</span>
+            </div>
+            <div class="summary-item">
+                <strong>Behoben</strong>
+                <span>${statusCount.resolved}</span>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2>Betroffene Websites</h2>
+        <ul class="website-list">
+`;
+
+    websites.forEach(website => {
+        html += `            <li>${escapeHtml(website)}</li>\n`;
+    });
+
+    html += `        </ul>
+    </section>
+
+    <section>
+        <h2>Gefundene Barrieren</h2>
+`;
+
+    // Einzelne Notizen
+    notes.forEach((note, index) => {
+        const noteTitle = note.title || note.pageTitle || 'Unbekannte Seite';
+        const date = new Date(note.timestamp).toLocaleDateString('de-DE');
+
+        const statusTexts = {
+            draft: 'Entwurf (noch nicht gemeldet)',
+            reported: 'Gemeldet',
+            resolved: 'Behoben'
+        };
+        const statusText = statusTexts[note.status] || statusTexts.draft;
+        const statusClass = note.status || 'draft';
+
+        const evaluationClass = note.bitvTest ? note.bitvTest.evaluation || 'needs_review' : '';
+        const barrierClass = evaluationClass ? `barrier--${evaluationClass}` : '';
+
+        html += `
+        <article class="barrier ${barrierClass}">
+            <h3>${index + 1}. ${escapeHtml(noteTitle)}</h3>
+
+            <span class="status-badge status-badge--${statusClass}">
+                Status: ${statusText}
+            </span>
+
+            <div class="meta-info">
+                <p><strong>Datum:</strong> ${date}</p>
+                <p><strong>URL:</strong> <a href="${escapeHtml(note.url)}">${escapeHtml(note.url)}</a></p>
+                <p><strong>Element:</strong> ${escapeHtml(note.element?.type || note.elementType || 'Unbekannt')}</p>
+            </div>
+`;
+
+        // BITV-Informationen
+        if (note.bitvTest) {
+            const evaluationTexts = {
+                passed: 'Bestanden',
+                failed: 'Nicht bestanden',
+                partial: 'Teilweise bestanden',
+                needs_review: 'Zu überprüfen'
+            };
+            const evaluationText = evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review;
+
+            html += `
+            <div class="bitv-info">
+                <p><strong>BITV-Prüfschritt:</strong> ${escapeHtml(note.bitvTest.stepId)} - ${escapeHtml(note.bitvTest.stepTitle)}</p>
+                <p>
+                    <strong>Bewertung:</strong>
+                    <span class="bitv-evaluation bitv-evaluation--${note.bitvTest.evaluation || 'needs_review'}">
+                        ${evaluationText}
+                    </span>
+                </p>
+            </div>
+`;
+        }
+
+        // Beschreibung
+        html += `
+            <div class="description">
+                <strong>Beschreibung:</strong>
+                <p>${escapeHtml(note.content || 'Keine Beschreibung')}</p>
+            </div>
+`;
+
+        // Empfehlung
+        if (note.recommendation) {
+            html += `
+            <div class="recommendation">
+                <strong>Empfehlung:</strong>
+                <p>${escapeHtml(note.recommendation)}</p>
+            </div>
+`;
+        }
+
+        // Screenshot
+        if (note.screenshotDataUrl) {
+            html += `
+            <div>
+                <strong>Screenshot:</strong>
+                <img src="${note.screenshotDataUrl}"
+                     alt="Screenshot von ${escapeHtml(noteTitle)}"
+                     class="screenshot">
+            </div>
+`;
+        }
+
+        html += `
+        </article>
+`;
+    });
+
+    html += `
+    </section>
+
+    <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280;">
+        <p>Erstellt mit <a href="https://github.com/heikofolkerts/AccNotes" style="color: #2563eb;">AccNotes</a> - AI-Powered BITV Testing Assistant</p>
+    </footer>
+</body>
+</html>`;
+
+    // HTML-Datei zum Download anbieten
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `barrierefreiheit-bericht-${new Date().toISOString().split('T')[0]}.html`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
 }
 
 // ============================================

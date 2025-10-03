@@ -1,8 +1,8 @@
 # AccNotes Implementation Status
 
-**Stand:** 2. Oktober 2025
-**Version:** 0.5.2 (in Entwicklung)
-**Aktueller Status:** Item #5 - Vereinfachter Melde-Workflow (Schritte 1-5 abgeschlossen)
+**Stand:** 3. Oktober 2025
+**Version:** 0.5.3
+**Aktueller Status:** Item #5 - Vereinfachter Melde-Workflow ✅ ABGESCHLOSSEN
 
 ---
 
@@ -192,6 +192,83 @@ else {
 }
 ```
 
+#### 6. Screenshot-Feature & Barrierefreie Export-Formate ✅
+
+**Status:** Vollständig implementiert
+**Implementiert am:** 3. Oktober 2025
+
+**Features:**
+- ✅ Screenshot-Erstellung direkt aus dem Browser
+  - Element-Highlighting mit rotem Rahmen
+  - Automatisches Scrolling zum Element
+  - Screenshot über Background Script (chrome.tabs.captureVisibleTab)
+  - Base64-Einbettung in Note-Daten
+- ✅ PDF-Export mit jsPDF
+  - Deckblatt mit Zusammenfassung
+  - H2: "Gefundene Barrieren"
+  - H3: Einzelne Notiz-Titel
+  - Eingebettete Screenshots
+  - Status-Badges (Entwurf/Gemeldet/Behoben)
+  - **Limitation:** Keine PDF/UA-Tags (jsPDF unterstützt keine semantische PDF-Struktur)
+- ✅ HTML-Export als barrierefreie Alternative
+  - Self-contained HTML-Datei (alle Styles inline)
+  - Echte semantische Überschriften (H1, H2, H3)
+  - Eingebettete Screenshots (Base64)
+  - WCAG AA konforme Farbkontraste
+  - Dark Mode Support (prefers-color-scheme)
+  - Responsive & Print-optimiert
+  - Screenshot-Icon (📷) in Notizen-Übersicht
+
+**Technische Details:**
+- `background.js`: Alle 6 `contextData`-Erstellungen ergänzt mit `tabId`
+- `content.js`: Screenshot-Request-Handler mit Element-Highlighting
+- `note.js`: `requestScreenshotFromTab()` Funktion
+- `manifest.json`: `screenshot-helper.js` zu content_scripts hinzugefügt
+- `notes-overview.js`:
+  - `generateAccessibilityPDF()` (Zeilen 1156-1387)
+  - `generateAccessibilityHTML()` (Zeilen 1393-1749)
+  - Screenshot-Anzeige in Notiz-Karte (Zeile 211)
+
+**Dokumentation:**
+- `docs/PDF_LIBRARY_EVALUATION.md`: Detaillierte Evaluierung von jsPDF vs pdf-lib vs PDFKit
+
+#### 7. E-Mail-Template für BFSG-Meldungen ✅
+
+**Status:** Vollständig implementiert
+**Implementiert am:** 3. Oktober 2025
+
+**Features:**
+- ✅ Generischer E-Mail-Template (unabhängig von Notiz-Auswahl)
+- ✅ Zwei Export-Optionen:
+  - "E-Mail-Entwurf öffnen" (mailto: Link)
+  - "E-Mail-Text kopieren" (Zwischenablage)
+- ✅ Rechtliche Grundlagen:
+  - Barrierefreiheitsstärkungsgesetz (BFSG, gültig seit 28. Juni 2025)
+  - Behindertengleichstellungsgesetz (BGG) § 12a
+  - EU-Richtlinie 2016/2102
+  - Verweis auf Schlichtungsstelle § 16 BGG
+- ✅ Professioneller Workflow:
+  - 2-Wochen-Frist für Stellungnahme
+  - Verweis auf "beigefügten Bericht (PDF oder HTML)"
+  - Links zu Bundesfachstelle & Schlichtungsstelle
+  - **Keine** Problemdetails im E-Mail-Text (→ kommen aus Anhang)
+
+**Implementierte Dateien:**
+- `notes-overview.html`: E-Mail-Template Section (Zeilen 225-241)
+- `notes-overview.js`:
+  - `initializeEmailTemplate()` (Zeilen 1035-1046)
+  - `generateGenericEmailText()` (Zeilen 1202-1229)
+  - `handleEmailDraft()` (Zeilen 1231-1251)
+  - `handleCopyEmail()` (Zeilen 1253-1270)
+
+**User Workflow:**
+1. Notizen auswählen
+2. PDF oder HTML exportieren
+3. E-Mail-Vorlage öffnen/kopieren (unabhängig!)
+4. Empfänger-Adresse manuell eintragen
+5. Export als Anhang hinzufügen
+6. E-Mail senden
+
 ---
 
 ### 🔄 Aktuell in Arbeit
@@ -201,66 +278,6 @@ else {
 ---
 
 ### 📅 Nächste Schritte
-
-#### 6. Barrierefreier PDF-Export mit Screenshots 📅
-
-**Status:** PENDING
-**Story Points:** 3
-
-**Geplante Features:**
-- PDF/UA-konforme PDF-Generation mit `pdf-lib`
-- Eingebettete Screenshots aus gespeicherten Notizen
-- Strukturierte PDF-Dokumentation:
-  - Inhaltsverzeichnis mit Lesezeichen
-  - Strukturierte Überschriften (H1-H3)
-  - Tabellen für Notizen-Übersicht
-  - Alt-Texte für eingebettete Screenshots
-- Export-Optionen:
-  - Nur ausgewählte Notizen
-  - Nur nicht gemeldete Notizen
-  - Alle Notizen einer Website
-
-**Technische Planung:**
-- Library: `pdf-lib` (PDF-Erstellung) + `jsPDF` Alternative prüfen
-- Screenshot-Quelle: `note.screenshotDataUrl` (bereits gespeichert)
-- Struktur:
-  - Deckblatt mit Zusammenfassung
-  - Notizen-Liste mit Screenshots
-  - Anhang mit technischen Details
-
-**Barrierefreiheits-Anforderungen:**
-- PDF/UA-1 Standard
-- Tagged PDF (Strukturbaum)
-- Alt-Texte für alle Bilder
-- Semantische Überschriften
-- Lesezeichen-Navigation
-
-#### 7. E-Mail-Template mit PDF-Anhang 📅
-
-**Status:** PENDING
-**Story Points:** 2
-
-**Geplante Features:**
-- E-Mail-Template-Generator für Meldungen
-- Anleitung zum Anhängen des generierten PDFs
-- Vorgefertigte Textbausteine:
-  - Anrede und Einleitung
-  - Verweis auf BITV/BGG
-  - Problembeschreibung (Zusammenfassung)
-  - Verweis auf angehängtes PDF
-  - Kontaktinformationen und rechtliche Grundlagen
-- Optionen:
-  - Formell vs. informell
-  - Mit/ohne rechtliche Grundlagen
-  - Für Privatperson vs. Organisation
-
-**Workflow:**
-1. Benutzer wählt Notizen aus
-2. Klick auf "Auswahl als PDF exportieren"
-3. PDF wird generiert und heruntergeladen
-4. E-Mail-Vorlage wird angezeigt (Copy & Paste)
-5. Hinweis: "PDF manuell an E-Mail anhängen"
-6. Optional: Status automatisch auf "gemeldet" setzen
 
 ---
 

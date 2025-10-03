@@ -320,6 +320,7 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
                 url: tab.url || 'Unbekannt',
                 pageTitle: tab.title || 'Unbekannt', // Seitentitel (nicht Element-title!)
                 selectedText: info.selectionText || '',
+                tabId: tab.id, // Für Screenshot-Erstellung
                 // Element-Informationen aus Content Script (falls verfügbar)
                 ...(elementInfo || {})
             };
@@ -355,6 +356,7 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
                 url: tab.url || 'Unbekannt',
                 pageTitle: tab.title || 'Unbekannt', // Seitentitel
                 selectedText: info.selectionText || '',
+                tabId: tab.id, // Für Screenshot-Erstellung
                 elementType: info.linkUrl ? 'Link' : (info.srcUrl ? 'Bild' : 'Allgemein'),
                 tagName: 'UNKNOWN',
                 detectedProblems: []
@@ -395,6 +397,7 @@ async function handleQuickProblemReport(problemIndex, tab, info) {
                 url: tab.url || 'Unbekannt',
                 pageTitle: tab.title || 'Unbekannt',
                 selectedText: info.selectionText || '',
+                tabId: tab.id, // Für Screenshot-Erstellung
                 ...elementInfo,
                 // Markiere das spezifische Problem als primär
                 primaryProblem: problem,
@@ -428,6 +431,7 @@ async function handleDetailedNote(tab, info) {
             url: tab.url || 'Unbekannt',
             pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
+            tabId: tab.id, // Für Screenshot-Erstellung
             ...elementInfo,
             reportType: 'detailed-bitv'
         };
@@ -511,6 +515,7 @@ async function handleQuickReport(tab, info) {
             url: tab.url || 'Unbekannt',
             pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
+            tabId: tab.id, // Für Screenshot-Erstellung
             ...elementInfo,
             reportType: 'quick-citizen'
         };
@@ -532,6 +537,7 @@ async function handleManualProblemReport(tab, info) {
             url: tab.url || 'Unbekannt',
             pageTitle: tab.title || 'Unbekannt',
             selectedText: info.selectionText || '',
+            tabId: tab.id, // Für Screenshot-Erstellung
             ...elementInfo,
             reportType: 'quick-problem',
             // Für manuelle Berichte ohne erkannte Probleme
@@ -600,4 +606,29 @@ async function openNoteWithContext(contextData) {
     const notePageUrl = browserAPI.runtime.getURL('note.html') + '?' + params.toString();
     browserAPI.tabs.create({ url: notePageUrl });
 }
+
+// Message Listener für Screenshot-Anfragen vom Content Script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'captureVisibleTab') {
+        console.log('📷 Background: Capturing visible tab screenshot');
+
+        chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
+            if (chrome.runtime.lastError) {
+                console.error('❌ Screenshot capture failed:', chrome.runtime.lastError);
+                sendResponse({
+                    success: false,
+                    error: chrome.runtime.lastError.message
+                });
+            } else {
+                console.log('✅ Screenshot captured successfully');
+                sendResponse({
+                    success: true,
+                    dataUrl: dataUrl
+                });
+            }
+        });
+
+        return true; // Asynchrone Response
+    }
+});
 

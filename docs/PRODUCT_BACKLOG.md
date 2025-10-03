@@ -363,7 +363,70 @@ Rechtsklick auf Element ohne erkannte Probleme:
 
 ### 🚀 LOW PRIORITY (Future Features)
 
-#### 10. BITV-Team-Kollaboration *(Story Points: 21)*
+#### 10. Barrierefreie Tabellen-Ansicht für Notizen-Übersicht *(Story Points: 5)*
+**Status**: 📋 Ready for Development (Accessibility Enhancement)
+
+**Problem Statement**:
+Die aktuelle Notizen-Übersicht verwendet `<div>`-basierte Karten-Layout, was für Screen-Reader-Nutzer suboptimal ist. Eine semantische `<table>`-Struktur würde die Navigation mit Screenreadern deutlich verbessern.
+
+**User Stories**:
+- Als **Screen-Reader-Nutzer** möchte ich durch Notizen mit Tabellen-Navigation navigieren
+- Als **BITV-Tester** möchte ich Notizen sortiert und strukturiert scannen können
+- Als **Nutzer mit Sehbehinderung** möchte ich Spalten-Header für Kontext nutzen
+
+**Tasks**:
+- [ ] Notizen-Übersicht von `<div>` auf `<table>` umstellen
+- [ ] Semantische Spalten: Titel, Status, Datum, Element-Typ, BITV-Schritt, Aktionen
+- [ ] Sortierbare Spalten-Header implementieren
+- [ ] Responsive Tabellen-Design (mobile Ansicht)
+- [ ] ARIA-Labels für verbesserte Screenreader-Unterstützung
+- [ ] Keyboard-Navigation für Tabellenzeilen
+
+**Acceptance Criteria**:
+- [ ] `<table>` mit `<thead>`, `<tbody>`, `<th>` und `<td>` Struktur
+- [ ] Screen-Reader kann Spalten-Header ansagen
+- [ ] Sortierung pro Spalte mit visuellen Indikatoren
+- [ ] Mobile-responsive (collapses/horizontal scroll)
+- [ ] Keyboard-Navigation: Pfeiltasten navigieren zwischen Zeilen
+- [ ] Bestehende Filter und Suche funktionieren weiterhin
+
+**Priorität**: Low (Nice-to-have für Accessibility)
+**Geschätzter Aufwand**: 5 Story Points
+
+---
+
+#### 11. Bulk-Export als ZIP-Archiv *(Story Points: 3)*
+**Status**: 📋 Ready for Development (Enhancement)
+
+**Problem Statement**:
+Es existiert ein "Als ZIP herunterladen"-Button in der Notizen-Übersicht, aber ohne entsprechende Story oder vollständige Implementierung.
+
+**User Stories**:
+- Als **Nutzer** möchte ich alle Notizen als ZIP-Archiv exportieren
+- Als **Team** möchten wir Notizen-Sammlungen austauschen
+- Als **Auditor** möchte ich alle Notizen inkl. Screenshots archivieren
+
+**Tasks**:
+- [ ] ZIP-Bibliothek einbinden (z.B. JSZip)
+- [ ] Bulk-Export-Logik implementieren
+- [ ] Alle Notiz-Textdateien in ZIP packen
+- [ ] Screenshots in ZIP-Archiv einbetten
+- [ ] Dateistruktur im ZIP: `/notes/note-123.txt`, `/screenshots/note-123.png`
+- [ ] README.txt mit Export-Metadaten
+
+**Acceptance Criteria**:
+- [ ] Button "Als ZIP herunterladen" funktioniert
+- [ ] ZIP enthält alle Notizen als Textdateien
+- [ ] ZIP enthält alle Screenshots (wenn vorhanden)
+- [ ] Strukturierte Ordner im ZIP
+- [ ] README mit Export-Datum und Statistiken
+
+**Priorität**: Low (Enhancement)
+**Geschätzter Aufwand**: 3 Story Points
+
+---
+
+#### 12. BITV-Team-Kollaboration *(Story Points: 21)*
 **Status**: 💭 Future Consideration (Professional Feature)
 
 **Epic**: BITV-Team-Zusammenarbeit ermöglichen

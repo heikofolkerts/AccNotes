@@ -326,6 +326,20 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="note-status" class="form-label">
+                        Status:
+                    </label>
+                    <select id="note-status" class="form-select" aria-describedby="status-help">
+                        <option value="draft">📝 Entwurf (noch nicht gemeldet)</option>
+                        <option value="reported">📧 Gemeldet</option>
+                        <option value="resolved">✅ Behoben</option>
+                    </select>
+                    <div id="status-help" class="form-help">
+                        <small>Verfolgen Sie den Status dieser Meldung: Entwurf → Gemeldet → Behoben.</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="checkbox-label">
                         <input type="checkbox" id="include-screenshot" class="checkbox-input">
                         <span class="checkbox-indicator" aria-hidden="true">📷</span>

@@ -25,6 +25,32 @@ function setValue(elementId, value, defaultValue = '-') {
     }
 }
 
+// Screenshot vom ursprünglichen Tab anfordern
+async function requestScreenshotFromTab(tabId, selector) {
+    return new Promise((resolve) => {
+        chrome.tabs.sendMessage(tabId, {
+            action: 'captureElementScreenshot',
+            selector: selector,
+            options: {
+                highlight: true,
+                padding: 20,
+                maxWidth: 800,
+                maxHeight: 600
+            }
+        }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.error('Screenshot request failed:', chrome.runtime.lastError);
+                resolve({
+                    success: false,
+                    error: chrome.runtime.lastError.message
+                });
+            } else {
+                resolve(response || { success: false, error: 'No response from tab' });
+            }
+        });
+    });
+}
+
 // Seiten-Informationen
 setValue('page-url', contextData.url);
 setValue('page-title', contextData.pageTitle);
@@ -711,6 +737,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const title = noteTitle.value.trim();
         const note = noteContent.value.trim();
         const recommendation = document.getElementById('recommendation').value.trim();
+        const status = document.getElementById('note-status')?.value || 'draft';
 
         if (!title) {
             noteTitle.focus();
@@ -735,6 +762,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 url: contextData.url || '',
                 pageTitle: contextData.pageTitle || '',
                 reportMode: currentMode, // 'simplified' or 'detailed'
+                // Status-Tracking für Meldungs-Workflow
+                status: status,
+                reportedDate: status === 'reported' ? new Date().toISOString() : null,
+                resolvedDate: status === 'resolved' ? new Date().toISOString() : null,
                 element: {
                     type: contextData.elementType || '',
                     tagName: contextData.tagName || '',
@@ -808,7 +839,43 @@ document.addEventListener('DOMContentLoaded', function() {
             const stepPrefix = currentBitvStep ? `${currentBitvStep.id}_` : '';
             const fileName = `bitv-note-${stepPrefix}${timestamp}.txt`;
 
-            // Create download link
+            // Screenshot ZUERST erstellen (BEVOR Text-Download und Speichern)
+            const includeScreenshot = document.getElementById('include-screenshot');
+            if (includeScreenshot && includeScreenshot.checked) {
+                try {
+                    console.log('📷 Creating screenshot for note...');
+                    console.log('📷 contextData.tabId:', contextData.tabId);
+                    console.log('📷 contextData.selector:', contextData.selector);
+                    console.log('📷 Full contextData:', contextData);
+
+                    // Screenshot muss vom ursprünglichen Tab erstellt werden
+                    // note.html läuft in separatem Fenster und hat keinen Zugriff auf die Original-Seite
+                    if (contextData.tabId && contextData.selector) {
+                        const screenshotResult = await requestScreenshotFromTab(
+                            contextData.tabId,
+                            contextData.selector
+                        );
+
+                        if (screenshotResult.success) {
+                            noteData.screenshotDataUrl = screenshotResult.dataUrl;
+                            console.log('✅ Screenshot successfully attached to note');
+                            showNotification('Screenshot wurde hinzugefügt', 'success');
+                        } else {
+                            console.warn('Screenshot creation failed:', screenshotResult.error);
+                            showNotification('Screenshot konnte nicht erstellt werden: ' + screenshotResult.error, 'warning');
+                        }
+                    } else {
+                        console.warn('Screenshot requested but tab ID or selector missing');
+                        console.warn('Missing: tabId=' + (contextData.tabId ? 'OK' : 'MISSING') + ', selector=' + (contextData.selector ? 'OK' : 'MISSING'));
+                        showNotification('Screenshot konnte nicht erstellt werden - Element-Information fehlt', 'warning');
+                    }
+                } catch (screenshotError) {
+                    console.error('Screenshot error:', screenshotError);
+                    showNotification('Fehler beim Screenshot erstellen: ' + screenshotError.message, 'warning');
+                }
+            }
+
+            // Create download link (NACH Screenshot)
             const blob = new Blob([outputText], { type: 'text/plain;charset=utf-8' });
             const url = URL.createObjectURL(blob);
 
@@ -820,52 +887,6 @@ document.addEventListener('DOMContentLoaded', function() {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-
-            // Screenshot erstellen wenn gewünscht
-            const includeScreenshot = document.getElementById('include-screenshot');
-            if (includeScreenshot && includeScreenshot.checked) {
-                try {
-                    console.log('📷 Creating screenshot for note...');
-
-                    // Element aus contextData rekonstruieren (falls möglich)
-                    let targetElement = null;
-                    if (window.lastClickedElement) {
-                        targetElement = window.lastClickedElement;
-                    } else if (contextData.cssSelector) {
-                        try {
-                            targetElement = document.querySelector(contextData.cssSelector);
-                        } catch (e) {
-                            console.warn('Could not find element by CSS selector:', contextData.cssSelector);
-                        }
-                    }
-
-                    if (targetElement && typeof ScreenshotHelper !== 'undefined') {
-                        const screenshotResult = await ScreenshotHelper.captureElementScreenshot(targetElement, {
-                            highlight: true,
-                            padding: 20,
-                            maxWidth: 800,
-                            maxHeight: 600
-                        });
-
-                        if (screenshotResult.success) {
-                            noteData.screenshot = ScreenshotHelper.prepareScreenshotForStorage(screenshotResult, noteData);
-                            console.log('✅ Screenshot successfully attached to note');
-
-                            // Screenshot-Vorschau anzeigen
-                            ScreenshotHelper.showScreenshotPreview(screenshotResult);
-                        } else {
-                            console.warn('Screenshot creation failed:', screenshotResult.error);
-                            showNotification('Screenshot konnte nicht erstellt werden: ' + screenshotResult.error, 'warning');
-                        }
-                    } else {
-                        console.warn('Screenshot requested but no target element available or ScreenshotHelper not loaded');
-                        showNotification('Screenshot konnte nicht erstellt werden - Element nicht verfügbar', 'warning');
-                    }
-                } catch (screenshotError) {
-                    console.error('Screenshot error:', screenshotError);
-                    showNotification('Fehler beim Screenshot erstellen: ' + screenshotError.message, 'warning');
-                }
-            }
 
             // Save to persistent storage for overview with enhanced structure
             noteData.fileName = fileName;
@@ -891,8 +912,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 : 'Notiz wurde erfolgreich gespeichert!';
             showNotification(successMessage, 'success');
 
-            // Close window after short delay
+            // Close window after delay
             setTimeout(() => {
+                console.log('🚪 Closing window now...');
                 window.close();
             }, 1500);
 

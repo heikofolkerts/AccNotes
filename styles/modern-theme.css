@@ -649,6 +649,9 @@ details > *:not(summary) {
   padding: var(--spacing-5);
   transition: all var(--transition-normal);
   position: relative;
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
 }
 
 .note-item:hover {
@@ -807,6 +810,49 @@ details > *:not(summary) {
 }
 
 /* Stats Components */
+/* Statistics List - Screen-Reader optimiert */
+.stats-list {
+  list-style: none;
+  margin: 0 0 var(--spacing-6) 0;
+  padding: 0;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.stats-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-3) var(--spacing-4);
+  border-bottom: 1px solid var(--color-border);
+  transition: background-color var(--transition-fast);
+}
+
+.stats-list__item:last-child {
+  border-bottom: none;
+}
+
+.stats-list__item:hover {
+  background-color: var(--color-primary-light);
+}
+
+.stats-list__label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.stats-list__value {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  min-width: 3ch;
+  text-align: right;
+}
+
+/* Legacy stats grid - deprecated but kept for compatibility */
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -907,6 +953,48 @@ details > *:not(summary) {
 .compact-dl dd {
   margin: 0;
   color: var(--color-text-primary);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  margin-left: var(--spacing-2);
+  vertical-align: middle;
+}
+
+.status-badge--draft {
+  background-color: #e0e0e0;
+  color: #424242;
+}
+
+.status-badge--reported {
+  background-color: #bbdefb;
+  color: #0d47a1;
+}
+
+.status-badge--resolved {
+  background-color: #c8e6c9;
+  color: #1b5e20;
+}
+
+/* Dark mode status badges */
+[data-theme="dark"] .status-badge--draft {
+  background-color: #424242;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .status-badge--reported {
+  background-color: #1565c0;
+  color: #bbdefb;
+}
+
+[data-theme="dark"] .status-badge--resolved {
+  background-color: #2e7d32;
+  color: #c8e6c9;
 }
 
 /* Controls and Actions */
@@ -1187,4 +1275,86 @@ details > *:not(summary) {
   .screenshot-preview {
     padding: var(--spacing-sm);
   }
+}
+
+/* ============================================
+   Bulk Selection & Checkboxes
+   ============================================ */
+
+.note-checkbox {
+  flex-shrink: 0;
+  padding-top: var(--spacing-2);
+}
+
+.note-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Checkbox styling */
+.checkbox-label--prominent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.checkbox-label--prominent:hover {
+  color: var(--color-primary);
+}
+
+.checkbox-text {
+  user-select: none;
+}
+
+.note-checkbox-input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+}
+
+.note-checkbox-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.note-checkbox-input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Checkbox indicator for custom styling */
+.checkbox-indicator {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+}
+
+/* Bulk action button disabled state */
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--color-text-secondary);
+}
+
+.btn:disabled:hover {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+  background-color: var(--color-text-secondary);
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .checkbox-label--prominent {
+  color: var(--color-dark-text-primary);
+}
+
+[data-theme="dark"] .checkbox-label--prominent:hover {
+  color: var(--color-primary-light);
+}
+
+[data-theme="dark"] .btn:disabled {
+  background-color: var(--color-dark-border);
+  color: var(--color-dark-text-secondary);
 }

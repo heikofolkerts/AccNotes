@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "AccNotes - AI-Powered BITV Testing Assistant",
-  "version": "0.5.0",
+  "version": "0.5.3",
   "description": "Automated browser extension for BITV accessibility testing with AI-inspired features. Complete end-to-end workflow from problem detection to BITV-compliant documentation in under 30 seconds.",
   "author": "Heiko Folkerts",
   "homepage_url": "https://github.com/heikofolkerts/AccNotes",
@@ -39,12 +39,13 @@
     "scripts/bitv-catalog.js",
     "scripts/storage-helper.js",
     "scripts/barrier-detector.js",
-    "scripts/screenshot-helper.js"
+    "scripts/screenshot-helper.js",
+    "scripts/libs/jspdf.umd.min.js"
   ],
 
   "content_scripts": [{
     "matches": ["<all_urls>"],
-    "js": ["scripts/barrier-detector.js", "content.js"],
+    "js": ["scripts/barrier-detector.js", "scripts/screenshot-helper.js", "content.js"],
     "run_at": "document_end",
     "all_frames": true
   }],

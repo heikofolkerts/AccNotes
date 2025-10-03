@@ -709,6 +709,73 @@ function createNoteFromCurrentElement() {
     }
 }
 
+// Message Listener für Screenshot-Anfragen
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'captureElementScreenshot') {
+        console.log('📷 Screenshot request received for selector:', request.selector);
+
+        try {
+            // Element anhand des Selectors finden
+            const element = document.querySelector(request.selector);
+
+            if (!element) {
+                console.warn('❌ Element not found for selector:', request.selector);
+                sendResponse({
+                    success: false,
+                    error: 'Element nicht gefunden auf der Seite'
+                });
+                return true;
+            }
+
+            // Element highlighten und zum Screenshot vorbereiten
+            const rect = element.getBoundingClientRect();
+
+            // Zum Element scrollen
+            element.scrollIntoView({ behavior: 'instant', block: 'center' });
+
+            // Element highlighten
+            const originalOutline = element.style.outline;
+            const originalBoxShadow = element.style.boxShadow;
+            element.style.outline = '3px solid #ff0000';
+            element.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.5)';
+
+            // Screenshot über Background Script anfordern (hat Zugriff auf chrome.tabs API)
+            setTimeout(() => {
+                chrome.runtime.sendMessage({
+                    action: 'captureVisibleTab'
+                }, (response) => {
+                    // Highlight entfernen
+                    element.style.outline = originalOutline;
+                    element.style.boxShadow = originalBoxShadow;
+
+                    if (response && response.success) {
+                        sendResponse({
+                            success: true,
+                            dataUrl: response.dataUrl
+                        });
+                    } else {
+                        sendResponse({
+                            success: false,
+                            error: response?.error || 'Screenshot-Erstellung fehlgeschlagen'
+                        });
+                    }
+                });
+            }, 100); // Kurze Verzögerung damit Highlight sichtbar ist
+
+            // Return true für asynchrone Response
+            return true;
+
+        } catch (error) {
+            console.error('❌ Screenshot request error:', error);
+            sendResponse({
+                success: false,
+                error: error.message
+            });
+            return true;
+        }
+    }
+});
+
 // Höre auf Nachrichten vom Background Script (Cross-Browser kompatibel)
 browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.action === 'getElementInfo') {
