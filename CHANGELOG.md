@@ -9,6 +9,94 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ---
 
+## [1.0.1] - 2025-01-13
+
+### ✨ Neue Features
+
+#### 🔍 **Vollständige Accessibility-Seitenprüfung**
+- **Automatische Seiten-Analyse**: Scannt alle interaktiven Elemente auf Barrierefreiheitsprobleme
+- **Ergebnisseite mit Checkbox-Verwaltung**: Übersichtliche Liste aller erkannten Probleme
+- **Bulk-Notiz-Speicherung**: Speichern mehrerer ausgewählter Probleme als Notizen in einem Durchgang
+- **Report-Type-Auswahl**: Wahl zwischen "Schnelle Bürgermeldung" und "Detaillierte BITV-Notiz"
+- **Alle auswählen/abwählen**: Komfortable Bulk-Aktionen für effiziente Workflows
+
+#### 📋 **Accessibility Check Ergebnisseite**
+- **Problem-Übersicht**: Tabellarische Darstellung mit Checkbox-Selektion
+- **Element-Details**: Anzeige von Element-Typ, Text, ARIA-Label und CSS-Selector pro Problem
+- **BITV-Badges**: Visuelle Kennzeichnung des zugeordneten BITV-Prüfschritts
+- **Zusammenfassung**: Problemanzahl und Seiten-URL auf einen Blick
+- **Standardmäßige Auswahl**: Alle Probleme sind beim Laden vorausgewählt
+
+#### 🎯 **Workflow-Integration**
+- **Kontextmenü-Eintrag**: "🔍 Barrierefreiheit prüfen" für schnellen Zugriff
+- **Automatische Seitenanalyse**: Vollständiger Scan aller relevanten Elemente (Buttons, Links, Inputs, Bilder, Überschriften)
+- **Storage-basierte Datenübertragung**: Robuste Kommunikation zwischen Content Script und Ergebnisseite
+- **Automatische Weiterleitung**: Nach Speichern Weiterleitung zur Notizen-Übersicht
+
+### 🔧 Technische Verbesserungen
+
+#### **Content Script Erweiterungen**
+- **performFullAccessibilityCheck Message Handler**: Vollständiger Seiten-Scan-Workflow
+- **DOM-Referenz-Bereinigung**: Verbesserte `cleanElementInfoForStorage()` mit rekursiver Tiefenprüfung
+- **Storage-optimiert**: Entfernung aller nicht-serialisierbaren Objekte (DOM-Elemente, Window, HTMLElement)
+- **Performance-optimiert**: Effiziente Element-Analyse mit BarrierDetector-Integration
+
+#### **Background Script Verbesserungen**
+- **handleAccessibilityCheck()**: Neue Handler-Funktion für Seiten-Prüfung
+- **Firefox Manifest V2 Kompatibilität**: Callback-basiertes Message Passing statt Promises
+- **Timeout-basierte Tab-Öffnung**: 2-Sekunden-Wartezeit für zuverlässige Analyse
+- **Erweiterte Error-Behandlung**: Robuste Fehlerbehandlung mit detailliertem Logging
+
+#### **Neue Dateien**
+- `accessibility-check-results.html`: Ergebnisseite mit modernem Design
+- `accessibility-check-results.js`: JavaScript-Logik für Checkbox-Verwaltung und Bulk-Speicherung
+- Manifest-Update: Neue Dateien zu `web_accessible_resources` hinzugefügt
+
+### 🐛 Bugfixes
+
+#### **DataCloneError behoben**
+- **Problem**: DOM-Elemente konnten nicht in localStorage gespeichert werden
+- **Lösung**: Erweiterte `cleanElementInfoForStorage()` mit mehrfacher DOM-Prüfung
+- **Details**: Prüfung auf `nodeType`, `instanceof Element/Node/HTMLElement/Window`
+- **Filterung**: Explizites Entfernen bekannter DOM-Referenz-Keys (`element`, `node`, `targetElement`)
+
+#### **Firefox Message Passing**
+- **Problem**: `browserAPI.tabs.sendMessage()` gibt in Firefox kein Promise zurück
+- **Lösung**: Callback-basierte Implementation statt `.then()/.catch()`
+- **Workaround**: 2-Sekunden-Wartezeit vor Tab-Öffnung für zuverlässige Datenübertragung
+
+### 🎨 UI/UX-Verbesserungen
+
+#### **Accessibility Check Results Interface**
+- **Responsive Design**: Optimiert für verschiedene Bildschirmgrößen
+- **Dark/Light Mode Support**: Konsistent mit bestehendem Theme-System
+- **Loading States**: Visuelles Feedback während Seiten-Analyse
+- **Empty State**: Freundliche Meldung bei fehlenden Problemen
+- **Selection Counter**: Echtzeit-Anzeige ausgewählter Probleme
+
+#### **Problem-Liste Design**
+- **Hover-Effekte**: Visuelles Feedback bei Maus-Interaktion
+- **Selected State**: Farbliche Hervorhebung ausgewählter Probleme
+- **Structured Layout**: Grid-basiertes Layout für Element-Details
+- **Accessibility-optimiert**: WCAG 2.1 AA konforme Kontraste und Fokus-Indikatoren
+
+### 📊 Performance
+
+#### **Optimierte Seiten-Analyse**
+- **Element-Selektion**: Effiziente querySelector für relevante Elemente
+- **Async Processing**: Nicht-blockierende Element-Analyse
+- **Storage Caching**: Temporäre Speicherung mit 5-Minuten-Timeout
+- **Fehlertoleranz**: Try-Catch-Blöcke für robuste Element-Verarbeitung
+
+### 📚 Dokumentation
+
+#### **Code-Kommentare**
+- Detaillierte Inline-Dokumentation in neuen Funktionen
+- Workflow-Beschreibungen für komplexe Abläufe
+- Browser-Kompatibilitäts-Hinweise
+
+---
+
 ## [0.5.1] - 2025-09-29
 
 ### ✅ **PRODUCT BACKLOG ITEM #4 VOLLSTÄNDIG ABGESCHLOSSEN**

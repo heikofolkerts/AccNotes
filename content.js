@@ -374,24 +374,44 @@ function captureCurrentFocusedElement() {
 function cleanElementInfoForStorage(elementInfo) {
     if (!elementInfo) return {};
 
-    // Erstelle eine tiefe Kopie ohne DOM-Referenzen
-    const cleanInfo = JSON.parse(JSON.stringify(elementInfo, (key, value) => {
-        // Entferne DOM-Element-Referenzen
-        if (value && typeof value === 'object' && value.nodeType) {
-            return undefined; // DOM-Elemente entfernen
-        }
-        return value;
-    }));
+    // Tiefe Kopie mit Filterung aller nicht-serialisierbaren Objekte
+    function deepClean(obj) {
+        if (obj === null || obj === undefined) return obj;
 
-    // Bereinige detectedProblems Array - entferne 'element' Referenzen
-    if (cleanInfo.detectedProblems && Array.isArray(cleanInfo.detectedProblems)) {
-        cleanInfo.detectedProblems = cleanInfo.detectedProblems.map(problem => {
-            const cleanProblem = { ...problem };
-            // Entferne DOM-Element-Referenz, aber behalte andere Daten
-            delete cleanProblem.element;
-            return cleanProblem;
-        });
+        // Primitive Typen direkt zurückgeben
+        if (typeof obj !== 'object') return obj;
+
+        // DOM-Elemente entfernen
+        if (obj.nodeType !== undefined) return undefined;
+        if (obj instanceof Element) return undefined;
+        if (obj instanceof Node) return undefined;
+        if (obj instanceof Window) return undefined;
+        if (obj instanceof HTMLElement) return undefined;
+
+        // Arrays rekursiv bereinigen
+        if (Array.isArray(obj)) {
+            return obj.map(item => deepClean(item)).filter(item => item !== undefined);
+        }
+
+        // Objekte rekursiv bereinigen
+        const cleaned = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                // Überspringe bekannte DOM-Referenz-Keys
+                if (key === 'element' || key === 'node' || key === 'targetElement') {
+                    continue;
+                }
+
+                const value = deepClean(obj[key]);
+                if (value !== undefined) {
+                    cleaned[key] = value;
+                }
+            }
+        }
+        return cleaned;
     }
+
+    const cleanInfo = deepClean(elementInfo);
 
     return cleanInfo;
 }
@@ -813,6 +833,94 @@ browserAPI.runtime.onMessage.addListener(function(request, sender, sendResponse)
         } else {
             sendResponse({ success: false, hasElementInfo: false });
         }
+        return true;
+    }
+
+    if (request.action === 'performFullAccessibilityCheck') {
+        console.log('🔍 Content: Starting full accessibility check...');
+
+        try {
+            if (typeof window.BarrierDetector === 'undefined') {
+                console.error('❌ BarrierDetector not available');
+                sendResponse({
+                    success: false,
+                    error: 'BarrierDetector nicht verfügbar'
+                });
+                return true;
+            }
+
+            const allProblems = [];
+
+            // Scanne alle interaktiven und relevanten Elemente
+            const interactiveElements = document.querySelectorAll(
+                'button, a, input, select, textarea, [role="button"], [tabindex], img, h1, h2, h3, h4, h5, h6'
+            );
+
+            console.log(`🔍 Content: Scanning ${interactiveElements.length} elements...`);
+
+            interactiveElements.forEach((element, index) => {
+                try {
+                    const result = window.BarrierDetector.analyzeElement(element);
+
+                    if (result.hasProblems && result.problems && result.problems.length > 0) {
+                        // Sammle Element-Informationen
+                        const elementInfo = getElementAccessibilityInfo(element);
+                        const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
+
+                        // Für jedes Problem einen separaten Eintrag erstellen
+                        result.problems.forEach(problem => {
+                            // Bereinige auch das Problem-Objekt von DOM-Referenzen
+                            const cleanProblem = cleanElementInfoForStorage(problem);
+
+                            allProblems.push({
+                                elementInfo: cleanElementInfo,
+                                problem: cleanProblem,
+                                url: window.location.href,
+                                pageTitle: document.title
+                            });
+                        });
+                    }
+                } catch (error) {
+                    console.error(`❌ Error analyzing element ${index}:`, error);
+                }
+            });
+
+            console.log(`✅ Content: Found ${allProblems.length} problems`);
+
+            // Debug: Zeige erste Problem-Struktur
+            if (allProblems.length > 0) {
+                console.log('🔍 Content: First problem structure:', JSON.stringify(allProblems[0], null, 2).substring(0, 500));
+            }
+
+            // Speichere Ergebnisse im Storage für die Ergebnisseite
+            console.log('💾 Content: Storing results in storage...');
+            browserAPI.storage.local.set({
+                'temp_accessibilityCheckResults': allProblems,
+                'temp_accessibilityCheckTimestamp': Date.now()
+            }, () => {
+                if (browserAPI.runtime.lastError) {
+                    console.error('❌ Failed to store results:', browserAPI.runtime.lastError);
+                    sendResponse({
+                        success: false,
+                        error: browserAPI.runtime.lastError.message
+                    });
+                } else {
+                    console.log('✅ Content: Results stored successfully, sending response...');
+                    sendResponse({
+                        success: true,
+                        problemCount: allProblems.length
+                    });
+                }
+            });
+
+        } catch (error) {
+            console.error('❌ Content: Error in full accessibility check:', error);
+            sendResponse({
+                success: false,
+                error: error.message
+            });
+        }
+
         return true;
     }
 

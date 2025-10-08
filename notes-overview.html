@@ -76,19 +76,11 @@
             <h2 id="export-title" class="info-panel__title">📥 Export & Verwaltung</h2>
             <div class="controls">
                 <div class="controls__group">
-                    <button type="button" onclick="exportAllNotes()" class="btn btn--secondary">
-                        <span aria-hidden="true">📦</span>
-                        Alle als ZIP exportieren
-                    </button>
                     <button type="button" onclick="exportFilteredNotes()" class="btn btn--secondary">
                         <span aria-hidden="true">🎯</span>
                         Gefilterte exportieren
                     </button>
-                    <button type="button" onclick="exportNotesAsCSV()" class="btn btn--secondary">
-                        <span aria-hidden="true">📊</span>
-                        Als CSV exportieren
-                    </button>
-                    <button type="button" onclick="exportBitvReport()" class="btn btn--primary">
+                    <button type="button" id="export-bitv-report-btn" class="btn btn--primary">
                         <span aria-hidden="true">✅</span>
                         BITV-Bericht exportieren
                     </button>
@@ -184,6 +176,7 @@
                         <option value="">Alle Status</option>
                         <option value="draft">📝 Entwürfe</option>
                         <option value="reported">📧 Gemeldete</option>
+                        <option value="in_arbitration">⚖️ In Schlichtung</option>
                         <option value="resolved">✅ Behobene</option>
                         <option value="unreported">🔄 Nicht gemeldete (Entwurf + Behoben)</option>
                     </select>

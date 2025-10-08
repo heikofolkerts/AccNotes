@@ -552,17 +552,40 @@ async function handleManualProblemReport(tab, info) {
 }
 
 async function handleAccessibilityCheck(tab, info) {
-    console.log('🔍 Background: Handling accessibility check');
+    console.log('🔍 Background: Handling accessibility check for tab', tab.id);
 
     try {
         // Sende Nachricht an Content Script für vollständige Seiten-Analyse
-        await browserAPI.tabs.sendMessage(tab.id, {
+        console.log('📤 Background: Sending performFullAccessibilityCheck message...');
+
+        // Firefox Manifest V2: sendMessage verwendet Callbacks, nicht Promises
+        browserAPI.tabs.sendMessage(tab.id, {
             action: 'performFullAccessibilityCheck'
+        }, (response) => {
+            if (browserAPI.runtime.lastError) {
+                console.error('❌ Background: Message sending error:', browserAPI.runtime.lastError);
+            } else {
+                console.log('📥 Background: Received response:', response);
+            }
         });
 
-        console.log('✅ Background: Accessibility check initiated');
+        // Warte kurz auf die Analyse (2 Sekunden sollten reichen für die meisten Seiten)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Öffne Ergebnisseite in neuem Tab
+        const resultsUrl = browserAPI.runtime.getURL('accessibility-check-results.html');
+        console.log('🌐 Background: Opening results page:', resultsUrl);
+
+        const newTab = await browserAPI.tabs.create({
+            url: resultsUrl,
+            active: true
+        });
+
+        console.log(`✅ Background: Results page opened in tab ${newTab.id}`);
+
     } catch (error) {
         console.error('❌ Background: Error in accessibility check:', error);
+        console.error('Error stack:', error.stack);
     }
 }
 

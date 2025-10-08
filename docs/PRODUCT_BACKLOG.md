@@ -155,27 +155,11 @@
 ---
 
 #### 6. Bürgerfreundliche BITV-Referenzen *(Story Points: 8)*
-**Status**: 📋 Ready for Development
+**Status**: ❌ NICHT UMSETZEN
 
-**User Stories**:
-- Als **Maria** möchte ich verstehen, warum etwas ein Problem ist
-- Als **Thomas** möchte ich rechtlich fundierte Meldungen erstellen
-- Als **Petra** möchte ich Barrieren einfach erklären können
+**Begründung**: Die bereits implementierten Features (automatische Barriere-Erkennung, laienverständliche Problembeschreibungen, vereinfachter Melde-Workflow) bieten ausreichende Bürgerfreundlichkeit. Eine Fokussierung auf "wichtigste Prüfschritte" ist nicht sinnvoll, da relevante Prüfschritte stark von Anwenderfall zu Anwenderfall variieren.
 
-**Tasks**:
-- [ ] Vereinfachte BITV-Beschreibungen in Alltagssprache
-- [ ] Fokus auf häufigste 15-20 Prüfschritte statt aller 54
-- [ ] "Warum ist das ein Problem"-Erklärungen
-- [ ] Rechtliche Grundlagen für Bürgermeldungen
-- [ ] Beispiele für korrekte Umsetzungen
-- [ ] Link zu Schlichtungsstelle und Beauftragte für Barrierefreiheit
-
-**Acceptance Criteria**:
-- [ ] Verständlich für Menschen ohne IT-Hintergrund
-- [ ] Rechtlich korrekte Verweise auf BITV/BGG
-- [ ] Priorisiert nach Häufigkeit der Probleme
-- [ ] Kontaktdaten für zuständige Stellen integriert
-- [ ] Mobile-optimiert für unterwegs
+**Entscheidung**: Item wird nicht weiter verfolgt, da Anforderungen durch bestehende Features abgedeckt sind.
 
 ---
 

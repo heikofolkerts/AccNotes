@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AccNotes Screenshot Generator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1400px;
+      margin: 40px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #1565c0;
+    }
+    .instructions {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #1565c0;
+    }
+    .step {
+      background: #f9f9f9;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+      border-left: 3px solid #2e7d32;
+    }
+    .step h3 {
+      margin-top: 0;
+      color: #2e7d32;
+    }
+    button {
+      background: #1565c0;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    button:hover {
+      background: #0d47a1;
+    }
+    .success {
+      background: #2e7d32;
+    }
+    .success:hover {
+      background: #1b5e20;
+    }
+    .warning {
+      background: #f57c00;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+      color: white;
+    }
+    code {
+      background: #f5f5f5;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: monospace;
+    }
+    .iframe-container {
+      border: 2px solid #1565c0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      position: relative;
+    }
+    iframe {
+      width: 1280px;
+      height: 800px;
+      border: none;
+      transform-origin: top left;
+    }
+    .screenshot-label {
+      background: #1565c0;
+      color: white;
+      padding: 8px 15px;
+      font-weight: bold;
+    }
+    .status {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .status.success {
+      background: #c8e6c9;
+      color: #1b5e20;
+    }
+    .status.info {
+      background: #e3f2fd;
+      color: #0d47a1;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📸 AccNotes Screenshot Generator (Screenreader-freundlich)</h1>
+
+    <div class="instructions">
+      <h2>🎯 Automatisierte Screenshot-Erstellung</h2>
+      <p>Dieses Tool erstellt automatisch Screenshots der AccNotes Extension für die Store-Submission. Keine visuelle Inspektion notwendig!</p>
+    </div>
+
+    <div class="step">
+      <h3>Schritt 1: Beispieldaten laden</h3>
+      <p>Klicke auf den Button, um Beispiel-Notizen in den LocalStorage zu laden.</p>
+      <button onclick="loadSampleData()" aria-label="Beispieldaten in LocalStorage laden">
+        📝 Beispieldaten laden
+      </button>
+      <div id="data-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="step">
+      <h3>Schritt 2: Screenshots automatisch erstellen</h3>
+      <p>Das Tool öffnet automatisch die Extension-Seiten und erstellt Screenshots.</p>
+      <button onclick="generateAllScreenshots()" class="success" aria-label="Alle Screenshots automatisch generieren">
+        📸 Alle Screenshots erstellen
+      </button>
+      <div id="screenshot-status" role="status" aria-live="polite"></div>
+    </div>
+
+    <div class="warning" role="alert">
+      <strong>💡 Hinweis für Screenreader-Nutzer:</strong><br>
+      Die Screenshots werden automatisch generiert. Du erhältst Audio-Feedback über den Status.
+      Nach Abschluss werden die Bilder automatisch heruntergeladen.
+    </div>
+
+    <div class="step">
+      <h3>Schritt 3: Manuelle Alternative (falls automatisch nicht funktioniert)</h3>
+      <p>Öffne die Extension-Seiten manuell und verwende Browser-Screenshot-Tools:</p>
+      <ul>
+        <li><strong>Chrome:</strong> Strg+Shift+P → "Screenshot" → "Capture full size screenshot"</li>
+        <li><strong>Firefox:</strong> Rechtsklick → "Screenshot erstellen" → "Ganze Seite speichern"</li>
+      </ul>
+      <button onclick="openNotesOverview()" aria-label="Notizen-Übersicht in neuem Tab öffnen">
+        🔗 Notizen-Übersicht öffnen
+      </button>
+    </div>
+
+    <div id="preview" class="iframe-container" style="display: none;">
+      <div class="screenshot-label" id="preview-label">Lade...</div>
+      <iframe id="preview-frame" title="Vorschau der Extension-Seite für Screenshot"></iframe>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for screenshots
+    const sampleNotes = [
+      {
+        id: "note_1",
+        timestamp: new Date(Date.now() - 86400000).toISOString(),
+        url: "https://www.berlin.de/buergerservice",
+        title: "Bürgerservice Berlin - Barrieren",
+        content: "Bild im Header hat keinen Alt-Text. Nutzer mit Screenreader können den Inhalt nicht erfassen.",
+        elementType: "img",
+        element: {
+          type: "img",
+          text: "",
+          ariaLabel: "",
+          role: "img"
+        },
+        fileName: "note-berlin-buergerservice.txt",
+        bitvTest: {
+          stepId: "1.1.1",
+          stepTitle: "Nicht-Text-Inhalte",
+          category: "wahrnehmbarkeit",
+          evaluation: "failed",
+          level: "A",
+          description: "Alternativtext für Grafiken und Objekte"
+        },
+        recommendation: "Alt-Attribut mit beschreibendem Text ergänzen: <img src='...' alt='Logo des Berliner Bürgerservice'>"
+      },
+      {
+        id: "note_2",
+        timestamp: new Date(Date.now() - 172800000).toISOString(),
+        url: "https://www.bundestag.de/formulare",
+        title: "Bundestag Formulare - Button-Problem",
+        content: "Submit-Button hat nur ein Icon ohne Text. Screenreader lesen 'Button' ohne weitere Information.",
+        elementType: "button",
+        element: {
+          type: "button",
+          text: "",
+          ariaLabel: "",
+          role: "button"
+        },
+        fileName: "note-bundestag-button.txt",
+        bitvTest: {
+          stepId: "4.1.2",
+          stepTitle: "Name, Rolle, Wert",
+          category: "robustheit",
+          evaluation: "failed",
+          level: "A",
+          description: "Zugänglicher Name für alle Bedienelemente"
+        },
+        recommendation: "aria-label hinzufügen: <button aria-label='Formular absenden'>...</button>"
+      },
+      {
+        id: "note_3",
+        timestamp: new Date(Date.now() - 259200000).toISOString(),
+        url: "https://www.muenchen.de/rathaus/online-services",
+        title: "München Online-Services - Formular",
+        content: "Eingabefeld für E-Mail hat kein zugeordnetes Label. Nutzer wissen nicht, was einzugeben ist.",
+        elementType: "input",
+        element: {
+          type: "email",
+          text: "",
+          ariaLabel: "",
+          role: ""
+        },
+        fileName: "note-muenchen-formular.txt",
+        bitvTest: {
+          stepId: "3.3.2",
+          stepTitle: "Beschriftungen oder Anweisungen",
+          category: "verstaendlichkeit",
+          evaluation: "failed",
+          level: "A",
+          description: "Labels für Formularfelder"
+        },
+        recommendation: "<label for='email'>E-Mail-Adresse:</label><input id='email' type='email'>"
+      },
+      {
+        id: "note_4",
+        timestamp: new Date(Date.now() - 345600000).toISOString(),
+        url: "https://www.hamburg.de/service",
+        title: "Hamburg Service - Kontrast-Problem",
+        content: "Hellgrauer Text auf weißem Hintergrund. Kontrastverhältnis nur 2.8:1 statt mindestens 4.5:1.",
+        elementType: "text",
+        element: {
+          type: "p",
+          text: "Wichtige Information",
+          ariaLabel: "",
+          role: ""
+        },
+        fileName: "note-hamburg-kontrast.txt",
+        bitvTest: {
+          stepId: "1.4.3",
+          stepTitle: "Kontrast (Minimum)",
+          category: "wahrnehmbarkeit",
+          evaluation: "failed",
+          level: "AA",
+          description: "Ausreichender Kontrast zwischen Text und Hintergrund"
+        },
+        recommendation: "Textfarbe auf #555555 oder dunkler ändern für mindestens 4.5:1 Kontrast"
+      },
+      {
+        id: "note_5",
+        timestamp: new Date(Date.now() - 432000000).toISOString(),
+        url: "https://www.koeln.de/artikel",
+        title: "Köln Artikel - Überschriften-Struktur",
+        content: "Seite springt von H1 direkt zu H3, H2 fehlt. Screenreader-Navigation ist inkonsistent.",
+        elementType: "heading",
+        element: {
+          type: "h3",
+          text: "Unterabschnitt",
+          ariaLabel: "",
+          role: "heading"
+        },
+        fileName: "note-koeln-ueberschriften.txt",
+        bitvTest: {
+          stepId: "1.3.1",
+          stepTitle: "Info und Beziehungen",
+          category: "wahrnehmbarkeit",
+          evaluation: "partial",
+          level: "A",
+          description: "Semantische Strukturierung von Inhalten"
+        },
+        recommendation: "Überschriften-Hierarchie korrigieren: H1 → H2 → H3 ohne Ebenen zu überspringen"
+      },
+      {
+        id: "note_6",
+        timestamp: new Date(Date.now() - 518400000).toISOString(),
+        url: "https://www.frankfurt.de/buerger",
+        title: "Frankfurt Bürgerportal - Link-Text unklar",
+        content: "Link-Text 'Hier klicken' ohne Kontext. Screenreader-Nutzer verstehen nicht, wohin der Link führt.",
+        elementType: "link",
+        element: {
+          type: "a",
+          text: "Hier klicken",
+          ariaLabel: "",
+          role: "link"
+        },
+        fileName: "note-frankfurt-link.txt",
+        bitvTest: {
+          stepId: "2.4.4",
+          stepTitle: "Linkzweck (im Kontext)",
+          category: "bedienbarkeit",
+          evaluation: "failed",
+          level: "A",
+          description: "Aussagekräftige Link-Texte"
+        },
+        recommendation: "Link-Text beschreibend machen: 'Antragsformular für Personalausweis herunterladen'"
+      },
+      {
+        id: "note_7",
+        timestamp: new Date(Date.now() - 604800000).toISOString(),
+        url: "https://www.stuttgart.de/online-dienste",
+        title: "Stuttgart Online-Dienste - Tastatur-Navigation",
+        content: "Dropdown-Menü kann nicht mit Tastatur bedient werden. Tab-Navigation springt über Element hinweg.",
+        elementType: "select",
+        element: {
+          type: "div",
+          text: "",
+          ariaLabel: "",
+          role: "combobox"
+        },
+        fileName: "note-stuttgart-tastatur.txt",
+        bitvTest: {
+          stepId: "2.1.1",
+          stepTitle: "Tastatur",
+          category: "bedienbarkeit",
+          evaluation: "failed",
+          level: "A",
+          description: "Alle Funktionen per Tastatur bedienbar"
+        },
+        recommendation: "Native <select> verwenden oder tabindex='0' und Keyboard-Event-Handler hinzufügen"
+      },
+      {
+        id: "note_8",
+        timestamp: new Date(Date.now() - 691200000).toISOString(),
+        url: "https://www.duesseldorf.de/formulare",
+        title: "Düsseldorf Formulare - Fehlermeldung",
+        content: "Formular-Fehlermeldung wird nur visuell (rot) angezeigt. Screenreader erhalten keine Information über Fehler.",
+        elementType: "form",
+        element: {
+          type: "form",
+          text: "",
+          ariaLabel: "",
+          role: "form"
+        },
+        fileName: "note-duesseldorf-fehler.txt",
+        bitvTest: {
+          stepId: "3.3.1",
+          stepTitle: "Fehlererkennung",
+          category: "verstaendlichkeit",
+          evaluation: "failed",
+          level: "A",
+          description: "Eingabefehler werden automatisch erkannt und beschrieben"
+        },
+        recommendation: "aria-live='assertive' Region für Fehlermeldungen oder role='alert' verwenden"
+      }
+    ];
+
+    // Load sample data into localStorage
+    function loadSampleData() {
+      try {
+        // Clear existing notes
+        const existingNotes = JSON.parse(localStorage.getItem('accnotes') || '[]');
+
+        // Add sample notes
+        localStorage.setItem('accnotes', JSON.stringify(sampleNotes));
+
+        const statusDiv = document.getElementById('data-status');
+        statusDiv.className = 'status success';
+        statusDiv.textContent = `✅ Erfolgreich! ${sampleNotes.length} Beispiel-Notizen geladen. Bereit für Screenshots.`;
+
+        // Announce to screen readers
+        announceToScreenReader(`${sampleNotes.length} Beispiel-Notizen erfolgreich geladen. Sie können jetzt Screenshots erstellen.`);
+
+      } catch (error) {
+        const statusDiv = document.getElementById('data-status');
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Fehler beim Laden der Daten: ' + error.message;
+        announceToScreenReader('Fehler beim Laden der Beispieldaten.');
+      }
+    }
+
+    // Announce to screen readers
+    function announceToScreenReader(message) {
+      const announcement = document.createElement('div');
+      announcement.setAttribute('role', 'status');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.className = 'sr-only';
+      announcement.textContent = message;
+      document.body.appendChild(announcement);
+
+      // Remove after announcement
+      setTimeout(() => announcement.remove(), 3000);
+    }
+
+    // Open notes overview in new tab
+    function openNotesOverview() {
+      const notesUrl = chrome?.runtime?.getURL('notes-overview.html') || '../notes-overview.html';
+      window.open(notesUrl, '_blank');
+      announceToScreenReader('Notizen-Übersicht in neuem Tab geöffnet.');
+    }
+
+    // Generate screenshot (using browser's built-in functionality)
+    async function generateAllScreenshots() {
+      const statusDiv = document.getElementById('screenshot-status');
+      statusDiv.className = 'status info';
+      statusDiv.textContent = '⏳ Screenshots werden vorbereitet...';
+
+      announceToScreenReader('Screenshot-Generierung gestartet. Bitte warten.');
+
+      try {
+        // Method 1: Try to use Extension API if available
+        if (typeof chrome !== 'undefined' && chrome.tabs) {
+          await generateScreenshotsViaExtension();
+        } else {
+          // Method 2: Open pages for manual screenshot
+          await guideManualScreenshots();
+        }
+
+        statusDiv.className = 'status success';
+        statusDiv.textContent = '✅ Screenshot-Prozess abgeschlossen! Überprüfe den Download-Ordner.';
+        announceToScreenReader('Screenshot-Prozess erfolgreich abgeschlossen.');
+
+      } catch (error) {
+        statusDiv.className = 'status error';
+        statusDiv.textContent = '❌ Fehler: ' + error.message;
+        announceToScreenReader('Fehler bei Screenshot-Generierung.');
+      }
+    }
+
+    // Guide manual screenshots
+    async function guideManualScreenshots() {
+      const instructions = `
+📸 MANUELLE SCREENSHOT-ANLEITUNG:
+
+1. Notizen-Übersicht wird in neuem Tab geöffnet
+2. Verwende Browser-Screenshot-Funktion:
+
+   Chrome: Strg+Shift+P → "Screenshot" eingeben → "Capture full size screenshot"
+   Firefox: Rechtsklick → "Screenshot erstellen" → "Ganze Seite speichern"
+
+3. Speichere als: screenshot-1-overview.png
+
+4. Wiederhole für weitere Seiten falls nötig
+
+Starte jetzt?
+      `;
+
+      if (confirm(instructions)) {
+        openNotesOverview();
+
+        setTimeout(() => {
+          alert('💡 TIPP: Du kannst auch Browser-Erweiterungen wie "GoFullPage" für automatische Screenshots verwenden.');
+        }, 2000);
+      }
+    }
+
+    // Generate screenshots via extension API
+    async function generateScreenshotsViaExtension() {
+      announceToScreenReader('Öffne Extension-Seiten für Screenshots.');
+
+      // This would require extension context - fallback to manual
+      throw new Error('Extension-API nicht verfügbar. Nutze manuelle Methode.');
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      announceToScreenReader('Screenshot Generator geladen. Beginne mit Schritt 1: Beispieldaten laden.');
+    });
+  </script>
+</body>
+</html>

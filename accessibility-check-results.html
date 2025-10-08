@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AccNotes - Accessibility Check Ergebnisse">
+    <title>Barrierefreiheits-Prüfung - AccNotes</title>
+    <link rel="stylesheet" href="styles/modern-theme.css">
+    <style>
+        .results-header {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .results-summary {
+            background: var(--color-bg-secondary);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            margin-bottom: var(--spacing-lg);
+            border-left: 4px solid var(--color-primary);
+        }
+
+        .results-summary h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+        }
+
+        .results-controls {
+            display: flex;
+            gap: var(--spacing-md);
+            flex-wrap: wrap;
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md);
+            background: var(--color-bg-secondary);
+            border-radius: var(--border-radius);
+        }
+
+        .report-type-selector {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+            padding: var(--spacing-sm);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            background: var(--color-bg-primary);
+        }
+
+        .report-type-selector label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            cursor: pointer;
+        }
+
+        .problem-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .problem-item {
+            background: var(--color-bg-secondary);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+            transition: all 0.2s ease;
+        }
+
+        .problem-item:hover {
+            border-color: var(--color-primary);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .problem-item.selected {
+            border-color: var(--color-primary);
+            background: var(--color-bg-primary);
+        }
+
+        .problem-checkbox-wrapper {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: flex-start;
+        }
+
+        .problem-checkbox {
+            margin-top: 4px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+
+        .problem-content {
+            flex: 1;
+        }
+
+        .problem-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-error);
+        }
+
+        .problem-description {
+            margin-bottom: var(--spacing-sm);
+            color: var(--color-text-secondary);
+        }
+
+        .element-info {
+            background: var(--color-bg-primary);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+            margin-top: var(--spacing-sm);
+        }
+
+        .element-info dl {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: var(--spacing-xs) var(--spacing-sm);
+            margin: 0;
+        }
+
+        .element-info dt {
+            font-weight: 600;
+            color: var(--color-text-secondary);
+        }
+
+        .element-info dd {
+            margin: 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--color-text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+        }
+
+        .loading-spinner {
+            border: 4px solid var(--color-border);
+            border-top: 4px solid var(--color-primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto var(--spacing-md);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .selection-info {
+            font-size: 0.9rem;
+            color: var(--color-text-secondary);
+            padding: var(--spacing-sm);
+        }
+
+        .bitv-badge {
+            display: inline-block;
+            background: var(--color-primary);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: var(--spacing-xs);
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip link for screen reader users -->
+    <a href="#main-content" class="skip-link">Zum Hauptinhalt springen</a>
+
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" aria-label="Zwischen hellem und dunklem Design wechseln" title="Design wechseln" id="theme-toggle">
+        <span aria-hidden="true">🌓</span>
+    </button>
+
+    <main id="main-content" class="container">
+        <header class="results-header">
+            <h1>🔍 Barrierefreiheits-Prüfung</h1>
+            <p>Automatisch erkannte Probleme auf der geprüften Seite</p>
+        </header>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Analysiere Seite...</p>
+        </div>
+
+        <!-- Results Summary -->
+        <div id="results-summary" class="results-summary" style="display: none;">
+            <h2>Zusammenfassung</h2>
+            <p>
+                <strong id="total-problems-count">0</strong> Probleme auf
+                <strong id="page-title-display">dieser Seite</strong> gefunden.
+            </p>
+            <p class="font-mono" style="font-size: 0.9rem; margin-top: var(--spacing-xs);">
+                <strong>URL:</strong> <span id="page-url-display"></span>
+            </p>
+        </div>
+
+        <!-- Controls -->
+        <div id="results-controls" class="results-controls" style="display: none;">
+            <div>
+                <button id="select-all-btn" class="btn btn--secondary">
+                    ✓ Alle auswählen
+                </button>
+                <button id="deselect-all-btn" class="btn btn--secondary">
+                    ✗ Alle abwählen
+                </button>
+            </div>
+
+            <div class="report-type-selector">
+                <strong>Speichern als:</strong>
+                <label>
+                    <input type="radio" name="report-type" value="citizen" checked>
+                    <span>🚀 Schnelle Bürgermeldung</span>
+                </label>
+                <label>
+                    <input type="radio" name="report-type" value="detailed">
+                    <span>📋 Detaillierte BITV-Notiz</span>
+                </label>
+            </div>
+
+            <div class="selection-info">
+                <span id="selection-count">0 von 0</span> Probleme ausgewählt
+            </div>
+        </div>
+
+        <!-- Problem List -->
+        <div id="problems-container">
+            <ul id="problem-list" class="problem-list" role="list">
+                <!-- Problems will be inserted here dynamically -->
+            </ul>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">✅</div>
+            <h2>Keine Probleme gefunden!</h2>
+            <p>Die automatische Prüfung hat keine offensichtlichen Barrierefreiheitsprobleme auf dieser Seite erkannt.</p>
+            <p style="margin-top: var(--spacing-md);">
+                <button class="btn btn--secondary" onclick="window.close()">Fenster schließen</button>
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="action-buttons" class="action-buttons" style="display: none;">
+            <button id="save-notes-btn" class="btn btn--primary" disabled>
+                💾 Ausgewählte Notizen speichern
+            </button>
+            <button class="btn btn--secondary" onclick="window.close()">
+                Abbrechen
+            </button>
+        </div>
+    </main>
+
+    <script src="scripts/theme-toggle.js"></script>
+    <script src="scripts/storage-helper.js"></script>
+    <script src="scripts/bitv-catalog.js"></script>
+    <script src="accessibility-check-results.js"></script>
+</body>
+</html>

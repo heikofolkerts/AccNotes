@@ -184,6 +184,7 @@ function createNoteHTML(note) {
     const statusTexts = {
         draft: '📝 Entwurf',
         reported: '📧 Gemeldet',
+        in_arbitration: '⚖️ In Schlichtung',
         resolved: '✅ Behoben'
     };
     const statusBadge = note.status ? `<span class="status-badge status-badge--${note.status}">${statusTexts[note.status] || statusTexts.draft}</span>` : '';
@@ -787,14 +788,22 @@ async function updateStorageStats() {
 }
 
 function exportBitvReport() {
-    // Export filtered notes instead of all BITV notes
-    const filteredNotes = getFilteredNotes(getSortedNotes());
-    const bitvNotes = filteredNotes.filter(note => note.bitvTest);
+    try {
+        console.log('exportBitvReport() aufgerufen');
 
-    if (bitvNotes.length === 0) {
-        alert('Keine BITV-Notizen entsprechen den aktuellen Filterkriterien.');
-        return;
-    }
+        // Export filtered notes instead of all BITV notes
+        const filteredNotes = getFilteredNotes(getSortedNotes());
+        console.log('Gefilterte Notizen:', filteredNotes.length);
+
+        const bitvNotes = filteredNotes.filter(note => note.bitvTest);
+        console.log('BITV-Notizen:', bitvNotes.length);
+
+        if (bitvNotes.length === 0) {
+            alert('Keine BITV-Notizen entsprechen den aktuellen Filterkriterien.\n\nHinweis: Stellen Sie sicher, dass mindestens eine Notiz einen BITV-Prüfschritt zugeordnet hat.');
+            return;
+        }
+
+        console.log('bitvCategories verfügbar:', bitvCategories?.length || 0);
 
     let reportContent = `BITV-SOFTWARETEST BERICHT\n`;
     reportContent += `Erstellt am: ${new Date().toLocaleString('de-DE')}\n`;
@@ -803,7 +812,17 @@ function exportBitvReport() {
 
     // Summary by category
     const categoryStats = {};
-    bitvCategories.forEach(category => {
+
+    // Fallback: Wenn bitvCategories nicht geladen ist, verwende BitvCatalog direkt
+    const categories = bitvCategories?.length > 0 ? bitvCategories : (typeof BitvCatalog !== 'undefined' ? BitvCatalog.getCategories() : []);
+
+    if (categories.length === 0) {
+        console.error('Keine BITV-Kategorien verfügbar');
+        alert('Fehler: BITV-Katalog konnte nicht geladen werden. Bitte Seite neu laden.');
+        return;
+    }
+
+    categories.forEach(category => {
         categoryStats[category.id] = {
             title: category.title,
             notes: bitvNotes.filter(note => note.bitvTest.category === category.id)
@@ -839,17 +858,23 @@ function exportBitvReport() {
         reportContent += '\n';
     });
 
-    const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
+        const blob = new Blob([reportContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bitv-softwaretest-bericht-${new Date().toISOString().split('T')[0]}.txt`;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bitv-softwaretest-bericht-${new Date().toISOString().split('T')[0]}.txt`;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        console.log('BITV-Bericht erfolgreich exportiert');
+    } catch (error) {
+        console.error('Fehler beim Export des BITV-Berichts:', error);
+        alert('Fehler beim Export des BITV-Berichts:\n' + error.message + '\n\nBitte öffnen Sie die Browser-Konsole für Details.');
+    }
 }
 
 function exportFilteredNotes() {
@@ -1641,6 +1666,10 @@ async function generateAccessibilityHTML(notes) {
             background: #dcfce7;
             color: #166534;
         }
+        .status-badge--in_arbitration {
+            background: #fef3c7;
+            color: #92400e;
+        }
         .status-badge--resolved {
             background: #f3e8ff;
             color: #6b21a8;
@@ -1892,6 +1921,9 @@ function initializeEventListeners() {
     const sortSelect = document.getElementById('sort-select');
     const refreshBtn = document.getElementById('refresh-notes-btn');
 
+    // Export Button Event-Listener
+    const exportBitvReportBtn = document.getElementById('export-bitv-report-btn');
+
     if (searchInput) searchInput.addEventListener('keyup', filterNotes);
     if (bitvCategoryFilter) bitvCategoryFilter.addEventListener('change', filterNotes);
     if (bitvEvaluationFilter) bitvEvaluationFilter.addEventListener('change', filterNotes);
@@ -1901,4 +1933,15 @@ function initializeEventListeners() {
     if (clearFiltersBtn) clearFiltersBtn.addEventListener('click', clearFilters);
     if (sortSelect) sortSelect.addEventListener('change', sortNotes);
     if (refreshBtn) refreshBtn.addEventListener('click', refreshNotes);
+
+    // Export BITV Report Button
+    if (exportBitvReportBtn) {
+        console.log('BITV-Export-Button gefunden, Event-Listener wird registriert');
+        exportBitvReportBtn.addEventListener('click', function() {
+            console.log('BITV-Export-Button wurde geklickt!');
+            exportBitvReport();
+        });
+    } else {
+        console.warn('BITV-Export-Button nicht gefunden!');
+    }
 }
