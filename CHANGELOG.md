@@ -9,6 +9,97 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ---
 
+## [1.0.2] - 2025-01-13
+
+### ✨ Neue Features
+
+#### 📊 **Barrierefreie Tabellenansicht für Notizen-Übersicht**
+- **Semantische HTML-Tabelle**: Vollständig strukturierte `<table>` mit `<thead>`, `<tbody>`, `<th>`, `<td>`
+- **ARIA-Optimierung**: `aria-label` auf Tabelle, `scope="col"` auf allen Spalten-Headern
+- **Screenreader-Navigation**: Optimiert für NVDA, JAWS und andere Screenreader
+- **7 strukturierte Spalten**: Auswahl, Titel/Seite, Datum, Element, BITV/Status, Beschreibung, Aktionen
+- **Kontextuelle ARIA-Labels**: Detaillierte Labels auf allen Buttons und Checkboxen
+
+#### ✏️ **Notizen-Bearbeitung**
+- **Bearbeiten-Button**: Ersetzt den Download-Button in der Notizen-Übersicht
+- **Vollständige Bearbeitung**: Alle Felder (Titel, Inhalt, BITV-Test, Status, Screenshot) können bearbeitet werden
+- **Intelligente ID-Verwaltung**: Bestehende IDs werden beim Speichern beibehalten
+- **Screenshot-Erhaltung**: Vorhandene Screenshots bleiben erhalten
+- **Rücknavigation**: Nach Bearbeitung automatische Rückkehr zur Übersicht
+- **Aktualisierungs-Feedback**: Unterschiedliche Erfolgsmeldungen für neue vs. bearbeitete Notizen
+
+#### 🗑️ **Verbessertes Löschen**
+- **Benutzerdefinierter Dialog**: "Ja/Nein"-Buttons statt "OK/Abbrechen"
+- **Sofortige UI-Aktualisierung**: Gelöschte Notizen verschwinden ohne Seiten-Reload
+- **Cache-Invalidierung**: Korrekte Aktualisierung aller Filter und Statistiken
+- **ESC-Taste Support**: Dialog kann mit ESC abgebrochen werden
+- **Theme-Integration**: Dialog passt sich an Hell/Dunkel-Modus an
+
+### 🎨 UI/UX-Verbesserungen
+
+#### **Tabellenansicht**
+- **Farbcodierung**: BITV-Status durch farbige linke Border (Rot/Orange/Grün/Blau)
+- **Hover-Effekte**: Farbliche Hervorhebung bei Maus-Hover pro Status
+- **Focus-Indikatoren**: Sichtbare Fokus-Rahmen bei Tastatur-Navigation
+- **Responsive Design**: Optimiert für verschiedene Bildschirmgrößen
+- **Kompakte Darstellung**: Beschreibung gekürzt auf 100 Zeichen mit "..."
+- **Dark Mode**: Vollständige Unterstützung mit angepassten Farben
+
+#### **Bearbeitungs-Workflow**
+- **Screenshot-Checkbox deaktiviert**: Bei Bearbeitung ohne Screenshot mit Hinweistext
+- **Kein Download bei Bearbeitung**: Nur neue Notizen werden automatisch heruntergeladen
+- **Button-Text-Anpassung**: "💾 Aktualisieren" statt "💾 Speichern" bei Bearbeitung
+- **Seitentitel-Update**: Zeigt "Notiz bearbeiten - [Titel]"
+
+### 🔧 Technische Verbesserungen
+
+#### **CSP-Konformität**
+- **Event-Delegation**: Keine inline-Handler (`onclick`) mehr
+- **Class-basierte Selektoren**: `.btn-edit-note`, `.btn-delete-note`
+- **Data-Attribute**: `data-note-id` für ID-Übergabe
+
+#### **ID-Konsistenz**
+- **Einheitliches ID-Format**: Alle IDs sind Strings (z.B. `note_1760030453776_kmf7lhw5k`)
+- **Storage-Key als ID**: `loadAllNotes()` überschreibt `value.id` mit Storage-Key
+- **Präfix-Handling**: Automatische Erkennung ob `note_` Präfix bereits vorhanden
+- **Abwärtskompatibilität**: Alte und neue Notizen funktionieren gleichermaßen
+
+#### **Performance-Optimierungen**
+- **Optimiertes Löschen**: Kein erneutes Laden aus Storage, direkte Array-Manipulation
+- **Cache-Invalidierung**: `invalidateCache()` bei allen Daten-Änderungen
+- **Sofortige UI-Updates**: `displayNotes()` statt `loadNotes()` wo möglich
+
+### 🐛 Bugfixes
+
+- **Löschen funktioniert**: Behoben durch korrekte ID-Übergabe und Cache-Invalidierung
+- **Bearbeitung alter Notizen**: Funktioniert durch konsistente ID-Behandlung in `loadAllNotes()`
+- **Screenshot-Checkbox-Problem**: Wird bei Bearbeitung ohne Screenshot deaktiviert
+- **Download bei Bearbeitung**: Entfernt, nur bei neuen Notizen
+- **UI-Aktualisierung**: Gelöschte Notizen verschwinden sofort aus der Ansicht
+
+### ♿ Barrierefreiheit (WCAG 2.1 AA)
+
+#### **Tabellenansicht**
+- ✅ **Tastatur-Navigation**: Vollständig per Tab/Shift+Tab navigierbar
+- ✅ **Screenreader-Support**: Korrekte Tabellenstruktur mit Headers
+- ✅ **Focus-Management**: Sichtbare Fokus-Indikatoren (2px solid)
+- ✅ **Kontrast**: Minimum 4.5:1 in beiden Modi (Hell/Dunkel)
+- ✅ **ARIA-Labels**: Kontextuelle Labels für alle interaktiven Elemente
+- ✅ **Semantisches HTML**: `<table>`, `<th scope="col">`, `<caption>` (via aria-label)
+
+#### **Lösch-Dialog**
+- ✅ **Tastatur-Support**: ESC zum Abbrechen, Tab-Navigation zwischen Buttons
+- ✅ **Focus-Management**: Automatischer Focus auf "Nein"-Button (sichere Option)
+- ✅ **Screen-Reader**: Korrekte Ankündigung von Titel und Nachricht
+- ✅ **Visuell unterscheidbar**: Farbcodierung (Rot für "Ja", Grau für "Nein")
+
+### 📄 Dokumentation
+
+- **README**: Aktualisiert mit neuen Features
+- **CLAUDE.md**: Erweitert um Tabellenansicht und Bearbeitungs-Workflow
+
+---
+
 ## [1.0.1] - 2025-01-13
 
 ### ✨ Neue Features

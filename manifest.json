@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "AccNotes - BITV Accessibility Testing",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Professional browser extension for BITV accessibility testing. Automatic barrier detection & complete documentation workflow - from problem to BITV-compliant report in 30 seconds.",
   "author": "Heiko Folkerts",
   "homepage_url": "https://github.com/heikofolkerts/AccNotes",

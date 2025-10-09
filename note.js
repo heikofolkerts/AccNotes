@@ -1,8 +1,11 @@
 // URL-Parameter auslesen
 const urlParams = new URLSearchParams(window.location.search);
 const contextDataStr = urlParams.get('contextData');
+const editNoteId = urlParams.get('id'); // Zum Bearbeiten einer bestehenden Notiz
 
 let contextData = {};
+let existingNote = null; // Speichert die zu bearbeitende Notiz
+
 try {
     contextData = JSON.parse(contextDataStr) || {};
 } catch (e) {
@@ -651,8 +654,129 @@ function showAutoSuggestionIndicator(bitvStep, problem) {
     }
 }
 
+// Funktion zum Laden einer bestehenden Notiz
+async function loadExistingNote(noteId) {
+    try {
+        // Lade Notiz aus Storage
+        let note = null;
+        if (typeof StorageHelper !== 'undefined') {
+            // StorageHelper.loadNote() macht selbst den Präfix-Check
+            note = await StorageHelper.loadNote(noteId);
+        } else {
+            // Fallback zu localStorage - hier müssen wir selbst das Präfix prüfen
+            const key = noteId.startsWith('note_') ? noteId : `note_${noteId}`;
+            const noteData = localStorage.getItem(key);
+            if (noteData) {
+                note = JSON.parse(noteData);
+                note.id = key;
+            }
+        }
+
+        if (!note) {
+            console.error('Notiz konnte nicht geladen werden. ID:', noteId);
+            alert('Notiz konnte nicht geladen werden.');
+            return;
+        }
+
+        existingNote = note;
+
+        // Fülle die Formularfelder
+        const noteTitle = document.getElementById('note-title');
+        const noteContent = document.getElementById('note-content');
+        const recommendation = document.getElementById('recommendation');
+        const noteStatus = document.getElementById('note-status');
+
+        if (noteTitle) noteTitle.value = note.title || '';
+        if (noteContent) noteContent.value = note.content || '';
+        if (recommendation) recommendation.value = note.recommendation || '';
+        if (noteStatus) noteStatus.value = note.status || 'draft';
+
+        // Setze Context-Daten aus der Notiz
+        contextData = {
+            url: note.url,
+            pageTitle: note.pageTitle || note.title,
+            elementType: note.element?.type || note.elementType,
+            tagName: note.element?.tagName,
+            text: note.element?.text,
+            id: note.element?.id,
+            className: note.element?.className,
+            selector: note.element?.selector,
+            accessibleName: note.element?.accessibleName,
+            ariaRole: note.element?.ariaRole
+        };
+
+        // Aktualisiere Seiten-Informationen im UI
+        setValue('page-url', note.url);
+        setValue('page-title', note.pageTitle || note.title);
+        setValue('element-type', note.element?.type || note.elementType);
+        setValue('tag-name', note.element?.tagName);
+        setValue('element-text', note.element?.text);
+
+        // BITV-Test wiederherstellen
+        if (note.bitvTest) {
+            // Suche den entsprechenden BITV-Schritt
+            if (typeof BitvCatalog !== 'undefined') {
+                const step = BitvCatalog.getStepById(note.bitvTest.stepId);
+                if (step) {
+                    selectBitvStep(step);
+                    if (note.bitvTest.evaluation) {
+                        selectEvaluation(note.bitvTest.evaluation);
+                    }
+                }
+            }
+        }
+
+        // Screenshot wiederherstellen, falls vorhanden
+        const screenshotCheckbox = document.getElementById('include-screenshot');
+        if (note.screenshotDataUrl) {
+            if (screenshotCheckbox) {
+                screenshotCheckbox.checked = true;
+
+                // Zeige Screenshot-Vorschau
+                if (typeof ScreenshotHelper !== 'undefined') {
+                    ScreenshotHelper.displayScreenshotPreview(note.screenshotDataUrl);
+                }
+            }
+        } else {
+            // Keine Screenshot-Daten vorhanden: Checkbox deaktivieren
+            if (screenshotCheckbox) {
+                screenshotCheckbox.disabled = true;
+                screenshotCheckbox.checked = false;
+
+                // Füge Hinweis hinzu
+                const previewContainer = document.getElementById('screenshot-preview');
+                if (previewContainer) {
+                    const info = document.getElementById('screenshot-info');
+                    if (info) {
+                        info.textContent = 'Screenshot nur bei neuen Notizen verfügbar (kein Zugriff auf ursprüngliche Seite)';
+                        info.style.color = 'var(--text-secondary, #666)';
+                    }
+                }
+            }
+        }
+
+        // Ändere Button-Text zu "Aktualisieren"
+        const saveButton = document.getElementById('save-button');
+        if (saveButton) {
+            saveButton.textContent = '💾 Aktualisieren';
+        }
+
+        // Ändere Seitentitel
+        document.title = `Notiz bearbeiten - ${note.title}`;
+
+    } catch (error) {
+        console.error('Fehler beim Laden der Notiz:', error);
+        alert('Fehler beim Laden der Notiz: ' + error.message);
+    }
+}
+
 // Enhanced form handling with accessibility
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Lade bestehende Notiz, wenn ID vorhanden
+    if (editNoteId) {
+        await loadExistingNote(editNoteId);
+    }
+
     // Initialize Screenshot Helper
     if (typeof window.ScreenshotHelper !== 'undefined') {
         ScreenshotHelper.init();
@@ -682,7 +806,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cancel button handling
     cancelButton.addEventListener('click', function() {
         if (confirm('Möchten Sie wirklich abbrechen? Nicht gespeicherte Änderungen gehen verloren.')) {
-            window.close();
+            if (existingNote) {
+                // Beim Bearbeiten: Zurück zur Übersicht
+                window.location.href = 'notes-overview.html';
+            } else {
+                // Bei neuer Notiz: Fenster schließen
+                window.close();
+            }
         }
     });
 
@@ -752,10 +882,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
+            // Bestimme ID: Entweder bestehende ID oder neue ID
+            const noteId = existingNote ? existingNote.id : Date.now();
+
             // Create enhanced note data structure
             const noteData = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
+                id: noteId,
+                timestamp: existingNote ? existingNote.timestamp : new Date().toISOString(),
+                lastModified: new Date().toISOString(),
                 title: title,
                 content: note,
                 recommendation: recommendation,
@@ -840,6 +974,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const fileName = `bitv-note-${stepPrefix}${timestamp}.txt`;
 
             // Screenshot ZUERST erstellen (BEVOR Text-Download und Speichern)
+            // Behalte existierenden Screenshot, falls vorhanden
+            if (existingNote && existingNote.screenshotDataUrl) {
+                noteData.screenshotDataUrl = existingNote.screenshotDataUrl;
+            }
+
             const includeScreenshot = document.getElementById('include-screenshot');
             if (includeScreenshot && includeScreenshot.checked) {
                 try {
@@ -875,21 +1014,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Create download link (NACH Screenshot)
-            const blob = new Blob([outputText], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
+            // Download nur bei neuen Notizen, nicht bei Bearbeitung
+            if (!existingNote) {
+                // Create download link
+                const blob = new Blob([outputText], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
 
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            a.style.display = 'none';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
 
             // Save to persistent storage for overview with enhanced structure
-            noteData.fileName = fileName;
+            noteData.fileName = existingNote ? existingNote.fileName : fileName;
 
             try {
                 if (typeof StorageHelper !== 'undefined') {
@@ -907,15 +1049,30 @@ document.addEventListener('DOMContentLoaded', function() {
             // Clear draft
             clearDraft();
 
-            const successMessage = currentBitvStep
-                ? `BITV-Notiz für Prüfschritt ${currentBitvStep.id} wurde erfolgreich gespeichert!`
-                : 'Notiz wurde erfolgreich gespeichert!';
+            // Passende Erfolgsmeldung je nach Modus (Erstellen vs. Bearbeiten)
+            let successMessage;
+            if (existingNote) {
+                successMessage = currentBitvStep
+                    ? `BITV-Notiz für Prüfschritt ${currentBitvStep.id} wurde erfolgreich aktualisiert!`
+                    : 'Notiz wurde erfolgreich aktualisiert!';
+            } else {
+                successMessage = currentBitvStep
+                    ? `BITV-Notiz für Prüfschritt ${currentBitvStep.id} wurde erfolgreich gespeichert!`
+                    : 'Notiz wurde erfolgreich gespeichert!';
+            }
             showNotification(successMessage, 'success');
 
-            // Close window after delay
+            // Close window or navigate back after delay
             setTimeout(() => {
-                console.log('🚪 Closing window now...');
-                window.close();
+                if (existingNote) {
+                    // Beim Bearbeiten: Zurück zur Übersicht
+                    console.log('🚪 Navigating back to overview...');
+                    window.location.href = 'notes-overview.html';
+                } else {
+                    // Bei neuer Notiz: Fenster schließen
+                    console.log('🚪 Closing window now...');
+                    window.close();
+                }
             }, 1500);
 
         } catch (error) {

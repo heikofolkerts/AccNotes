@@ -137,7 +137,7 @@ function displayNotes() {
     if (filteredNotes.length > 100) {
         renderNotesVirtualized(container, filteredNotes);
     } else {
-        container.innerHTML = filteredNotes.map(note => createNoteHTML(note)).join('');
+        container.innerHTML = createNotesTable(filteredNotes);
     }
 
     // Update bulk selection UI (NACH dem DOM-Update!)
@@ -149,6 +149,123 @@ function displayNotes() {
     if (endTime - startTime > PERFORMANCE_THRESHOLD) {
         console.warn(`Performance warning: displayNotes took ${Math.round(endTime - startTime)}ms for ${filteredNotes.length} notes`);
     }
+}
+
+function createNotesTable(notes) {
+    let tableHTML = `
+        <table class="notes-table" role="table" aria-label="Barrierefreiheits-Notizen">
+            <thead>
+                <tr>
+                    <th scope="col" class="notes-table__checkbox">
+                        <span class="sr-only">Auswahl</span>
+                    </th>
+                    <th scope="col" class="notes-table__title">Titel / Seite</th>
+                    <th scope="col" class="notes-table__date">Datum</th>
+                    <th scope="col" class="notes-table__element">Element</th>
+                    <th scope="col" class="notes-table__bitv">BITV / Status</th>
+                    <th scope="col" class="notes-table__content">Beschreibung</th>
+                    <th scope="col" class="notes-table__actions">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    notes.forEach(note => {
+        tableHTML += createNoteTableRow(note);
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    return tableHTML;
+}
+
+function createNoteTableRow(note) {
+    const date = new Date(note.timestamp);
+    const formattedDate = date.toLocaleDateString('de-DE');
+    const formattedTime = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+    // BITV evaluation
+    const evaluationTexts = {
+        passed: '✅ Bestanden',
+        failed: '❌ Nicht bestanden',
+        partial: '⚠️ Teilweise',
+        needs_review: '📝 Zu prüfen'
+    };
+
+    // Status
+    const statusTexts = {
+        draft: '📝 Entwurf',
+        reported: '📧 Gemeldet',
+        in_arbitration: '⚖️ Schlichtung',
+        resolved: '✅ Behoben'
+    };
+
+    const isSelected = selectedNotes.has(note.id);
+    const isBitvNote = note.bitvTest;
+    const rowClass = isBitvNote ? `notes-table__row--${note.bitvTest.evaluation || 'needs_review'}` : '';
+
+    const bitvInfo = isBitvNote
+        ? `${note.bitvTest.stepId}: ${note.bitvTest.stepTitle}<br><span class="bitv-evaluation">${evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review}</span>`
+        : '—';
+
+    const statusInfo = note.status
+        ? statusTexts[note.status] || statusTexts.draft
+        : statusTexts.draft;
+
+    const screenshotIndicator = note.screenshotDataUrl
+        ? '<span role="img" aria-label="Mit Screenshot" title="Screenshot vorhanden">📷</span> '
+        : '';
+
+    return `
+        <tr class="notes-table__row ${rowClass}" data-note-id="${note.id}">
+            <td class="notes-table__checkbox">
+                <label class="checkbox-label">
+                    <input type="checkbox"
+                           class="checkbox-input note-checkbox-input"
+                           data-note-id="${note.id}"
+                           ${isSelected ? 'checked' : ''}
+                           aria-label="Notiz auswählen: ${escapeHtml(note.title || note.pageTitle || 'Unbekannte Seite')}">
+                    <span class="checkbox-indicator" aria-hidden="true"></span>
+                </label>
+            </td>
+            <td class="notes-table__title">
+                <strong>${escapeHtml(note.title || note.pageTitle || 'Unbekannte Seite')}</strong>
+                ${screenshotIndicator}
+                <br>
+                <small class="notes-table__url">${escapeHtml(note.url || 'Keine URL')}</small>
+            </td>
+            <td class="notes-table__date">
+                ${formattedDate}<br>
+                <small>${formattedTime}</small>
+            </td>
+            <td class="notes-table__element">
+                ${escapeHtml(note.element?.type || note.elementType || '—')}
+            </td>
+            <td class="notes-table__bitv">
+                ${bitvInfo}
+                <br>
+                <span class="status-badge">${statusInfo}</span>
+            </td>
+            <td class="notes-table__content">
+                ${escapeHtml(note.content ? (note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '')) : 'Kein Inhalt')}
+            </td>
+            <td class="notes-table__actions">
+                <button class="btn btn--small btn-edit-note"
+                        data-note-id="${note.id}"
+                        aria-label="Notiz bearbeiten: ${escapeHtml(note.title || note.pageTitle || 'Unbekannte Seite')}">
+                    ✏️ Bearbeiten
+                </button>
+                <button class="btn btn--small btn--danger btn-delete-note"
+                        data-note-id="${note.id}"
+                        aria-label="Notiz löschen: ${escapeHtml(note.title || note.pageTitle || 'Unbekannte Seite')}">
+                    🗑️ Löschen
+                </button>
+            </td>
+        </tr>
+    `;
 }
 
 function createNoteHTML(note) {
@@ -216,8 +333,8 @@ function createNoteHTML(note) {
                         ${bitvInfo}
                     </div>
                     <div class="note-actions">
-                        <button onclick="downloadNote('${note.id}')">📥 Download</button>
-                        <button onclick="deleteNote('${note.id}')" class="delete">🗑️ Löschen</button>
+                        <button class="btn-edit-note" data-note-id="${note.id}">✏️ Bearbeiten</button>
+                        <button class="btn-delete-note delete" data-note-id="${note.id}">🗑️ Löschen</button>
                     </div>
                 </div>
                 <div class="note-content">${escapeHtml(note.content || 'Kein Inhalt')}</div>
@@ -406,20 +523,127 @@ function loadMoreNotes() {
     displayNotes();
 }
 
+function editNote(noteId) {
+    // Öffne die Bearbeitungsseite mit der Notiz-ID als Parameter
+    window.location.href = `note.html?id=${noteId}`;
+}
+
 async function deleteNote(noteId) {
-    if (confirm('Möchten Sie diese Notiz wirklich löschen?')) {
+    // Erstelle einen benutzerdefinierten Dialog mit Ja/Nein
+    const confirmed = await showConfirmDialog(
+        'Notiz löschen',
+        'Möchten Sie diese Notiz wirklich löschen?',
+        'Ja',
+        'Nein'
+    );
+
+    if (confirmed) {
         try {
             if (typeof StorageHelper !== 'undefined') {
-                await StorageHelper.deleteNote(noteId);
+                // StorageHelper.deleteNote() erwartet den Key MIT Präfix
+                const key = noteId.startsWith('note_') ? noteId : `note_${noteId}`;
+                const success = await StorageHelper.deleteNote(key);
+
+                if (!success) {
+                    throw new Error('Löschen fehlgeschlagen');
+                }
             } else {
-                localStorage.removeItem(noteId);
+                // Fallback zu localStorage
+                const key = noteId.startsWith('note_') ? noteId : `note_${noteId}`;
+                localStorage.removeItem(key);
             }
-            loadNotes();
+
+            // Entferne die Notiz aus allNotes
+            const index = allNotes.findIndex(n => n.id === noteId);
+            if (index > -1) {
+                allNotes.splice(index, 1);
+            }
+
+            // Entferne die Notiz auch aus der selectedNotes-Liste
+            selectedNotes.delete(noteId);
+
+            // Cache invalidieren
+            invalidateCache();
+
+            // UI sofort aktualisieren
+            updateStats();
+            updateStorageStats();
+            displayNotes();
         } catch (error) {
             console.error('Fehler beim Löschen der Notiz:', error);
             alert('Fehler beim Löschen der Notiz. Bitte versuchen Sie es erneut.');
         }
     }
+}
+
+// Hilfsfunktion für benutzerdefinierten Bestätigungsdialog
+function showConfirmDialog(title, message, confirmText, cancelText) {
+    return new Promise((resolve) => {
+        // Erstelle Dialog-Overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+
+        // Erstelle Dialog-Box
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: var(--surface, #fff);
+            color: var(--text-primary, #1f2937);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 90%;
+        `;
+
+        dialog.innerHTML = `
+            <h3 style="margin: 0 0 1rem 0; font-size: 1.25rem; color: var(--text-primary, #1f2937);">${escapeHtml(title)}</h3>
+            <p style="margin: 0 0 1.5rem 0; color: var(--text-secondary, #6b7280);">${escapeHtml(message)}</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button id="confirm-cancel" class="btn btn--secondary">${escapeHtml(cancelText)}</button>
+                <button id="confirm-ok" class="btn btn--danger">${escapeHtml(confirmText)}</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Event-Listener
+        const handleConfirm = () => {
+            document.body.removeChild(overlay);
+            resolve(true);
+        };
+
+        const handleCancel = () => {
+            document.body.removeChild(overlay);
+            resolve(false);
+        };
+
+        document.getElementById('confirm-ok').addEventListener('click', handleConfirm);
+        document.getElementById('confirm-cancel').addEventListener('click', handleCancel);
+
+        // ESC-Taste zum Abbrechen
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                handleCancel();
+                document.removeEventListener('keydown', handleEscape);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+
+        // Focus auf Abbrechen-Button
+        document.getElementById('confirm-cancel').focus();
+    });
 }
 
 function downloadNote(noteId) {
@@ -1047,12 +1271,26 @@ function initializeBulkSelection() {
         bulkActionHtmlButton.addEventListener('click', handleBulkExportHTML);
     }
 
-    // Event-Delegation für individuelle Checkboxen
+    // Event-Delegation für individuelle Checkboxen und Buttons
     const notesContainer = document.getElementById('notes-container');
     if (notesContainer) {
         notesContainer.addEventListener('change', function(event) {
             if (event.target.classList.contains('note-checkbox-input')) {
                 handleNoteCheckboxChange(event.target);
+            }
+        });
+
+        // Event-Delegation für Bearbeiten und Löschen
+        notesContainer.addEventListener('click', function(event) {
+            const editButton = event.target.closest('.btn-edit-note');
+            const deleteButton = event.target.closest('.btn-delete-note');
+
+            if (editButton) {
+                const noteId = editButton.dataset.noteId;
+                editNote(noteId);
+            } else if (deleteButton) {
+                const noteId = deleteButton.dataset.noteId;
+                deleteNote(noteId);
             }
         });
     }
@@ -1090,14 +1328,12 @@ function handleSelectAllChange(event) {
 }
 
 function handleNoteCheckboxChange(checkbox) {
-    const noteId = checkbox.dataset.noteId;
-    // WICHTIG: dataset.noteId ist ein String, aber wir brauchen Number!
-    const noteIdAsNumber = Number(noteId);
+    const noteId = checkbox.dataset.noteId; // IDs sind Strings wie "note_123456789"
 
     if (checkbox.checked) {
-        selectedNotes.add(noteIdAsNumber);
+        selectedNotes.add(noteId);
     } else {
-        selectedNotes.delete(noteIdAsNumber);
+        selectedNotes.delete(noteId);
     }
 
     updateSelectAllCheckbox();
@@ -1109,10 +1345,8 @@ function updateCheckboxStates() {
     const checkboxes = document.querySelectorAll('.note-checkbox-input');
 
     checkboxes.forEach(checkbox => {
-        const noteId = checkbox.dataset.noteId;
-        // WICHTIG: dataset.noteId ist ein String, aber selectedNotes enthält Numbers!
-        const noteIdAsNumber = Number(noteId);
-        checkbox.checked = selectedNotes.has(noteIdAsNumber);
+        const noteId = checkbox.dataset.noteId; // IDs sind Strings wie "note_123456789"
+        checkbox.checked = selectedNotes.has(noteId);
     });
 }
 
@@ -1122,7 +1356,7 @@ function updateSelectAllCheckbox() {
 
     const sortedNotes = getSortedNotes();
     const filteredNotes = getFilteredNotesWithCache(sortedNotes);
-    const visibleNoteIds = filteredNotes.map(note => note.id);  // IDs sind Numbers
+    const visibleNoteIds = filteredNotes.map(note => note.id);  // IDs sind Strings
     const visibleSelectedCount = visibleNoteIds.filter(id => selectedNotes.has(id)).length;
 
     if (visibleSelectedCount === 0) {

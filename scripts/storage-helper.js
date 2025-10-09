@@ -44,7 +44,12 @@ const StorageHelper = {
         try {
             const key = noteId.startsWith(this.NOTE_PREFIX) ? noteId : `${this.NOTE_PREFIX}${noteId}`;
             const result = await this.storage.get([key]);
-            return result[key] || null;
+            const note = result[key] || null;
+            if (note) {
+                // Stelle sicher, dass die ID im note-Objekt korrekt ist
+                note.id = key;
+            }
+            return note;
         } catch (error) {
             console.error('Fehler beim Laden der Notiz:', error);
             return null;
@@ -59,9 +64,11 @@ const StorageHelper = {
 
             for (const [key, value] of Object.entries(result)) {
                 if (key.startsWith(this.NOTE_PREFIX)) {
+                    // Verwende den Storage-Key als ID (vollständiger Key)
+                    // Dies stellt sicher, dass die ID konsistent ist
                     notes.push({
-                        id: key,
-                        ...value
+                        ...value,
+                        id: key  // Key überschreibt value.id
                     });
                 }
             }
