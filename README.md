@@ -4,7 +4,7 @@
 
 AccNotes bietet einen **vollständig automatisierten End-to-End Workflow** von der Barriere-Erkennung bis zur fertigen BITV-Dokumentation. Mit intelligenter Problem-Erkennung, dynamischen Kontextmenüs und automatischer BITV-Zuordnung reduziert AccNotes die Zeit für Accessibility-Tests um 80%.
 
-![AccNotes Demo](https://img.shields.io/badge/Version-0.5.0-brightgreen)
+![AccNotes Demo](https://img.shields.io/badge/Version-1.0.2-brightgreen)
 ![Automation Ready](https://img.shields.io/badge/Automation-AI%20Powered-purple)
 ![BITV Support](https://img.shields.io/badge/BITV-Softwaretest%20Ready-blue)
 ![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA%20Compliant-blue)
@@ -67,7 +67,12 @@ Template-Auswahl → Auto-BITV-Mapping → Vorbefüllte Notiz → Speichern
 
 ## 🚀 Installation
 
-### Aus dem Repository
+### Firefox Add-on Store (Empfohlen)
+[![Firefox Add-on](https://img.shields.io/badge/Firefox-Get%20Add--on-orange?logo=firefox)](https://addons.mozilla.org/firefox/addon/accnotes-bitv-accessibility-testing/)
+
+**Status**: 🔄 In Review (eingereicht am 10.10.2025)
+
+### Aus dem Repository (Entwicklung)
 1. Repository klonen:
    ```bash
    git clone https://github.com/heikofolkerts/AccNotes.git

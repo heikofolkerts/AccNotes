@@ -32,6 +32,7 @@ AccNotes ist Ihr intelligenter Assistent für BITV-konforme Barrierefreiheitstes
 - Formularfelder ohne Labels
 - Kontrast-Probleme
 - Überschriften-Struktur-Fehler
+- **NEU:** Vollständige Seitenprüfung auf Knopfdruck – alle Probleme auf einmal erfassen
 
 ✅ **Vollständiger BITV-Katalog**
 - 54 BITV-Prüfschritte von bit-inklusiv.de
@@ -40,8 +41,9 @@ AccNotes ist Ihr intelligenter Assistent für BITV-konforme Barrierefreiheitstes
 
 ✅ **Intelligentes Kontextmenü**
 - Rechtsklick auf Element → Problem automatisch erkannt
-- Schnellmeldung für Bürger*innen
+- Schnellmeldung für Bürger*innen mit **E-Mail-Vorlage**
 - Detaillierte BITV-Dokumentation für Profis
+- **NEU:** Vollständige Seitenprüfung mit Checkbox-Auswahl für Bulk-Erfassung
 
 ✅ **BITV-Dashboard & Analytics**
 - Compliance-Score Berechnung
@@ -49,10 +51,12 @@ AccNotes ist Ihr intelligenter Assistent für BITV-konforme Barrierefreiheitstes
 - Fortschritts-Tracking pro Prüfschritt
 - Problem-Website-Identifikation
 
-✅ **Flexibler Export**
+✅ **Flexibler Export & Verwaltung**
 - PDF-Reports (BITV-konform)
-- Textdateien für Bürgermeldungen
+- Textdateien für Bürgermeldungen mit **E-Mail-Vorlagen**
 - Bulk-Export für Audits
+- **NEU:** Barrierefreie Tabellenansicht (Screenreader-optimiert)
+- **NEU:** Notizen bearbeiten und aktualisieren
 
 **👥 Für wen ist AccNotes?**
 
@@ -82,8 +86,9 @@ AccNotes ist Ihr intelligenter Assistent für BITV-konforme Barrierefreiheitstes
 AccNotes ist selbst WCAG 2.1 AA-konform:
 - Dark/Light Mode
 - Vollständige Keyboard-Navigation
-- Screen-Reader-optimiert
+- **NEU:** Screen-Reader-optimierte Tabellenansicht mit ARIA-Labels
 - Barrierefreie Focus-Styles
+- Semantisches HTML mit korrekten Rollen
 
 **📚 Basierend auf offiziellen Standards**
 
@@ -112,6 +117,7 @@ AccNotes is your intelligent assistant for BITV-compliant accessibility testing.
 - Form fields without labels
 - Contrast issues
 - Heading structure errors
+- **NEW:** Full-page accessibility check – capture all problems at once
 
 ✅ **Complete BITV Catalog**
 - 54 BITV test steps from bit-inklusiv.de
@@ -120,8 +126,9 @@ AccNotes is your intelligent assistant for BITV-compliant accessibility testing.
 
 ✅ **Intelligent Context Menu**
 - Right-click on element → problem automatically detected
-- Quick report for citizens
+- Quick report for citizens with **email template**
 - Detailed BITV documentation for professionals
+- **NEW:** Full-page check with checkbox selection for bulk capture
 
 ✅ **BITV Dashboard & Analytics**
 - Compliance score calculation
@@ -129,10 +136,12 @@ AccNotes is your intelligent assistant for BITV-compliant accessibility testing.
 - Progress tracking per test step
 - Problem website identification
 
-✅ **Flexible Export**
+✅ **Flexible Export & Management**
 - PDF reports (BITV-compliant)
-- Text files for citizen reports
+- Text files for citizen reports with **email templates**
 - Bulk export for audits
+- **NEW:** Accessible table view (screen reader optimized)
+- **NEW:** Edit and update notes
 
 **👥 Who is AccNotes for?**
 
@@ -162,8 +171,9 @@ AccNotes is your intelligent assistant for BITV-compliant accessibility testing.
 AccNotes itself is WCAG 2.1 AA compliant:
 - Dark/Light mode
 - Full keyboard navigation
-- Screen reader optimized
+- **NEW:** Screen reader optimized table view with ARIA labels
 - Accessible focus styles
+- Semantic HTML with proper roles
 
 **📚 Based on Official Standards**
 
@@ -203,9 +213,22 @@ BITV, Accessibility, WCAG, Accessibility Testing, Barriers, BITV Testing, Access
 
 ---
 
-## Version Notes for 1.0.0 Release
+## Version Notes for 1.0.2 Release
 
-**Neu in Version 1.0.0:**
+**Neu in Version 1.0.2:**
+- Barrierefreie Tabellenansicht (Screenreader-optimiert mit ARIA)
+- Notizen bearbeiten und aktualisieren
+- Verbesserter Lösch-Dialog mit "Ja/Nein"-Buttons
+- Vollständige Keyboard-Navigation
+- WCAG 2.1 AA Konformität für alle UI-Komponenten
+
+**Neu in Version 1.0.1:**
+- Vollständige Seitenprüfung auf Knopfdruck
+- Checkbox-basierte Bulk-Erfassung von Problemen
+- E-Mail-Vorlagen für Bürgermeldungen
+- Erweiterte Ergebnisseite mit Problem-Übersicht
+
+**Basis-Features (seit 1.0.0):**
 - Vollständiger BITV-Katalog mit 54 Prüfschritten
 - Automatische Barriere-Erkennung (5 Erkennungsalgorithmen)
 - Intelligentes Kontextmenü mit Problem-spezifischen Einträgen
@@ -215,7 +238,20 @@ BITV, Accessibility, WCAG, Accessibility Testing, Barriers, BITV Testing, Access
 - PDF-Export-Funktionalität
 - Komplette Lokalisierung (Deutsch)
 
-**New in Version 1.0.0:**
+**New in Version 1.0.2:**
+- Accessible table view (screen reader optimized with ARIA)
+- Edit and update notes
+- Improved delete dialog with "Yes/No" buttons
+- Full keyboard navigation
+- WCAG 2.1 AA compliance for all UI components
+
+**New in Version 1.0.1:**
+- Full-page accessibility check on demand
+- Checkbox-based bulk capture of problems
+- Email templates for citizen reports
+- Enhanced results page with problem overview
+
+**Core Features (since 1.0.0):**
 - Complete BITV catalog with 54 test steps
 - Automatic barrier detection (5 detection algorithms)
 - Intelligent context menu with problem-specific entries
