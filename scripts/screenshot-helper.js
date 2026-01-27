@@ -323,6 +323,40 @@ if (typeof window.ScreenshotHelper === 'undefined') {
                     noteId: noteData.id
                 }
             };
+        },
+
+        // Alias für displayScreenshotPreview (für Kompatibilität)
+        displayScreenshotPreview(dataUrl) {
+            const previewContainer = document.getElementById('screenshot-preview');
+            const canvas = document.getElementById('screenshot-canvas');
+            const info = document.getElementById('screenshot-info');
+
+            if (!previewContainer || !canvas || !info) {
+                console.warn('Screenshot-Vorschau-Elemente nicht gefunden');
+                return;
+            }
+
+            // Canvas mit Screenshot-Daten füllen
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                // Info aktualisieren
+                info.textContent = `Screenshot erfolgreich geladen (${img.width}×${img.height}px)`;
+                info.style.color = 'var(--success-color, #2e7d32)';
+
+                // Vorschau anzeigen
+                previewContainer.style.display = 'block';
+            };
+            img.onerror = () => {
+                info.textContent = 'Screenshot konnte nicht geladen werden';
+                info.style.color = 'var(--error-color, #c62828)';
+                previewContainer.style.display = 'block';
+            };
+            img.src = dataUrl;
         }
     };
 

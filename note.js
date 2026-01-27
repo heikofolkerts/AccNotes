@@ -28,12 +28,17 @@ function setValue(elementId, value, defaultValue = '-') {
     }
 }
 
-// Screenshot vom ursprünglichen Tab anfordern
-async function requestScreenshotFromTab(tabId, selector) {
+// Screenshot vom ursprünglichen Tab anfordern (DEPRECATED - wird nicht mehr verwendet)
+// Screenshots werden jetzt direkt beim Rechtsklick erstellt und in contextData gespeichert
+async function requestScreenshotFromTab(tabId, selector, xpath, elementText) {
+    console.warn('⚠️ requestScreenshotFromTab is deprecated - screenshots should be captured on contextmenu');
     return new Promise((resolve) => {
         chrome.tabs.sendMessage(tabId, {
             action: 'captureElementScreenshot',
             selector: selector,
+            xpath: xpath,
+            elementText: elementText,
+            fingerprint: contextData.fingerprint,
             options: {
                 highlight: true,
                 padding: 20,
@@ -345,6 +350,54 @@ function initializeBitvUI() {
 
     // === PHASE 3: AUTOMATISCHE BITV-PRÜFSCHRITT-VORSCHLÄGE ===
     autoSuggestBitvStep();
+}
+
+// Hilfsfunktion: BITV-Schritt programmatisch auswählen
+function selectBitvStep(step) {
+    if (!step || !step.id) {
+        console.warn('selectBitvStep: Invalid step provided', step);
+        return;
+    }
+
+    console.log('📝 Selecting BITV step:', step.id, step.title);
+
+    // Setze die Kategorie
+    const categorySelect = document.getElementById('bitv-category');
+    if (categorySelect) {
+        categorySelect.value = step.category;
+        // Trigger change event um Step-Dropdown zu füllen
+        categorySelect.dispatchEvent(new Event('change'));
+    }
+
+    // Warte kurz, damit die Steps geladen werden
+    setTimeout(() => {
+        const stepSelect = document.getElementById('bitv-step');
+        if (stepSelect) {
+            stepSelect.value = step.id;
+            // Trigger change event um Details anzuzeigen
+            stepSelect.dispatchEvent(new Event('change'));
+        }
+    }, 50);
+}
+
+// Hilfsfunktion: Evaluation programmatisch auswählen
+function selectEvaluation(evaluationValue) {
+    if (!evaluationValue) {
+        console.warn('selectEvaluation: No evaluation value provided');
+        return;
+    }
+
+    console.log('📝 Selecting evaluation:', evaluationValue);
+
+    const evaluationInput = document.querySelector(`input[name="evaluation"][value="${evaluationValue}"]`);
+    if (evaluationInput) {
+        evaluationInput.checked = true;
+        currentEvaluation = evaluationValue;
+        // Trigger change event
+        evaluationInput.dispatchEvent(new Event('change'));
+    } else {
+        console.warn('selectEvaluation: Radio button not found for value:', evaluationValue);
+    }
 }
 
 // Funktion für automatische BITV-Prüfschritt-Vorschläge basierend auf erkannten Problemen
@@ -716,7 +769,7 @@ async function loadExistingNote(noteId) {
         if (note.bitvTest) {
             // Suche den entsprechenden BITV-Schritt
             if (typeof BitvCatalog !== 'undefined') {
-                const step = BitvCatalog.getStepById(note.bitvTest.stepId);
+                const step = BitvCatalog.getStep(note.bitvTest.stepId);
                 if (step) {
                     selectBitvStep(step);
                     if (note.bitvTest.evaluation) {
@@ -780,6 +833,44 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Initialize Screenshot Helper
     if (typeof window.ScreenshotHelper !== 'undefined') {
         ScreenshotHelper.init();
+    }
+
+    // Screenshot-Checkbox automatisch aktivieren, wenn Screenshot vorhanden
+    const screenshotCheckbox = document.getElementById('include-screenshot');
+    if (screenshotCheckbox && contextData.screenshotDataUrl) {
+        console.log('✅ Screenshot in contextData gefunden - Checkbox wird aktiviert');
+        screenshotCheckbox.checked = true;
+        screenshotCheckbox.disabled = false;
+
+        // Zeige Screenshot-Vorschau wenn ScreenshotHelper verfügbar
+        if (typeof ScreenshotHelper !== 'undefined') {
+            ScreenshotHelper.displayScreenshotPreview(contextData.screenshotDataUrl);
+        }
+
+        // Update Info-Text
+        const previewContainer = document.getElementById('screenshot-preview');
+        if (previewContainer) {
+            previewContainer.style.display = 'block';
+            const info = document.getElementById('screenshot-info');
+            if (info) {
+                info.textContent = 'Screenshot wurde beim Rechtsklick erfasst';
+                info.style.color = 'var(--success-color, #2e7d32)';
+            }
+        }
+    } else if (screenshotCheckbox && !contextData.screenshotDataUrl && !editNoteId) {
+        // Keine Screenshot-Daten und keine Bearbeitung: Zeige Hinweis
+        console.log('ℹ️ Kein Screenshot in contextData - Checkbox deaktiviert');
+        screenshotCheckbox.disabled = true;
+        screenshotCheckbox.checked = false;
+
+        const previewContainer = document.getElementById('screenshot-preview');
+        if (previewContainer) {
+            const info = document.getElementById('screenshot-info');
+            if (info) {
+                info.textContent = 'Screenshot wird direkt beim Rechtsklick erfasst';
+                info.style.color = 'var(--text-secondary, #666)';
+            }
+        }
     }
 
     // Initialize BITV UI
@@ -981,36 +1072,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             const includeScreenshot = document.getElementById('include-screenshot');
             if (includeScreenshot && includeScreenshot.checked) {
-                try {
-                    console.log('📷 Creating screenshot for note...');
-                    console.log('📷 contextData.tabId:', contextData.tabId);
-                    console.log('📷 contextData.selector:', contextData.selector);
-                    console.log('📷 Full contextData:', contextData);
-
-                    // Screenshot muss vom ursprünglichen Tab erstellt werden
-                    // note.html läuft in separatem Fenster und hat keinen Zugriff auf die Original-Seite
-                    if (contextData.tabId && contextData.selector) {
-                        const screenshotResult = await requestScreenshotFromTab(
-                            contextData.tabId,
-                            contextData.selector
-                        );
-
-                        if (screenshotResult.success) {
-                            noteData.screenshotDataUrl = screenshotResult.dataUrl;
-                            console.log('✅ Screenshot successfully attached to note');
-                            showNotification('Screenshot wurde hinzugefügt', 'success');
-                        } else {
-                            console.warn('Screenshot creation failed:', screenshotResult.error);
-                            showNotification('Screenshot konnte nicht erstellt werden: ' + screenshotResult.error, 'warning');
-                        }
-                    } else {
-                        console.warn('Screenshot requested but tab ID or selector missing');
-                        console.warn('Missing: tabId=' + (contextData.tabId ? 'OK' : 'MISSING') + ', selector=' + (contextData.selector ? 'OK' : 'MISSING'));
-                        showNotification('Screenshot konnte nicht erstellt werden - Element-Information fehlt', 'warning');
-                    }
-                } catch (screenshotError) {
-                    console.error('Screenshot error:', screenshotError);
-                    showNotification('Fehler beim Screenshot erstellen: ' + screenshotError.message, 'warning');
+                // Screenshot wurde bereits beim Rechtsklick erstellt und in contextData gespeichert
+                if (contextData.screenshotDataUrl) {
+                    console.log('✅ Using pre-captured screenshot from contextData');
+                    noteData.screenshotDataUrl = contextData.screenshotDataUrl;
+                    showNotification('Screenshot wurde hinzugefügt', 'success');
+                } else {
+                    console.warn('⚠️ Screenshot checkbox is checked but no screenshot data available');
+                    console.log('   This might happen if the page was reloaded or the screenshot capture failed');
+                    showNotification('Screenshot nicht verfügbar - bitte erneut versuchen direkt nach Rechtsklick', 'warning');
                 }
             }
 

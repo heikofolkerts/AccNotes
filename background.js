@@ -338,6 +338,35 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
 
             console.log('📦 Background: Opening note with element:', contextData.elementType);
 
+            // SCREENSHOT DIREKT ERSTELLEN (bevor note.html geöffnet wird)
+            console.log('📷 Background: Attempting to capture screenshot immediately...');
+            try {
+                // Erstelle Screenshot vom sichtbaren Tab
+                const screenshotDataUrl = await new Promise((resolve, reject) => {
+                    browserAPI.tabs.captureVisibleTab(tab.windowId, {
+                        format: 'png',
+                        quality: 90
+                    }, (dataUrl) => {
+                        if (browserAPI.runtime.lastError) {
+                            console.error('❌ Screenshot capture failed:', browserAPI.runtime.lastError);
+                            reject(browserAPI.runtime.lastError);
+                        } else {
+                            resolve(dataUrl);
+                        }
+                    });
+                });
+
+                if (screenshotDataUrl) {
+                    contextData.screenshotDataUrl = screenshotDataUrl;
+                    console.log('✅ Screenshot captured successfully (', screenshotDataUrl.length, 'bytes)');
+                } else {
+                    console.warn('⚠️ Screenshot capture returned empty data');
+                }
+            } catch (screenshotError) {
+                console.error('❌ Error capturing screenshot:', screenshotError);
+                // Fahre fort ohne Screenshot - kein Fehler werfen
+            }
+
             // Erstelle URL-Parameter für die lokale Seite
             const params = new URLSearchParams();
             // Übergebe alle Daten als JSON

@@ -253,6 +253,13 @@ function createNoteTableRow(note) {
                 ${escapeHtml(note.content ? (note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '')) : 'Kein Inhalt')}
             </td>
             <td class="notes-table__actions">
+                ${note.screenshotDataUrl ? `
+                <button class="btn btn--small btn-view-screenshot"
+                        data-note-id="${note.id}"
+                        aria-label="Screenshot anzeigen für ${escapeHtml(note.title || note.pageTitle || 'Notiz')}">
+                    📷 Screenshot
+                </button>
+                ` : ''}
                 <button class="btn btn--small btn-edit-note"
                         data-note-id="${note.id}"
                         aria-label="Notiz bearbeiten: ${escapeHtml(note.title || note.pageTitle || 'Unbekannte Seite')}">
@@ -333,6 +340,7 @@ function createNoteHTML(note) {
                         ${bitvInfo}
                     </div>
                     <div class="note-actions">
+                        ${note.screenshotDataUrl ? `<button class="btn-view-screenshot" data-note-id="${note.id}" aria-label="Screenshot anzeigen für ${note.title || note.pageTitle || 'Notiz'}">📷 Screenshot</button>` : ''}
                         <button class="btn-edit-note" data-note-id="${note.id}">✏️ Bearbeiten</button>
                         <button class="btn-delete-note delete" data-note-id="${note.id}">🗑️ Löschen</button>
                     </div>
@@ -574,6 +582,166 @@ async function deleteNote(noteId) {
             alert('Fehler beim Löschen der Notiz. Bitte versuchen Sie es erneut.');
         }
     }
+}
+
+// Screenshot-Modal anzeigen
+function showScreenshotModal(noteId) {
+    // Notiz finden
+    const note = allNotes.find(n => n.id === noteId);
+    if (!note || !note.screenshotDataUrl) {
+        announceToScreenReader('Screenshot nicht verfügbar');
+        alert('Screenshot nicht verfügbar für diese Notiz.');
+        return;
+    }
+
+    // Prüfe ob Modal bereits existiert, wenn ja entferne es
+    let existingModal = document.getElementById('screenshot-modal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Speichere aktuelles Fokus-Element
+    const previousFocusElement = document.activeElement;
+
+    // Modal erstellen
+    const modal = document.createElement('div');
+    modal.id = 'screenshot-modal';
+    modal.className = 'screenshot-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'screenshot-modal-title');
+    modal.setAttribute('aria-describedby', 'screenshot-modal-description');
+
+    const noteTitle = note.title || note.pageTitle || 'Notiz';
+
+    modal.innerHTML = `
+        <div class="screenshot-modal__backdrop"></div>
+        <div class="screenshot-modal__content">
+            <div class="screenshot-modal__header">
+                <h2 id="screenshot-modal-title" class="screenshot-modal__title">
+                    Screenshot: ${escapeHtml(noteTitle)}
+                </h2>
+                <button class="screenshot-modal__close"
+                        aria-label="Dialog schließen"
+                        title="Dialog schließen (ESC)">
+                    ✕
+                </button>
+            </div>
+            <div class="screenshot-modal__body">
+                <p id="screenshot-modal-description" class="sr-only">
+                    Screenshot der Notiz "${escapeHtml(noteTitle)}" von ${note.url || 'unbekannter URL'}
+                </p>
+                <img src="${note.screenshotDataUrl}"
+                     alt="Screenshot von ${escapeHtml(noteTitle)}"
+                     class="screenshot-modal__image">
+                <div class="screenshot-modal__info">
+                    <p><strong>Seite:</strong> ${escapeHtml(note.url || 'Keine URL')}</p>
+                    <p><strong>Element:</strong> ${escapeHtml(note.element?.type || note.elementType || 'Unbekannt')}</p>
+                    ${note.element?.text ? `<p><strong>Text:</strong> ${escapeHtml(note.element.text)}</p>` : ''}
+                </div>
+            </div>
+            <div class="screenshot-modal__footer">
+                <button class="btn screenshot-modal__close-btn">Schließen</button>
+            </div>
+        </div>
+    `;
+
+    // Modal zum DOM hinzufügen
+    document.body.appendChild(modal);
+
+    // ARIA Live Region für Ankündigungen
+    announceToScreenReader(`Screenshot-Dialog geöffnet für ${noteTitle}`);
+
+    // Fokus auf ersten fokussierbaren Element (Close-Button im Header)
+    setTimeout(() => {
+        const closeButton = modal.querySelector('.screenshot-modal__close');
+        if (closeButton) {
+            closeButton.focus();
+        }
+    }, 100);
+
+    // Event-Handler für Schließen
+    const closeModal = () => {
+        // Ankündigung für Screenreader
+        announceToScreenReader('Screenshot-Dialog geschlossen');
+
+        // Modal entfernen
+        modal.remove();
+
+        // Fokus zurücksetzen
+        if (previousFocusElement && previousFocusElement.focus) {
+            previousFocusElement.focus();
+        }
+    };
+
+    // Close-Buttons
+    const closeButtons = modal.querySelectorAll('.screenshot-modal__close, .screenshot-modal__close-btn');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', closeModal);
+    });
+
+    // Backdrop-Click
+    const backdrop = modal.querySelector('.screenshot-modal__backdrop');
+    if (backdrop) {
+        backdrop.addEventListener('click', closeModal);
+    }
+
+    // ESC-Taste
+    const handleKeyDown = (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+            document.removeEventListener('keydown', handleKeyDown);
+        }
+
+        // Tab-Trap: Fokus im Modal halten
+        if (e.key === 'Tab') {
+            trapFocusInModal(e, modal);
+        }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Modal als aktiv markieren
+    modal.dataset.active = 'true';
+}
+
+// Fokus im Modal halten (Tab-Trap)
+function trapFocusInModal(event, modal) {
+    const focusableElements = modal.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+    }
+}
+
+// Screenreader-Ankündigung
+function announceToScreenReader(message) {
+    // Prüfe ob Live-Region existiert, sonst erstelle sie
+    let liveRegion = document.getElementById('sr-live-region');
+    if (!liveRegion) {
+        liveRegion = document.createElement('div');
+        liveRegion.id = 'sr-live-region';
+        liveRegion.className = 'sr-only';
+        liveRegion.setAttribute('role', 'status');
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(liveRegion);
+    }
+
+    // Nachricht setzen
+    liveRegion.textContent = message;
+
+    // Nach 3 Sekunden leeren
+    setTimeout(() => {
+        liveRegion.textContent = '';
+    }, 3000);
 }
 
 // Hilfsfunktion für benutzerdefinierten Bestätigungsdialog
@@ -1280,10 +1448,11 @@ function initializeBulkSelection() {
             }
         });
 
-        // Event-Delegation für Bearbeiten und Löschen
+        // Event-Delegation für Bearbeiten, Löschen und Screenshot-Anzeige
         notesContainer.addEventListener('click', function(event) {
             const editButton = event.target.closest('.btn-edit-note');
             const deleteButton = event.target.closest('.btn-delete-note');
+            const screenshotButton = event.target.closest('.btn-view-screenshot');
 
             if (editButton) {
                 const noteId = editButton.dataset.noteId;
@@ -1291,6 +1460,9 @@ function initializeBulkSelection() {
             } else if (deleteButton) {
                 const noteId = deleteButton.dataset.noteId;
                 deleteNote(noteId);
+            } else if (screenshotButton) {
+                const noteId = screenshotButton.dataset.noteId;
+                showScreenshotModal(noteId);
             }
         });
     }

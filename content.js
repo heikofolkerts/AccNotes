@@ -473,6 +473,7 @@ function getElementAccessibilityInfo(element) {
         // DOM-Position für bessere Identifikation
         xpath: getXPath(element),
         selector: generateSelector(element),
+        fingerprint: generateElementFingerprint(element),
 
         // Automatische Barriere-Erkennung
         detectedProblems: []
@@ -675,19 +676,110 @@ function generateSelector(element) {
     if (element.id) return `#${element.id}`;
 
     const path = [];
-    while (element && element.nodeType === Node.ELEMENT_NODE) {
-        let selector = element.nodeName.toLowerCase();
-        if (element.className) {
-            selector += '.' + element.className.trim().split(/\s+/).join('.');
+    let currentElement = element;
+    while (currentElement && currentElement.nodeType === Node.ELEMENT_NODE) {
+        let selector = currentElement.nodeName.toLowerCase();
+
+        // Verwende nur erste Klasse für bessere Stabilität
+        if (currentElement.className && typeof currentElement.className === 'string') {
+            const firstClass = currentElement.className.trim().split(/\s+/)[0];
+            if (firstClass && !firstClass.includes(':')) {
+                selector += '.' + firstClass;
+            }
         }
+
         path.unshift(selector);
-        if (element.id) {
-            path[0] = `#${element.id}`;
+        if (currentElement.id) {
+            path[0] = `#${currentElement.id}`;
             break;
         }
-        element = element.parentNode;
+
+        // Stoppe bei body, gehe nicht höher
+        if (currentElement.tagName === 'BODY') {
+            break;
+        }
+
+        currentElement = currentElement.parentNode;
     }
     return path.join(' > ');
+}
+
+// Verbesserte Element-Identifikation mit mehreren Attributen
+function generateElementFingerprint(element) {
+    const fingerprint = {
+        // Primäre Identifikatoren
+        id: element.id || null,
+        tagName: element.tagName,
+
+        // Text-basierte Identifikation
+        textContent: element.textContent ? element.textContent.trim().substring(0, 100) : null,
+
+        // Attribut-basierte Identifikation
+        href: element.href || null,
+        src: element.src || null,
+        name: element.name || null,
+        type: element.type || null,
+        value: element.value || null,
+
+        // ARIA-Attribute für bessere Identifikation
+        ariaLabel: element.getAttribute('aria-label') || null,
+        role: element.getAttribute('role') || null,
+
+        // Position im DOM (nth-child)
+        nthChild: getNthChild(element),
+
+        // Eltern-ID falls vorhanden
+        parentId: element.parentElement?.id || null
+    };
+
+    return fingerprint;
+}
+
+// Hilfsfunktion: nth-child Position ermitteln
+function getNthChild(element) {
+    if (!element.parentElement) return 1;
+
+    const siblings = Array.from(element.parentElement.children);
+    return siblings.indexOf(element) + 1;
+}
+
+// Verbessertes Element-Finden mit Fingerabdruck
+function findElementByFingerprint(fingerprint) {
+    // Methode 1: ID
+    if (fingerprint.id) {
+        const el = document.getElementById(fingerprint.id);
+        if (el && el.tagName === fingerprint.tagName) {
+            return el;
+        }
+    }
+
+    // Methode 2: Eindeutige Attribute (href, name, aria-label)
+    if (fingerprint.href) {
+        const el = document.querySelector(`${fingerprint.tagName.toLowerCase()}[href="${fingerprint.href}"]`);
+        if (el) return el;
+    }
+
+    if (fingerprint.ariaLabel) {
+        const el = document.querySelector(`${fingerprint.tagName.toLowerCase()}[aria-label="${fingerprint.ariaLabel}"]`);
+        if (el) return el;
+    }
+
+    if (fingerprint.name) {
+        const el = document.querySelector(`${fingerprint.tagName.toLowerCase()}[name="${fingerprint.name}"]`);
+        if (el) return el;
+    }
+
+    // Methode 3: Text-basiert (für Buttons, Links)
+    if (fingerprint.textContent) {
+        const elements = document.querySelectorAll(fingerprint.tagName.toLowerCase());
+        for (const el of elements) {
+            if (el.textContent.trim().substring(0, 100) === fingerprint.textContent) {
+                return el;
+            }
+        }
+    }
+
+    return null;
 }
 
 // Cross-Browser-API
@@ -732,20 +824,86 @@ function createNoteFromCurrentElement() {
 // Message Listener für Screenshot-Anfragen
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'captureElementScreenshot') {
-        console.log('📷 Screenshot request received for selector:', request.selector);
+        console.log('📷 Screenshot request received');
+        console.log('   Selector:', request.selector);
+        console.log('   XPath:', request.xpath);
+        console.log('   Fingerprint:', request.fingerprint);
 
         try {
-            // Element anhand des Selectors finden
-            const element = document.querySelector(request.selector);
+            // Mehrere Methoden zum Finden des Elements verwenden
+            let element = null;
+            let method = 'none';
+
+            // Methode 1: Fingerabdruck (am zuverlässigsten für dynamische Seiten)
+            if (request.fingerprint && !element) {
+                console.log('🔍 Trying fingerprint-based search...');
+                element = findElementByFingerprint(request.fingerprint);
+                if (element) {
+                    method = 'fingerprint';
+                    console.log('✅ Element found via fingerprint');
+                }
+            }
+
+            // Methode 2: XPath
+            if (request.xpath && !element) {
+                console.log('🔍 Trying XPath search...');
+                try {
+                    const xpathResult = document.evaluate(
+                        request.xpath,
+                        document,
+                        null,
+                        XPathResult.FIRST_ORDERED_NODE_TYPE,
+                        null
+                    );
+                    element = xpathResult.singleNodeValue;
+                    if (element) {
+                        method = 'xpath';
+                        console.log('✅ Element found via XPath');
+                    }
+                } catch (xpathError) {
+                    console.warn('⚠️ XPath search failed:', xpathError.message);
+                }
+            }
+
+            // Methode 3: CSS Selector
+            if (request.selector && !element) {
+                console.log('🔍 Trying CSS selector search...');
+                try {
+                    element = document.querySelector(request.selector);
+                    if (element) {
+                        method = 'selector';
+                        console.log('✅ Element found via CSS selector');
+                    }
+                } catch (selectorError) {
+                    console.warn('⚠️ CSS selector search failed:', selectorError.message);
+                }
+            }
+
+            // Methode 4: Fallback - verwende lastClickedElement wenn verfügbar
+            if (!element && lastClickedElement) {
+                console.log('🔍 Trying lastClickedElement fallback...');
+                // Prüfe ob lastClickedElement noch im DOM ist
+                if (document.body.contains(lastClickedElement)) {
+                    method = 'lastClicked';
+                    console.log('✅ Using lastClickedElement as fallback');
+                    element = lastClickedElement;
+                }
+            }
 
             if (!element) {
-                console.warn('❌ Element not found for selector:', request.selector);
+                console.warn('❌ Element not found with any method');
+                console.log('   Tried Fingerprint:', !!request.fingerprint);
+                console.log('   Tried XPath:', request.xpath);
+                console.log('   Tried Selector:', request.selector);
+                console.log('   lastClickedElement available:', !!lastClickedElement);
                 sendResponse({
                     success: false,
-                    error: 'Element nicht gefunden auf der Seite'
+                    error: 'Element nicht gefunden auf der Seite. Bitte erstellen Sie die Notiz direkt nach dem Rechtsklick auf das Element.'
                 });
                 return true;
             }
+
+            console.log(`✅ Element found using method: ${method}`);
 
             // Element highlighten und zum Screenshot vorbereiten
             const rect = element.getBoundingClientRect();
