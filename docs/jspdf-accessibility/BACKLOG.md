@@ -2,8 +2,13 @@
 
 **Version:** 1.0.0
 **Datum:** 20. Oktober 2025
+**Aktualisiert:** 7. Februar 2026
 **Projekt:** PDF/UA-1 Plugin für jsPDF
-**Ziel:** Community Contribution (Pull Request)
+**Ziel:** ~~Community Contribution (Pull Request)~~ → Eigenständiger Fork (PR ohne Feedback)
+
+---
+
+> **Status-Update (Februar 2026):** Der jsPDF-UA Fork wurde als eigenständiges Projekt unter `../jsPDF-UA/` realisiert und in AccNotes integriert. Die Core-Features (Structure Tree, Marked Content, Artifacts, Figure mit Alt-Text, Atkinson Hyperlegible Font, XMP-Metadata) sind implementiert und getestet. Der PR an jsPDF upstream blieb ohne Feedback - der Fork wird als eigenständiges Projekt weitergeführt. Viele der unten aufgeführten Backlog-Items sind damit abgeschlossen oder hinfällig.
 
 ---
 
@@ -1288,5 +1293,5 @@ Erstelle Release Notes.
 ---
 
 **Version:** 1.0.0
-**Status:** 📋 Backlog bereit
-**Nächster Schritt:** Sprint 1 starten
+**Status:** ✅ Core-Features implementiert und in AccNotes integriert (Februar 2026)
+**Fork-Repository:** `../jsPDF-UA/`

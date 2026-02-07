@@ -1717,7 +1717,8 @@ async function generateAccessibilityPDF(notes) {
     const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        pdfUA: true
     });
 
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -1726,43 +1727,94 @@ async function generateAccessibilityPDF(notes) {
     const contentWidth = pageWidth - 2 * margin;
     let yPos = margin;
 
-    // ========== Deckblatt ==========
+    // PDF/UA Metadata
+    doc.setDocumentTitle('Barrierefreiheits-Bericht');
+    doc.setLanguage('de-DE');
+
+    // Font: Atkinson Hyperlegible (eingebettet im Fork)
+    const FONT = 'AtkinsonHyperlegible';
+
+    // Helper: Seitenumbruch mit Mindestplatz prüfen
+    function checkPageBreak(neededSpace) {
+        if (yPos > pageHeight - neededSpace) {
+            doc.addPage();
+            yPos = margin;
+        }
+    }
+
+    // Helper: Text mit automatischem Umbruch und Seitenumbruch ausgeben
+    function writeWrappedText(text, fontSize, fontStyle) {
+        doc.setFontSize(fontSize);
+        doc.setFont(FONT, fontStyle);
+        const lines = doc.splitTextToSize(text, contentWidth);
+        const lineHeight = fontSize * 0.45; // mm pro Zeile
+        lines.forEach(line => {
+            checkPageBreak(20);
+            doc.text(line, margin, yPos);
+            yPos += lineHeight;
+        });
+    }
+
+    // ========== Document Structure ==========
+    doc.beginStructureElement('Document');
+
+    // ========== H1: Titel ==========
+    doc.beginStructureElement('H1');
     doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.text('Barrierefreiheits-Bericht', margin, yPos);
+    doc.endStructureElement();
     yPos += 15;
 
+    // Erstellungsdatum
+    doc.beginStructureElement('P');
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
     doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE', {
         year: 'numeric', month: 'long', day: 'numeric'
     })}`, margin, yPos);
+    doc.endStructureElement();
     yPos += 10;
+
+    // Anzahl Notizen
+    doc.beginStructureElement('P');
     doc.text(`Anzahl Notizen: ${notes.length}`, margin, yPos);
+    doc.endStructureElement();
     yPos += 15;
 
-    // Zusammenfassung
+    // ========== H2: Zusammenfassung ==========
     const statusCount = {
         draft: notes.filter(n => n.status === 'draft' || !n.status).length,
         reported: notes.filter(n => n.status === 'reported').length,
         resolved: notes.filter(n => n.status === 'resolved').length
     };
 
+    doc.beginStructureElement('H2');
     doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.text('Zusammenfassung', margin, yPos);
+    doc.endStructureElement();
     yPos += 10;
 
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
+
+    doc.beginStructureElement('P');
     doc.text(`Entwürfe: ${statusCount.draft}`, margin, yPos);
+    doc.endStructureElement();
     yPos += 7;
+
+    doc.beginStructureElement('P');
     doc.text(`Gemeldet: ${statusCount.reported}`, margin, yPos);
+    doc.endStructureElement();
     yPos += 7;
+
+    doc.beginStructureElement('P');
     doc.text(`Behoben: ${statusCount.resolved}`, margin, yPos);
+    doc.endStructureElement();
     yPos += 20;
 
-    // Websites-Übersicht
+    // ========== H2: Betroffene Websites ==========
     const websites = [...new Set(notes.map(n => {
         try {
             return new URL(n.url).hostname;
@@ -1771,83 +1823,114 @@ async function generateAccessibilityPDF(notes) {
         }
     }))];
 
+    doc.beginStructureElement('H2');
     doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.text('Betroffene Websites', margin, yPos);
+    doc.endStructureElement();
     yPos += 10;
 
+    // Liste der Websites
     doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
+    doc.setFont(FONT, 'normal');
+    doc.beginStructureElement('L');
     websites.forEach(website => {
-        if (yPos > pageHeight - 30) {
-            doc.addPage();
-            yPos = margin;
-        }
-        doc.text(`• ${website}`, margin + 5, yPos);
+        checkPageBreak(30);
+        doc.beginStructureElement('LI');
+        doc.beginStructureElement('Lbl');
+        doc.text('\u2022', margin + 2, yPos);
+        doc.endStructureElement();
+        doc.beginStructureElement('LBody');
+        doc.text(website, margin + 8, yPos);
+        doc.endStructureElement();
+        doc.endStructureElement(); // LI
         yPos += 7;
     });
+    doc.endStructureElement(); // L
 
-    // ========== Notizen-Details ==========
+    // ========== H2: Gefundene Barrieren ==========
     doc.addPage();
     yPos = margin;
 
-    // H2: Gefundene Barrieren
+    doc.beginStructureElement('H2');
     doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
+    doc.setFont(FONT, 'bold');
     doc.text('Gefundene Barrieren', margin, yPos);
+    doc.endStructureElement();
     yPos += 15;
 
+    // ========== Notizen-Details ==========
     for (let i = 0; i < notes.length; i++) {
         const note = notes[i];
 
-        // Prüfe Seitenumbruch
-        if (yPos > pageHeight - 80) {
-            doc.addPage();
-            yPos = margin;
-        }
+        checkPageBreak(80);
 
-        // H3: Einzelne Barriere (Notiz-Titel)
-        doc.setFontSize(12);  // H3-Größe (kleiner als H2)
-        doc.setFont('helvetica', 'bold');
+        // Sect: Notiz-Container
+        doc.beginStructureElement('Sect');
+
+        // H3: Notiz-Titel
+        doc.beginStructureElement('H3');
+        doc.setFontSize(12);
+        doc.setFont(FONT, 'bold');
         const noteTitle = note.title || note.pageTitle || 'Unbekannte Seite';
         doc.text(`${i + 1}. ${noteTitle}`, margin, yPos);
-        yPos += 8;  // Abstand nach H3-Überschrift
+        doc.endStructureElement();
+        yPos += 8;
 
-        // Status-Badge
+        // Status (kursiv)
         const statusTexts = {
             draft: 'Status: Entwurf (noch nicht gemeldet)',
             reported: 'Status: Gemeldet',
             resolved: 'Status: Behoben'
         };
         const statusText = statusTexts[note.status] || statusTexts.draft;
+        doc.beginStructureElement('P');
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'italic');
+        doc.setFont(FONT, 'italic');
         doc.text(statusText, margin, yPos);
+        doc.endStructureElement();
         yPos += 7;
 
-        // Metadaten
+        // Datum
+        doc.beginStructureElement('P');
         doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
+        doc.setFont(FONT, 'normal');
         const date = new Date(note.timestamp).toLocaleDateString('de-DE');
         doc.text(`Datum: ${date}`, margin, yPos);
+        doc.endStructureElement();
         yPos += 6;
 
+        // URL
+        doc.beginStructureElement('P');
         const urlText = note.url || 'Keine URL';
-        const splitUrl = doc.splitTextToSize(urlText, contentWidth);
-        doc.text(`URL: ${splitUrl[0]}`, margin, yPos);
+        const splitUrl = doc.splitTextToSize(`URL: ${urlText}`, contentWidth);
+        doc.text(splitUrl[0], margin, yPos);
+        doc.endStructureElement();
         yPos += 6;
 
+        // Element (optional)
         if (note.element?.type) {
+            doc.beginStructureElement('P');
             doc.text(`Element: ${note.element.type}`, margin, yPos);
+            doc.endStructureElement();
             yPos += 6;
         }
 
-        // BITV-Prüfschritt
+        // BITV-Prüfschritt (optional)
         if (note.bitvTest) {
-            doc.setFont('helvetica', 'bold');
-            doc.text(`BITV-Prüfschritt: ${note.bitvTest.stepId} - ${note.bitvTest.stepTitle}`, margin, yPos);
-            yPos += 6;
-            doc.setFont('helvetica', 'normal');
+            doc.beginStructureElement('P');
+            doc.setFont(FONT, 'bold');
+            const bitvLine = doc.splitTextToSize(
+                `BITV-Prüfschritt: ${note.bitvTest.stepId} - ${note.bitvTest.stepTitle}`,
+                contentWidth
+            );
+            bitvLine.forEach((line, idx) => {
+                if (idx > 0) { checkPageBreak(20); }
+                doc.text(line, margin, yPos);
+                yPos += 5;
+            });
+            yPos += 1;
+            doc.setFont(FONT, 'normal');
 
             const evaluationTexts = {
                 passed: 'Bestanden',
@@ -1856,88 +1939,85 @@ async function generateAccessibilityPDF(notes) {
                 needs_review: 'Zu überprüfen'
             };
             doc.text(`Bewertung: ${evaluationTexts[note.bitvTest.evaluation] || evaluationTexts.needs_review}`, margin, yPos);
+            doc.endStructureElement();
             yPos += 8;
         } else {
             yPos += 2;
         }
 
-        // Beschreibung
-        doc.setFont('helvetica', 'bold');
-        doc.text('Beschreibung:', margin, yPos);
+        // H4: Beschreibung
+        doc.beginStructureElement('H4');
+        doc.setFontSize(10);
+        doc.setFont(FONT, 'bold');
+        doc.text('Beschreibung', margin, yPos);
+        doc.endStructureElement();
         yPos += 6;
-        doc.setFont('helvetica', 'normal');
 
-        const contentLines = doc.splitTextToSize(note.content || 'Keine Beschreibung', contentWidth);
-        contentLines.forEach(line => {
-            if (yPos > pageHeight - 20) {
-                doc.addPage();
-                yPos = margin;
-            }
-            doc.text(line, margin, yPos);
-            yPos += 5;
-        });
+        doc.beginStructureElement('P');
+        writeWrappedText(note.content || 'Keine Beschreibung', 10, 'normal');
+        doc.endStructureElement();
         yPos += 5;
 
-        // Empfehlung
+        // H4: Empfehlung (optional)
         if (note.recommendation) {
-            doc.setFont('helvetica', 'bold');
-            doc.text('Empfehlung:', margin, yPos);
+            checkPageBreak(25);
+            doc.beginStructureElement('H4');
+            doc.setFontSize(10);
+            doc.setFont(FONT, 'bold');
+            doc.text('Empfehlung', margin, yPos);
+            doc.endStructureElement();
             yPos += 6;
-            doc.setFont('helvetica', 'normal');
 
-            const recommendationLines = doc.splitTextToSize(note.recommendation, contentWidth);
-            recommendationLines.forEach(line => {
-                if (yPos > pageHeight - 20) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-                doc.text(line, margin, yPos);
-                yPos += 5;
-            });
+            doc.beginStructureElement('P');
+            writeWrappedText(note.recommendation, 10, 'normal');
+            doc.endStructureElement();
             yPos += 5;
         }
 
-        // Screenshot (wenn vorhanden)
+        // Figure: Screenshot (optional)
         if (note.screenshotDataUrl) {
             try {
-                if (yPos > pageHeight - 100) {
-                    doc.addPage();
-                    yPos = margin;
-                }
-
-                doc.setFont('helvetica', 'bold');
-                doc.text('Screenshot:', margin, yPos);
-                yPos += 6;
-
+                checkPageBreak(100);
                 const imgWidth = contentWidth;
-                const imgHeight = 80; // Feste Höhe für einheitliches Layout
+                const imgHeight = 80;
+                const altText = `Screenshot der Barriere: ${noteTitle}`;
 
+                doc.beginStructureElement('Figure', { alt: altText });
                 doc.addImage(note.screenshotDataUrl, 'PNG', margin, yPos, imgWidth, imgHeight);
+                doc.endStructureElement();
                 yPos += imgHeight + 10;
             } catch (error) {
                 console.warn('Screenshot konnte nicht eingebettet werden:', error);
             }
         }
 
-        // Trennlinie
+        // Artifact: Trennlinie (dekorativ)
         yPos += 5;
+        doc.beginArtifact();
         doc.setDrawColor(200, 200, 200);
         doc.line(margin, yPos, pageWidth - margin, yPos);
+        doc.endArtifact();
         yPos += 10;
+
+        doc.endStructureElement(); // Sect
     }
 
-    // ========== Fußzeile auf allen Seiten ==========
+    doc.endStructureElement(); // Document
+
+    // ========== Artifact: Fußzeile auf allen Seiten ==========
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
+        doc.beginArtifact({ type: 'Pagination', subtype: 'Footer' });
         doc.setFontSize(9);
-        doc.setFont('helvetica', 'italic');
+        doc.setFont(FONT, 'italic');
         doc.text(
-            `Seite ${i} von ${totalPages} • Erstellt mit AccNotes`,
+            `Seite ${i} von ${totalPages} \u2022 Erstellt mit AccNotes`,
             pageWidth / 2,
             pageHeight - 10,
             { align: 'center' }
         );
+        doc.endArtifact();
     }
 
     // Speichern

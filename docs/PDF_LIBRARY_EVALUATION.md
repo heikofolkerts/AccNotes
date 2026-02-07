@@ -271,6 +271,41 @@ doc.addImage(img, x, y); // Besser: Label davor!
 
 ---
 
+---
+
+## Update: jsPDF-UA Fork (Februar 2026)
+
+**Datum:** 7. Februar 2026
+
+Die ursprüngliche Einschränkung bezüglich PDF/UA-1 wurde durch den eigenständigen **jsPDF-UA Fork** behoben. Der Fork erweitert jsPDF um vollständige PDF/UA-1 Unterstützung (ISO 14289-1):
+
+### Neue Fähigkeiten
+- ✅ **Structure Tree**: Semantische Überschriften (H1-H4), Paragraphen, Listen, Sektionen
+- ✅ **Marked Content**: Alle Inhalte sind getaggt und für Screenreader navigierbar
+- ✅ **Artifacts**: Dekorative Elemente (Trennlinien, Fußzeilen) korrekt als Artefakte markiert
+- ✅ **Figure mit Alt-Text**: Screenshots erhalten automatisch beschreibende Alt-Texte
+- ✅ **XMP-Metadata**: Dokumenttitel und Sprache (de-DE) korrekt gesetzt
+- ✅ **Atkinson Hyperlegible Font**: Eingebetteter barrierefreier Font (optimiert für Lesbarkeit)
+- ✅ **PDF/UA-1 Identifier**: Korrektes PDF/UA-1 Conformance-Flag
+
+### Aktualisierte Bewertung
+| Kriterium | Vorher | Nachher |
+|-----------|--------|---------|
+| PDF/UA-1 Konformität | ❌ | ✅ |
+| Tagged PDF (Strukturbaum) | ❌ | ✅ |
+| Alt-Texte für Bilder | ❌ | ✅ |
+| Dokumentsprache | ❌ | ✅ |
+| Barrierefreier Font | ⚠️ Helvetica | ✅ Atkinson Hyperlegible |
+| Barrierefreiheit gesamt | ⭐⭐⭐⭐☆ | ⭐⭐⭐⭐⭐ |
+
+**Gesamt: 25/25 Punkten** (vorher 24/25)
+
+### Quelle
+- **Fork-Repository:** `../jsPDF-UA/` (eigenständiges Projekt, basierend auf jsPDF v2.5.1)
+- **Dateigröße:** 756 KB (vorher 364 KB, Zunahme durch eingebetteten Font)
+
+---
+
 **Autor:** Claude Code
 **Review:** Heiko Folkerts
-**Status:** ✅ Genehmigt und implementiert
+**Status:** ✅ Genehmigt und implementiert (aktualisiert Februar 2026)

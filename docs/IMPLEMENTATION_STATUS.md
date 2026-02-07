@@ -1,8 +1,8 @@
 # AccNotes Implementation Status
 
-**Stand:** 3. Oktober 2025
-**Version:** 0.5.3
-**Aktueller Status:** Item #5 - Vereinfachter Melde-Workflow ✅ ABGESCHLOSSEN
+**Stand:** 7. Februar 2026
+**Version:** 1.0.2+
+**Aktueller Status:** PDF/UA-1 Export integriert (jsPDF-UA Fork)
 
 ---
 
@@ -203,13 +203,15 @@ else {
   - Automatisches Scrolling zum Element
   - Screenshot über Background Script (chrome.tabs.captureVisibleTab)
   - Base64-Einbettung in Note-Daten
-- ✅ PDF-Export mit jsPDF
+- ✅ PDF-Export mit jsPDF-UA Fork (PDF/UA-1 konform)
   - Deckblatt mit Zusammenfassung
-  - H2: "Gefundene Barrieren"
-  - H3: Einzelne Notiz-Titel
-  - Eingebettete Screenshots
+  - Semantische Struktur: Document → H1/H2/H3/H4 → P → Sect → L/LI → Figure
+  - Eingebettete Screenshots mit Alt-Text (`Figure`-Element)
   - Status-Badges (Entwurf/Gemeldet/Behoben)
-  - **Limitation:** Keine PDF/UA-Tags (jsPDF unterstützt keine semantische PDF-Struktur)
+  - Atkinson Hyperlegible Font (eingebettet, barrierefrei)
+  - Trennlinien und Fußzeilen als Artefakte markiert
+  - Dokumenttitel und Sprache (de-DE) gesetzt
+  - Screenreader-navigierbar (NVDA-Test bestanden)
 - ✅ HTML-Export als barrierefreie Alternative
   - Self-contained HTML-Datei (alle Styles inline)
   - Echte semantische Überschriften (H1, H2, H3)
@@ -271,9 +273,24 @@ else {
 
 ---
 
-### 🔄 Aktuell in Arbeit
+### ✅ Zuletzt abgeschlossen
 
-*Kein aktives Feature in Arbeit*
+#### PDF/UA-1 konforme PDF-Exporte (Februar 2026)
+
+**Features:**
+- ✅ jsPDF-UA Fork integriert (eigenständiger Fork mit PDF/UA-1 Support)
+- ✅ Vollständiger Structure Tree: Document → H1/H2/H3/H4 → P → Sect → L/LI/Lbl/LBody → Figure
+- ✅ Marked Content für alle Textinhalte
+- ✅ Artifacts für dekorative Elemente (Trennlinien, Fußzeilen)
+- ✅ Figure-Elemente mit Alt-Text für Screenshots
+- ✅ Atkinson Hyperlegible Font (eingebettet, barrierefrei)
+- ✅ Dokumenttitel und Sprache (de-DE) korrekt gesetzt
+- ✅ Screenreader-Test mit NVDA bestanden
+
+**Technische Details:**
+- `scripts/libs/jspdf.umd.min.js`: jsPDF-UA Fork (756 KB, vorher 364 KB)
+- `notes-overview.js`: `generateAccessibilityPDF()` komplett umgeschrieben
+- API: `pdfUA: true`, `beginStructureElement()`, `endStructureElement()`, `beginArtifact()`, `endArtifact()`
 
 ---
 
@@ -438,15 +455,15 @@ else {
 
 ## 📊 Entwicklungsstatus
 
-### Version 0.5.2 (In Arbeit)
+### Version 1.0.2+ (Aktuell)
 
 **Neue Features:**
 - ✅ Vereinfachter Notiz-Modus (Simplified/Detailed)
 - ✅ Status-Tracking (draft/reported/resolved)
 - ✅ Checkbox-Auswahl für Bulk-Operationen
 - ✅ Status-Filter (vollständig implementiert)
-- 📅 PDF-Export mit Screenshots (geplant)
-- 📅 E-Mail-Template (geplant)
+- ✅ PDF-Export mit PDF/UA-1 (jsPDF-UA Fork, Atkinson Hyperlegible)
+- ✅ E-Mail-Template (BFSG-konform)
 
 **Bugfixes:**
 - ✅ DEF-002: Kontextmenü Race-Condition
@@ -477,17 +494,17 @@ else {
 
 ### Mittelfristig (Nächste 2 Wochen)
 
-3. 📅 **PDF-Export implementieren**
-   - `pdf-lib` Integration
-   - Screenshot-Einbettung
-   - PDF/UA-Konformität
-   - Strukturierte Dokumentation
+3. ✅ **PDF-Export mit PDF/UA-1** - ERLEDIGT (Februar 2026)
+   - jsPDF-UA Fork integriert (756 KB, Atkinson Hyperlegible eingebettet)
+   - Structure Tree mit H1-H4, P, Sect, L/LI, Figure
+   - Artifacts für dekorative Elemente
+   - Screenreader-Test bestanden (NVDA)
 
-4. 📅 **E-Mail-Template erstellen**
-   - Textbausteine vorbereiten
+4. ✅ **E-Mail-Template erstellen** - ERLEDIGT
+   - Textbausteine vorbereitet
    - Template-Generator
    - Copy & Paste Workflow
-   - Status-Update-Automatik
+   - BFSG-konforme Formulierungen
 
 ### Langfristig
 
@@ -508,30 +525,31 @@ else {
 
 ### Aktueller Kontext
 
-- Item #5 zu ~70% abgeschlossen
-- Schritte 1-5 vollständig implementiert
-- Schritte 6-7 noch offen
+- Item #5 vollständig abgeschlossen
+- PDF/UA-1 Export integriert und getestet (Februar 2026)
+- Alle Schritte 1-7 implementiert
 
-### Code-Bereiche für Fortsetzung
+### Abgeschlossene Meilensteine
 
-1. **PDF-Export vorbereiten:**
-   - Library-Evaluation: `pdf-lib` vs. `jsPDF`
-   - Screenshot-Daten aus `note.screenshotDataUrl` extrahieren
-   - PDF/UA-Standard-Recherche
+1. ✅ **PDF-Export mit PDF/UA-1:**
+   - jsPDF-UA Fork integriert (756 KB)
+   - Structure Tree, Marked Content, Artifacts
+   - Atkinson Hyperlegible Font eingebettet
+   - NVDA-Screenreader-Test bestanden
 
-3. **E-Mail-Template vorbereiten:**
-   - Textbausteine sammeln
-   - Rechtliche Grundlagen (BGG, BITV) recherchieren
-   - Template-Varianten definieren
+2. ✅ **E-Mail-Template:**
+   - BFSG-konforme Formulierungen
+   - mailto: + Zwischenablage
+   - Rechtliche Grundlagen integriert
 
 ### Offene Fragen
 
-- Welche PDF-Library? (`pdf-lib` scheint am besten für PDF/UA)
-- E-Mail-Versand: Nur Template oder Integration mit `mailto:`?
+- ~~Welche PDF-Library?~~ → Gelöst: jsPDF-UA Fork mit PDF/UA-1 Support
+- ~~E-Mail-Versand?~~ → Gelöst: mailto: + Zwischenablage
 - Status-Update: Automatisch oder manuell nach PDF-Export?
 
 ---
 
-**Letztes Update:** 2. Oktober 2025, 14:30 Uhr
+**Letztes Update:** 7. Februar 2026
 **Bearbeiter:** Claude Code
-**Nächster Meilenstein:** PDF-Export & E-Mail-Template (Item #5, Schritte 6-7)
+**Letzter Meilenstein:** PDF/UA-1 Export integriert (jsPDF-UA Fork)

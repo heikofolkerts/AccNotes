@@ -138,7 +138,7 @@
 - [ ] Vereinfachter Notiz-Modus ohne BITV-Prüfschritt-Auswahl implementieren
 - [ ] Automatische Vor-Ausfüllung basierend auf erkanntem Problem optimieren
 - [ ] Vorausgefüllte E-Mail-Templates für Behördenmeldungen
-- [ ] PDF-Export im Meldungs-Format (kein technischer Report)
+- [x] PDF-Export im Meldungs-Format mit PDF/UA-1 Konformität (jsPDF-UA Fork)
 - [ ] Nachverfolgungsmodus für gemeldete Probleme
 - [ ] Status-Tracking: Gemeldet → In Bearbeitung → Behoben
 
@@ -147,7 +147,7 @@
 - ✅ Automatische Problem-Erkennung schlägt passenden Modus vor
 - ✅ Nahtloser Workflow ohne zusätzliche UI-Elemente
 - [ ] Ein-Klick-Meldung ohne BITV-Kenntnisse nötig (Notiz-Formular noch zu vereinfachen)
-- [ ] Verständliche Meldungs-PDFs für Behörden
+- [x] Verständliche Meldungs-PDFs für Behörden (PDF/UA-1 konform, Screenreader-navigierbar)
 - [ ] E-Mail-Template mit korrekten rechtlichen Verweisen
 
 **Hinweis**: Das Kontextmenü ist vollständig implementiert und wird nicht mehr geändert. Diese Story fokussiert sich nun auf die Workflow-Features nach der Kontextmenü-Auswahl.
@@ -298,7 +298,7 @@ Rechtsklick auf Element ohne erkannte Probleme:
 ---
 
 #### 8. BITV-Reporting & Export *(Story Points: 13)*
-**Status**: 📋 Ready for Development (Professional Feature)
+**Status**: 🔄 Teilweise implementiert (PDF/UA ✅, Excel/HTML-Navigation offen)
 
 **User Stories**:
 - Als **Sarah** möchte ich BITV-konforme PDF-Reports generieren
@@ -306,14 +306,17 @@ Rechtsklick auf Element ohne erkannte Probleme:
 - Als **Auditor** möchte ich strukturierte BITV-HTML-Reports
 
 **Tasks**:
-- [ ] BITV-PDF-Generator mit offizieller Struktur
+- [x] BITV-PDF-Generator mit PDF/UA-1 Konformität (jsPDF-UA Fork, Februar 2026)
+  - Structure Tree (H1-H4, P, Sect, L/LI, Figure)
+  - Atkinson Hyperlegible Font (eingebettet)
+  - Screenreader-navigierbar (NVDA-Test bestanden)
 - [ ] Excel-Export mit BITV-Prüfschritt-Spalten
 - [ ] HTML-Report mit BITV-Navigation
 - [ ] BITV-Compliance-Dashboard implementieren
 - [ ] Multi-Format BITV-Export-Wizard
 
 **Acceptance Criteria**:
-- [ ] PDF folgt BITV-Reporting-Standards
+- [x] PDF folgt BITV-Reporting-Standards (PDF/UA-1 konform)
 - [ ] Excel mit Prüfschritt-ID, Status, Bewertung-Spalten
 - [ ] HTML responsive mit BITV-Kategorien-Navigation
 - [ ] Compliance-Prozentsatz pro Kategorie
@@ -537,8 +540,9 @@ Es existiert ein "Als ZIP herunterladen"-Button in der Notizen-Übersicht, aber 
 
 ---
 
-*Letzte Aktualisierung: September 2025*
+*Letzte Aktualisierung: Februar 2026*
 *Fokus: Deutsche BITV-Softwaretest-Standards & Screen-Reader-Accessibility*
+*Zuletzt: PDF/UA-1 Export integriert (jsPDF-UA Fork)*
 
 ## 🐛 **Bekannte Defekte**
 

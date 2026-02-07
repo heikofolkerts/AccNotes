@@ -7,6 +7,38 @@ und dieses Projekt folgt [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### ✨ Neue Features
+
+#### 🏗️ **PDF/UA-1 konforme PDF-Exporte (ISO 14289-1)**
+- **jsPDF-UA Fork integriert**: Eigenständiger Fork von jsPDF mit vollständiger PDF/UA-1 Unterstützung ersetzt bisheriges jsPDF v2.5.1
+- **Structure Tree**: Semantische Dokumentstruktur mit H1-H4, P, Sect, L/LI/Lbl/LBody, Figure
+- **Marked Content**: Alle Textinhalte sind getaggt und für Screenreader navigierbar
+- **Artifacts**: Dekorative Elemente (Trennlinien, Seitenfußzeilen) korrekt als Artefakte markiert
+- **Figure mit Alt-Text**: Screenshots erhalten automatisch beschreibende Alt-Texte (`Screenshot der Barriere: [Titel]`)
+- **Dokumentmetadaten**: Titel (`Barrierefreiheits-Bericht`) und Sprache (`de-DE`) werden korrekt gesetzt
+- **Atkinson Hyperlegible Font**: Eingebetteter barrierefreier Font (optimiert für Lesbarkeit bei Sehbehinderungen), ersetzt Helvetica
+- **PDF/UA-1 Identifier**: Korrektes PDF/UA-1 Conformance-Flag im Dokument
+
+### ♿ Barrierefreiheit
+
+- **Screenreader-Navigation im PDF**: Überschriften (H1-H4) sind per Screenreader navigierbar (NVDA-Test bestanden)
+- **Logische Lesereihenfolge**: Structure Tree definiert korrekte Lesereihenfolge
+- **Dekorative Inhalte ausgeblendet**: Trennlinien und Seitenzahlen sind als Artefakte markiert und werden von Screenreadern ignoriert
+- **Barrierefreier Font**: Atkinson Hyperlegible bietet bessere Lesbarkeit als Standard-Systemfonts
+
+### 🔧 Technische Änderungen
+
+- **Library-Update**: `scripts/libs/jspdf.umd.min.js` von jsPDF v2.5.1 (364 KB) auf jsPDF-UA Fork (756 KB) aktualisiert
+- **`generateAccessibilityPDF()` umgeschrieben**: Vollständige Nutzung der PDF/UA-API (`beginStructureElement`, `endStructureElement`, `beginArtifact`, `endArtifact`, `setDocumentTitle`, `setLanguage`)
+- **Font-Umstellung**: Alle `doc.setFont('helvetica', ...)` durch `doc.setFont('AtkinsonHyperlegible', ...)` ersetzt
+
+### 📄 Dokumentation
+
+- **PDF_LIBRARY_EVALUATION.md**: Aktualisiert mit jsPDF-UA Fork Bewertung (25/25 Punkte)
+- **JSPDF_ACCESSIBILITY_FORK_FEASIBILITY.md**: Aktualisiert - Fork wurde realisiert
+- **PRODUCT_BACKLOG.md**: PDF/UA-Export als abgeschlossen markiert
+- **IMPLEMENTATION_STATUS.md**: PDF/UA-Limitation entfernt, neuen Status dokumentiert
+
 ---
 
 ## [1.0.2] - 2025-01-13
@@ -678,7 +710,8 @@ Template-Auswahl → Auto-BITV-Mapping → Vorbefüllte Notiz → Speichern
 
 ## Geplante Releases
 
-- **v0.4.0**: BITV-Template-System
-- **v0.5.0**: PDF/Excel-Reports
-- **v0.6.0**: Screenshot-Integration
-- **v1.0.0**: Team-Kollaboration
+- ~~**v0.4.0**: BITV-Template-System~~ ✅
+- ~~**v0.5.0**: PDF/Excel-Reports~~ ✅
+- ~~**v0.6.0**: Screenshot-Integration~~ ✅
+- ~~**v1.0.0**: Team-Kollaboration~~ (verschoben)
+- **Nächste**: PDF/UA-1 Export (jsPDF-UA Fork) ✅

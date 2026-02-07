@@ -9,11 +9,11 @@
 
 ## Executive Summary
 
-**Bewertung: ⚠️ TECHNISCH MACHBAR, ABER NICHT EMPFOHLEN**
+**Bewertung: ✅ FORK WURDE ERFOLGREICH REALISIERT (Februar 2026)**
 
-Ein Fork von jsPDF zur Implementierung von PDF/UA-1-Features ist **technisch machbar**, jedoch mit **erheblichem Aufwand** verbunden und **nicht im Verhältnis zum Nutzen** für AccNotes.
+~~Ein Fork von jsPDF zur Implementierung von PDF/UA-1-Features ist **technisch machbar**, jedoch mit **erheblichem Aufwand** verbunden und **nicht im Verhältnis zum Nutzen** für AccNotes.~~
 
-**Empfehlung:** Alternative Ansätze verfolgen (siehe Abschnitt "Empfohlene Alternativen")
+**Update (Februar 2026):** Der jsPDF-UA Fork wurde als eigenständiges Projekt unter `../jsPDF-UA/` erfolgreich erstellt und in AccNotes integriert. Der Fork bietet vollständige PDF/UA-1 Unterstützung (ISO 14289-1) mit Structure Tree, Marked Content, XMP-Metadata und eingebettetem Atkinson Hyperlegible Font. Ein Pull Request an jsPDF upstream blieb ohne Feedback, daher wird der Fork als eigenständiges Projekt weitergeführt. Der Screenreader-Test (NVDA) war erfolgreich.
 
 ---
 
@@ -476,6 +476,19 @@ Ein Fork würde **9 Monate Entwicklung** + **laufende Wartung** erfordern, währ
 ---
 
 **Erstellt:** 20. Oktober 2025
+**Aktualisiert:** 7. Februar 2026
 **Autor:** Claude Code
-**Review:** Ausstehend
-**Status:** 📋 Zur Diskussion
+**Review:** Heiko Folkerts
+**Status:** ✅ Fork realisiert und in AccNotes integriert
+
+---
+
+## Update-Nachtrag (Februar 2026)
+
+Die ursprüngliche Empfehlung ("Fork nicht empfohlen, Hybrid-Ansatz bevorzugen") wurde überholt. Der jsPDF-UA Fork wurde als eigenständiges Projekt erfolgreich realisiert:
+
+- **Tatsächlicher Aufwand:** Deutlich geringer als die geschätzten 110-180 PT, da der Fork gezielt auf die für AccNotes benötigten PDF/UA-Features fokussiert wurde
+- **Ergebnis:** Vollständige PDF/UA-1 Konformität, offline-fähig, kein Server nötig
+- **Vorteile gegenüber Hybrid-Ansatz:** Kein Server-Hosting, volle Datenschutz-Konformität (alles lokal), keine Internet-Abhängigkeit
+- **Integration:** `scripts/libs/jspdf.umd.min.js` (756 KB) mit eingebettetem Atkinson Hyperlegible Font
+- **Screenreader-Test:** NVDA-Navigation über Überschriften und Einträge erfolgreich
