@@ -8,6 +8,7 @@ console.log('📡 Background: Using API:', browserAPI === chrome ? 'chrome' : 'b
 // Dynamisches Kontextmenü-System
 let currentMenuItems = [];
 let lastMenuState = null; // Cache für den letzten Menü-Zustand
+let menuUpdateVersion = 0; // Sequenzierung: verhindert Race Conditions bei überlappenden Updates
 
 // Erstelle Standard-Kontextmenü-Einträge (initial)
 console.log('🎯 Background: Creating initial context menu items...');
@@ -58,8 +59,17 @@ function createDynamicContextMenu(elementInfo) {
         console.log('🔄 Background: Menu state changed, updating menu');
         lastMenuState = menuStateHash;
 
+        // Version erhöhen — wenn während removeAll ein neueres Update kommt, wird dieses abgebrochen
+        const thisVersion = ++menuUpdateVersion;
+
         // Lösche alle bestehenden Menü-Items
         browserAPI.contextMenus.removeAll(() => {
+            // Prüfe ob dieses Update noch aktuell ist
+            if (thisVersion !== menuUpdateVersion) {
+                console.log('⏭️ Background: Menu update superseded by newer version, aborting');
+                return;
+            }
+
             currentMenuItems = [];
 
             if (hasProblems) {

@@ -54,8 +54,56 @@ function prepareContextMenuForElement(element) {
     }
 }
 
+// Smarte Element-Auflösung: Navigiert vom event.target zum nächsten semantisch relevanten Element
+function resolveSemanticElement(element) {
+    if (!element || element === document.body || element === document.documentElement) {
+        return element;
+    }
+
+    const interactiveTags = ['button', 'a', 'input', 'select', 'textarea', 'details', 'summary'];
+    const semanticTags = ['li', 'article', 'section', 'nav', 'header', 'footer', 'main', 'aside', 'figure', 'table', 'tr', 'th', 'td', 'form', 'fieldset', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'img'];
+    const interactiveRoles = ['button', 'link', 'menuitem', 'tab', 'checkbox', 'radio', 'textbox', 'option', 'switch'];
+
+    let current = element;
+    const maxLevels = 5;
+
+    // Prüfe zuerst ob das aktuelle Element bereits interaktiv ist
+    for (let i = 0; i < maxLevels && current && current !== document.body; i++) {
+        const tag = current.tagName.toLowerCase();
+        const role = current.getAttribute('role');
+
+        // Höchste Priorität: interaktive Elemente
+        if (interactiveTags.includes(tag) || (role && interactiveRoles.includes(role)) || current.onclick) {
+            return current;
+        }
+
+        current = current.parentElement;
+    }
+
+    // Zweiter Durchlauf: semantische Elemente
+    current = element;
+    for (let i = 0; i < maxLevels && current && current !== document.body; i++) {
+        const tag = current.tagName.toLowerCase();
+
+        if (semanticTags.includes(tag)) {
+            return current;
+        }
+
+        current = current.parentElement;
+    }
+
+    // Kein semantisch relevantes Element gefunden — Originalelement zurückgeben
+    return element;
+}
+
+// Flag: Kontextmenü ist aktiv, mouseover-Updates unterdrücken
+let contextMenuActive = false;
+
 // Event-Listener für proaktive Vorbereitung
 document.addEventListener('mouseover', function(event) {
+    // Überspringe Updates wenn Kontextmenü aktiv ist
+    if (contextMenuActive) return;
+
     // Throttle: Nur alle 300ms vorbereiten
     if (!this.lastPrepareTime || Date.now() - this.lastPrepareTime > 300) {
         prepareContextMenuForElement(event.target);
@@ -70,32 +118,29 @@ document.addEventListener('focusin', function(event) {
 
 // Speichere das zuletzt geklickte Element und Element-Informationen
 document.addEventListener('contextmenu', function(event) {
-    lastClickedElement = event.target;
-    console.log('🎯 Right-clicked element:', event.target, 'Tag:', event.target.tagName);
+    // Kontextmenü-Flag setzen um mouseover-Updates zu unterdrücken
+    contextMenuActive = true;
+    setTimeout(() => { contextMenuActive = false; }, 500);
+
+    // Smarte Element-Auflösung: vom event.target zum nächsten relevanten Element
+    const resolvedElement = resolveSemanticElement(event.target);
+    lastClickedElement = resolvedElement;
+    console.log('🎯 Right-clicked element:', event.target.tagName, '→ resolved to:', resolvedElement.tagName);
 
     // Sammle Element-Informationen sofort für direkte Verwendung
     try {
-        let cleanElementInfo;
+        // Immer frische Analyse durchführen (kein Cache, um Race Conditions zu vermeiden)
+        const elementInfo = getElementAccessibilityInfo(resolvedElement);
+        const cleanElementInfo = cleanElementInfoForStorage(elementInfo);
 
-        // Prüfe ob wir bereits gecachte Daten für dieses Element haben
-        if (lastAnalyzedElement === event.target && lastAnalysisResult) {
-            console.log('⚡ Content: Using cached analysis for element');
-            cleanElementInfo = lastAnalysisResult;
-        } else {
-            // Neue Analyse durchführen
-            const elementInfo = getElementAccessibilityInfo(event.target);
-            cleanElementInfo = cleanElementInfoForStorage(elementInfo);
-
-            // Cache aktualisieren
-            lastAnalyzedElement = event.target;
-            lastAnalysisResult = cleanElementInfo;
-        }
+        // Cache aktualisieren
+        lastAnalyzedElement = resolvedElement;
+        lastAnalysisResult = cleanElementInfo;
 
         console.log('📊 Content: Element info collected:', {
             tagName: cleanElementInfo.tagName,
             elementType: cleanElementInfo.elementType,
-            detectedProblems: cleanElementInfo.detectedProblems?.length || 0,
-            fromCache: lastAnalyzedElement === event.target
+            detectedProblems: cleanElementInfo.detectedProblems?.length || 0
         });
 
         // Speichere für direkte Verwendung (ohne Background Script)

@@ -915,7 +915,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     // Screenshot checkbox handler
-    const screenshotCheckbox = document.getElementById('include-screenshot');
     if (screenshotCheckbox) {
         screenshotCheckbox.addEventListener('change', function() {
             const previewContainer = document.getElementById('screenshot-preview');
