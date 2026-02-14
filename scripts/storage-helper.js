@@ -7,7 +7,7 @@ const StorageHelper = {
         if (typeof browser !== 'undefined' && browser.storage) {
             return browser.storage.local;  // Firefox native API
         } else if (typeof chrome !== 'undefined' && chrome.storage) {
-            return this.storage;   // Chrome/Edge API
+            return chrome.storage.local;  // Chrome/Edge API (war: this.storage → endlose Rekursion)
         } else {
             throw new Error('Keine unterstützte Storage-API gefunden');
         }
@@ -121,9 +121,13 @@ const StorageHelper = {
                 if (key && key.startsWith(this.NOTE_PREFIX)) {
                     try {
                         const noteData = JSON.parse(localStorage.getItem(key));
-                        await this.saveNote(key, noteData);
-                        migrated.push(key);
-                        localStorage.removeItem(key); // Entferne aus localStorage
+                        const success = await this.saveNote(key, noteData);
+                        if (success) {
+                            migrated.push(key);
+                            localStorage.removeItem(key);
+                        } else {
+                            console.warn('Migration fehlgeschlagen für:', key);
+                        }
                     } catch (e) {
                         console.warn('Konnte Notiz nicht migrieren:', key, e);
                     }

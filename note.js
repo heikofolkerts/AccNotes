@@ -837,7 +837,64 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Screenshot-Checkbox automatisch aktivieren, wenn Screenshot vorhanden
     const screenshotCheckbox = document.getElementById('include-screenshot');
-    if (screenshotCheckbox && contextData.screenshotDataUrl) {
+
+    // Screenshot per Message-Passing vom Background-Script anfordern
+    if (screenshotCheckbox && contextData.hasScreenshot && !contextData.screenshotDataUrl && !editNoteId) {
+        console.log('📷 Screenshot per Message-Passing vom Background-Script anfordern...');
+        screenshotCheckbox.disabled = true; // Temporär deaktiviert bis Screenshot geladen
+
+        const previewContainer = document.getElementById('screenshot-preview');
+        if (previewContainer) {
+            previewContainer.style.display = 'block';
+            const info = document.getElementById('screenshot-info');
+            if (info) {
+                info.textContent = 'Screenshot wird geladen...';
+                info.style.color = 'var(--text-secondary, #666)';
+            }
+        }
+
+        chrome.runtime.sendMessage({ action: 'getScreenshot' }, (response) => {
+            if (chrome.runtime.lastError) {
+                console.error('❌ Screenshot-Abruf fehlgeschlagen:', chrome.runtime.lastError);
+                screenshotCheckbox.disabled = true;
+                screenshotCheckbox.checked = false;
+                const info = document.getElementById('screenshot-info');
+                if (info) {
+                    info.textContent = 'Screenshot konnte nicht geladen werden';
+                    info.style.color = 'var(--error-color, #c62828)';
+                }
+                return;
+            }
+
+            if (response && response.screenshotDataUrl) {
+                console.log('✅ Screenshot per Message-Passing empfangen (', response.screenshotDataUrl.length, 'bytes)');
+                contextData.screenshotDataUrl = response.screenshotDataUrl;
+                screenshotCheckbox.checked = true;
+                screenshotCheckbox.disabled = false;
+
+                // Zeige Screenshot-Vorschau
+                if (typeof ScreenshotHelper !== 'undefined') {
+                    ScreenshotHelper.displayScreenshotPreview(contextData.screenshotDataUrl);
+                }
+
+                const info = document.getElementById('screenshot-info');
+                if (info) {
+                    info.textContent = 'Screenshot wurde beim Rechtsklick erfasst';
+                    info.style.color = 'var(--success-color, #2e7d32)';
+                }
+            } else {
+                console.warn('⚠️ Kein Screenshot vom Background-Script erhalten');
+                screenshotCheckbox.disabled = true;
+                screenshotCheckbox.checked = false;
+                const info = document.getElementById('screenshot-info');
+                if (info) {
+                    info.textContent = 'Screenshot nicht verfügbar';
+                    info.style.color = 'var(--text-secondary, #666)';
+                }
+            }
+        });
+    } else if (screenshotCheckbox && contextData.screenshotDataUrl) {
+        // Screenshot bereits in contextData vorhanden (z.B. bei Bearbeitung)
         console.log('✅ Screenshot in contextData gefunden - Checkbox wird aktiviert');
         screenshotCheckbox.checked = true;
         screenshotCheckbox.disabled = false;
@@ -857,9 +914,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 info.style.color = 'var(--success-color, #2e7d32)';
             }
         }
-    } else if (screenshotCheckbox && !contextData.screenshotDataUrl && !editNoteId) {
+    } else if (screenshotCheckbox && !contextData.screenshotDataUrl && !contextData.hasScreenshot && !editNoteId) {
         // Keine Screenshot-Daten und keine Bearbeitung: Zeige Hinweis
-        console.log('ℹ️ Kein Screenshot in contextData - Checkbox deaktiviert');
+        console.log('ℹ️ Kein Screenshot verfügbar - Checkbox deaktiviert');
         screenshotCheckbox.disabled = true;
         screenshotCheckbox.checked = false;
 

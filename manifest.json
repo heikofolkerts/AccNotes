@@ -18,6 +18,7 @@
     "tabs",
     "activeTab",
     "storage",
+    "unlimitedStorage",
     "file://*/*",
     "<all_urls>"
   ],

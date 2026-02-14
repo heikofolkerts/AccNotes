@@ -3,6 +3,9 @@ console.log('🚀 Background script starting...');
 // Cross-Browser-API
 const browserAPI = (typeof chrome !== 'undefined' && chrome.runtime) ? chrome : browser;
 
+// Temporärer Speicher für Screenshots (Message-Passing statt URL-Parameter)
+let pendingScreenshot = null;
+
 console.log('📡 Background: Using API:', browserAPI === chrome ? 'chrome' : 'browser');
 
 // Dynamisches Kontextmenü-System
@@ -216,7 +219,7 @@ function createDynamicContextMenu(elementInfo) {
 // Initialisiere mit Standard-Menü
 createInitialContextMenu();
 
-// Message-Listener für dynamisches Kontextmenü
+// Message-Listener für dynamisches Kontextmenü und Screenshot-Abruf
 browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'updateContextMenu') {
         console.log('📩 Background: Received context menu update request');
@@ -224,6 +227,15 @@ browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ success: true });
         return true;
     }
+
+    // Screenshot per Message-Passing an note.js übergeben
+    if (request.action === 'getScreenshot') {
+        console.log('📷 Background: Screenshot requested by note page');
+        sendResponse({ screenshotDataUrl: pendingScreenshot });
+        pendingScreenshot = null; // Einmal abrufen, dann löschen
+        return true;
+    }
+
     return false;
 });
 
@@ -351,11 +363,11 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
             // SCREENSHOT DIREKT ERSTELLEN (bevor note.html geöffnet wird)
             console.log('📷 Background: Attempting to capture screenshot immediately...');
             try {
-                // Erstelle Screenshot vom sichtbaren Tab
+                // Erstelle Screenshot vom sichtbaren Tab (JPEG statt PNG für ~20x kleinere Dateien)
                 const screenshotDataUrl = await new Promise((resolve, reject) => {
                     browserAPI.tabs.captureVisibleTab(tab.windowId, {
-                        format: 'png',
-                        quality: 90
+                        format: 'jpeg',
+                        quality: 70
                     }, (dataUrl) => {
                         if (browserAPI.runtime.lastError) {
                             console.error('❌ Screenshot capture failed:', browserAPI.runtime.lastError);
@@ -367,8 +379,10 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
                 });
 
                 if (screenshotDataUrl) {
-                    contextData.screenshotDataUrl = screenshotDataUrl;
-                    console.log('✅ Screenshot captured successfully (', screenshotDataUrl.length, 'bytes)');
+                    // Screenshot im Background-Script zwischenspeichern (nicht in URL-Parameter!)
+                    pendingScreenshot = screenshotDataUrl;
+                    contextData.hasScreenshot = true;
+                    console.log('✅ Screenshot captured successfully (', screenshotDataUrl.length, 'bytes) - stored for message-passing');
                 } else {
                     console.warn('⚠️ Screenshot capture returned empty data');
                 }
@@ -378,8 +392,8 @@ browserAPI.contextMenus.onClicked.addListener(async (info, tab) => {
             }
 
             // Erstelle URL-Parameter für die lokale Seite
+            // WICHTIG: Screenshot wird NICHT in URL übergeben (zu groß), sondern per Message-Passing
             const params = new URLSearchParams();
-            // Übergebe alle Daten als JSON
             params.set('contextData', JSON.stringify(contextData));
 
             const notePageUrl = browserAPI.runtime.getURL('note.html') + '?' + params.toString();
@@ -662,6 +676,13 @@ async function openNoteWithContext(contextData) {
     if (!contextData.elementType) contextData.elementType = 'Unbekannt';
     if (!contextData.detectedProblems) contextData.detectedProblems = [];
 
+    // Screenshot separat behandeln (nicht in URL-Parameter, zu groß)
+    if (contextData.screenshotDataUrl) {
+        pendingScreenshot = contextData.screenshotDataUrl;
+        delete contextData.screenshotDataUrl;
+        contextData.hasScreenshot = true;
+    }
+
     const params = new URLSearchParams();
     params.set('contextData', JSON.stringify(contextData));
 
@@ -674,7 +695,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'captureVisibleTab') {
         console.log('📷 Background: Capturing visible tab screenshot');
 
-        chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
+        chrome.tabs.captureVisibleTab(null, { format: 'jpeg', quality: 70 }, (dataUrl) => {
             if (chrome.runtime.lastError) {
                 console.error('❌ Screenshot capture failed:', chrome.runtime.lastError);
                 sendResponse({
