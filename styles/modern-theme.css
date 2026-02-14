@@ -37,6 +37,11 @@
   --color-dark-border: #333333;       /* Dark grey - Borders */
   --color-dark-border-focus: #64b5f6; /* Blue 300 - Focus in dark mode */
 
+  /* Dark Theme Background Colors - for use as bg with white text */
+  --color-dark-primary-bg: #1565c0;       /* Blue 700 - 7.35:1 on white */
+  --color-dark-primary-bg-hover: #0d47a1; /* Blue 900 - 12.63:1 on white */
+  --color-dark-error-bg: #c62828;         /* Red 800 - 7.44:1 on white */
+
   /* Typography Scale */
   --font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   --font-family-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
@@ -351,6 +356,24 @@
   --color-surface: var(--color-dark-surface);
   --color-border: var(--color-dark-border);
   --color-border-focus: var(--color-dark-border-focus);
+}
+
+/* Explicit Light Mode - resets dark values when OS prefers dark but user toggles light */
+[data-theme="light"] {
+  --color-primary: #1565c0;
+  --color-primary-hover: #0d47a1;
+  --color-primary-light: #e3f2fd;
+  --color-secondary: #37474f;
+  --color-success: #2e7d32;
+  --color-warning: #f57c00;
+  --color-error: #c62828;
+  --color-text-primary: #212121;
+  --color-text-secondary: #616161;
+  --color-text-hint: #757575;
+  --color-background: #fafafa;
+  --color-surface: #ffffff;
+  --color-border: #e0e0e0;
+  --color-border-focus: #1976d2;
 }
 
 /* Reset and Base Styles */
@@ -1358,6 +1381,60 @@ details > *:not(summary) {
   background-color: var(--color-dark-border);
   color: var(--color-dark-text-secondary);
 }
+
+/* Dark mode button contrast fixes - use opaque bg colors instead of light text colors */
+[data-theme="dark"] .btn--primary {
+  background-color: var(--color-dark-primary-bg);
+  color: white;
+}
+
+[data-theme="dark"] .btn--primary:hover:not(:disabled) {
+  background-color: var(--color-dark-primary-bg-hover);
+}
+
+[data-theme="dark"] .btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-dark-primary-bg);
+  color: white;
+}
+
+[data-theme="dark"] .btn--danger {
+  background-color: var(--color-dark-error-bg);
+  color: white;
+}
+
+[data-theme="dark"] .btn--danger:hover:not(:disabled) {
+  background-color: #b71c1c;
+}
+
+/* Dark mode heading/accordion contrast fixes */
+[data-theme="dark"] .info-panel__title {
+  color: var(--color-dark-text-primary);
+}
+
+[data-theme="dark"] summary:hover {
+  background-color: var(--color-dark-primary-bg);
+  color: white;
+}
+
+/* Dark mode alert/info-box contrast fixes */
+[data-theme="dark"] .alert--info {
+  background-color: #1e3a5f;
+  border-left-color: #64b5f6;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .alert--warning {
+  background-color: #3e2723;
+  border-left-color: #ffb74d;
+  color: #e0e0e0;
+}
+
+[data-theme="dark"] .info-box--warning {
+  background-color: #3e2723;
+  border-color: #ffb74d;
+  color: #e0e0e0;
+}
+
 /* ============================================
    Notes Table Styles (Accessible Table Layout)
    ============================================ */
@@ -1816,4 +1893,66 @@ details > *:not(summary) {
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+/* ============================================
+   @media fallbacks for pre-JS rendering
+   Duplicates critical dark-mode contrast fixes
+   so they apply before JS sets data-theme.
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+  .btn--primary {
+    background-color: var(--color-dark-primary-bg);
+    color: white;
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    background-color: var(--color-dark-primary-bg-hover);
+  }
+
+  .btn--secondary:hover:not(:disabled) {
+    background-color: var(--color-dark-primary-bg);
+    color: white;
+  }
+
+  .btn--danger {
+    background-color: var(--color-dark-error-bg);
+    color: white;
+  }
+
+  .btn--danger:hover:not(:disabled) {
+    background-color: #b71c1c;
+  }
+
+  .notes-table thead {
+    background: var(--color-dark-primary-light);
+    color: var(--color-dark-text-primary);
+  }
+
+  .info-panel__title {
+    color: var(--color-dark-text-primary);
+  }
+
+  summary:hover {
+    background-color: var(--color-dark-primary-bg);
+    color: white;
+  }
+
+  .alert--info {
+    background-color: #1e3a5f;
+    border-left-color: #64b5f6;
+    color: #e0e0e0;
+  }
+
+  .alert--warning {
+    background-color: #3e2723;
+    border-left-color: #ffb74d;
+    color: #e0e0e0;
+  }
+
+  .info-box--warning {
+    background-color: #3e2723;
+    border-color: #ffb74d;
+    color: #e0e0e0;
+  }
 }
